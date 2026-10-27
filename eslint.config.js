@@ -86,7 +86,7 @@ export default defineConfig(
 			}
 		},
 		settings: {
-			jsdoc: { mode: 'typescript' },
+			jsdoc: { mode: 'typescript', tagNamePreference: { template: 'typeParam' } },
 			'import-x/resolver': { typescript: true }
 		},
 		plugins: { unicorn },
@@ -183,7 +183,30 @@ export default defineConfig(
 		files: ['src/**'],
 		plugins: { i18next },
 		rules: {
-			'i18next/no-literal-string': ['error', { mode: 'all' }],
+			'i18next/no-literal-string': [
+				'error',
+				{
+					mode: 'all',
+					callees: {
+						exclude: [
+							'i18n(ext)?',
+							't',
+							'require',
+							'addEventListener',
+							'removeEventListener',
+							'postMessage',
+							'getElementById',
+							'dispatch',
+							'commit',
+							'includes',
+							'indexOf',
+							'endsWith',
+							'startsWith',
+							'Error'
+						]
+					}
+				}
+			],
 			'no-restricted-syntax': [
 				'error',
 				...typeSafetySyntax,
