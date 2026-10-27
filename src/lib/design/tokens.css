@@ -1,0 +1,68 @@
+/*
+ * Design tokens: the only place raw colors, sizes, and durations appear.
+ * Text pairings meet WCAG 2.2 AA (4.5:1) in both themes; see docs/adr/0004-design-direction.md.
+ */
+:root {
+	color-scheme: light dark;
+
+	--color-background: #fafaf8;
+	--color-surface: #f1f1ee;
+	--color-text: #1b1b19;
+	--color-text-muted: #62625c;
+	--color-divider: #e2e2dd;
+	--color-accent: #1d7348;
+	--color-on-accent: #fff;
+	--color-backdrop: rgb(0 0 0 / 30%);
+
+	--font-family: system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
+	--font-size-small: 0.875rem;
+	--font-size-body: 1rem;
+	--font-size-title: 1.5rem;
+	--font-size-display: 3rem;
+	--font-weight-regular: 400;
+	--font-weight-semibold: 600;
+	--line-height: 1.4;
+
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-6: 24px;
+	--space-8: 32px;
+	--space-12: 48px;
+
+	--radius-small: 6px;
+	--radius-medium: 12px;
+	--radius-large: 20px;
+	--radius-round: 999px;
+
+	--border-hairline: 1px;
+	--focus-ring-width: 2px;
+	--tap-target: 44px;
+	--icon-size: 24px;
+	--number-key-height: 56px;
+	--content-max-width: 600px;
+
+	--duration-quick: 150ms;
+	--duration-sheet: 250ms;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-background: #121211;
+		--color-surface: #1d1d1b;
+		--color-text: #ecece8;
+		--color-text-muted: #a2a29b;
+		--color-divider: #2e2e2b;
+		--color-accent: #62c08d;
+		--color-on-accent: #0c2316;
+		--color-backdrop: rgb(0 0 0 / 50%);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--duration-quick: 0ms;
+		--duration-sheet: 0ms;
+	}
+}

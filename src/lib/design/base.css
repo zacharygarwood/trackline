@@ -1,0 +1,52 @@
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	overscroll-behavior: none;
+}
+
+body {
+	margin: 0;
+	background: var(--color-background);
+	color: var(--color-text);
+	font-family: var(--font-family);
+	font-size: var(--font-size-body);
+	font-weight: var(--font-weight-regular);
+	line-height: var(--line-height);
+	-webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+p {
+	margin: 0;
+}
+
+h1,
+h2 {
+	font-weight: var(--font-weight-semibold);
+}
+
+a {
+	color: var(--color-accent);
+}
+
+button,
+input {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	user-select: none;
+	touch-action: manipulation;
+}
+
+:focus-visible {
+	outline: var(--focus-ring-width) solid var(--color-accent);
+	outline-offset: var(--focus-ring-width);
+}
