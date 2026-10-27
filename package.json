@@ -13,7 +13,7 @@
 		"lint:eslint": "eslint --max-warnings 0 .",
 		"lint:format": "prettier --check .",
 		"lint:svelte": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
-		"lint:types": "tsc --noEmit",
+		"lint:types": "tsc --noEmit && tsc --noEmit -p src/service-worker",
 		"lint:css": "stylelint \"src/**/*.{css,svelte}\" --allow-empty-input --max-warnings 0",
 		"lint:unused": "knip",
 		"arch": "depcruise src",

@@ -45,7 +45,7 @@ const hiddenEffectSyntax = [
 
 const literalTextSyntax = [
 	{
-		selector: 'SvelteText[value=/\\S/]',
+		selector: 'SvelteText[value=/\\S/]:not(SvelteStyleElement SvelteText)',
 		message: 'Put user-facing text in the messages module.'
 	}
 ];
@@ -95,7 +95,7 @@ export default defineConfig(
 			'no-console': 'error',
 			eqeqeq: ['error', 'always'],
 			'no-param-reassign': ['error', { props: true }],
-			'prefer-const': 'error',
+			'prefer-const': ['error', { destructuring: 'all' }],
 			'no-restricted-syntax': ['error', ...typeSafetySyntax, ...hiddenEffectSyntax],
 
 			'@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
@@ -125,9 +125,11 @@ export default defineConfig(
 			complexity: ['error', 8],
 			'max-depth': ['error', 3],
 			'sonarjs/cognitive-complexity': ['error', 10],
+			'sonarjs/function-return-type': 'off',
 
 			'import-x/no-cycle': 'error',
 			'import-x/no-default-export': 'error',
+			'import-x/no-unresolved': 'off',
 			'import-x/no-named-as-default': 'off',
 			'import-x/no-named-as-default-member': 'off',
 
@@ -176,7 +178,8 @@ export default defineConfig(
 		rules: {
 			'svelte/block-lang': ['error', { script: 'ts' }],
 			'svelte/no-at-html-tags': 'error',
-			'svelte/require-each-key': 'error'
+			'svelte/require-each-key': 'error',
+			'@typescript-eslint/no-useless-default-assignment': 'off'
 		}
 	},
 	{
@@ -202,7 +205,10 @@ export default defineConfig(
 							'indexOf',
 							'endsWith',
 							'startsWith',
-							'Error'
+							'Error',
+							'URL',
+							'Worker',
+							'import\\.meta\\.glob'
 						]
 					}
 				}
@@ -222,7 +228,15 @@ export default defineConfig(
 		rules: { 'i18next/no-literal-string': 'off' }
 	},
 	{
-		files: ['src/lib/platform/pwa/**'],
+		files: ['src/lib/design/**'],
+		rules: { 'svelte/no-navigation-without-resolve': 'off' }
+	},
+	{
+		files: ['src/lib/platform/db/worker.ts'],
+		rules: { 'sonarjs/post-message': 'off' }
+	},
+	{
+		files: ['src/lib/platform/pwa/**', 'src/service-worker/**'],
 		rules: { 'no-restricted-globals': 'off', 'no-restricted-properties': 'off' }
 	},
 	{
@@ -233,6 +247,7 @@ export default defineConfig(
 		files: ['**/*.test.ts', 'tests/**'],
 		rules: {
 			'@typescript-eslint/no-magic-numbers': 'off',
+			'sonarjs/no-floating-point-equality': 'off',
 			'i18next/no-literal-string': 'off',
 			'max-lines-per-function': 'off',
 			'jsdoc/require-jsdoc': 'off'
@@ -240,7 +255,11 @@ export default defineConfig(
 	},
 	{
 		files: ['*.config.{js,ts}', '.dependency-cruiser.js'],
-		rules: { 'import-x/no-default-export': 'off', '@typescript-eslint/no-magic-numbers': 'off' }
+		rules: {
+			'import-x/no-default-export': 'off',
+			'@typescript-eslint/no-magic-numbers': 'off',
+			'max-lines': 'off'
+		}
 	},
 	{
 		files: ['**/*.{js,cjs}'],

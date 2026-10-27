@@ -54,14 +54,16 @@ export default {
 		},
 		{
 			name: 'not-to-unresolvable',
+			comment:
+				'SvelteKit virtual modules ($app/*) and Vite asset imports (?url) resolve at build time.',
 			severity: 'error',
 			from: {},
-			to: { couldNotResolve: true }
+			to: { couldNotResolve: true, pathNot: ['^\\$app/', '\\?url$'] }
 		}
 	],
 	options: {
 		doNotFollow: { path: 'node_modules' },
-		exclude: { path: '^src/lib/assets/' },
+		exclude: { path: ['\\.test\\.ts$', '^tests/'] },
 		tsPreCompilationDeps: true,
 		tsConfig: { fileName: 'tsconfig.json' },
 		enhancedResolveOptions: {

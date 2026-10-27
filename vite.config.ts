@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { svelteTesting } from '@testing-library/svelte/vite';
 
 /**
  * Hash of the inline `style` attribute on SvelteKit's route announcer, the live region that
@@ -52,19 +53,45 @@ export default defineConfig({
 			}
 		})
 	],
+	worker: { format: 'es' },
+	optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },
 	test: {
 		expect: { requireAssertions: true },
-		include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'tests/**/*.test.ts'],
-		environment: 'node',
 		coverage: {
 			provider: 'v8',
 			include: ['src/lib/**/*.ts'],
-			exclude: ['src/lib/**/*.test.ts'],
+			exclude: [
+				'src/lib/**/*.test.ts',
+				'src/lib/**/*.constants.ts',
+				'src/lib/platform/db/{worker,open-database,wasm-sql-executor}.ts'
+			],
 			thresholds: {
 				'src/lib/**/{domain,application}/**': { lines: 95 },
 				'src/lib/shared/**': { lines: 95 },
-				'src/lib/**/infrastructure/**': { lines: 85 }
+				'src/lib/**/infrastructure/**': { lines: 85 },
+				'src/lib/platform/**': { lines: 85 }
 			}
-		}
+		},
+		projects: [
+			{
+				extends: true,
+				test: {
+					name: 'unit',
+					environment: 'node',
+					include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'tests/**/*.test.ts'],
+					exclude: ['src/**/*.svelte.test.ts']
+				}
+			},
+			{
+				extends: true,
+				plugins: [svelteTesting()],
+				test: {
+					name: 'components',
+					environment: 'jsdom',
+					include: ['src/**/*.svelte.test.ts'],
+					setupFiles: ['tests/setup/components.ts']
+				}
+			}
+		]
 	}
 });

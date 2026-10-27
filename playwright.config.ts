@@ -1,4 +1,5 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
+import { androidPhone, iPhone } from './tests/e2e/devices.ts';
 
 const PORT = 4173;
 const isCi = process.env.CI !== undefined;
@@ -16,7 +17,7 @@ export default defineConfig({
 		reuseExistingServer: !isCi
 	},
 	projects: [
-		{ name: 'chromium', use: { ...devices['Pixel 7'] } },
-		{ name: 'webkit', use: { ...devices['iPhone 15'] } }
+		{ name: 'chromium', use: { ...androidPhone } },
+		{ name: 'webkit', use: { ...iPhone } }
 	]
 });

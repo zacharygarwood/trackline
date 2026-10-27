@@ -3,6 +3,7 @@ export default {
 	extends: ['stylelint-config-standard', 'stylelint-config-html/svelte'],
 	plugins: ['stylelint-declaration-strict-value'],
 	rules: {
+		'custom-property-empty-line-before': null,
 		'scale-unlimited/declaration-strict-value': [
 			[
 				'/color$/',
