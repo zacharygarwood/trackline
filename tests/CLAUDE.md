@@ -6,6 +6,10 @@
 - Fakes, not mocks. Every repository interface has a hand-written in-memory fake in `tests/fakes/` that passes the same contract suite as the SQLite implementation.
 - Inject `Clock` and `IdGenerator`; no test depends on the real date or randomness.
 - Test behavior through public APIs. Never assert on private fields or CSS classes. No snapshot tests of markup.
+- Use `expectOk` / `expectErr` from `tests/support/result.ts` to unwrap results.
+- SQL tests use `new TestDatabase()` (in-memory `node:sqlite`) from `tests/support/test-database.ts`, with `migrate(database, bundledMigrations)` for the real schema.
+- Component tests bind props through a `$state` object with getters and setters (see `NumberPad.svelte.test.ts`).
+- E2E tests import `test` and `expect` from `tests/e2e/fixtures.ts`, never from `@playwright/test`, so WebKit gets a persistent context with OPFS.
 - Builders in `tests/builders/` keep setup readable: `aWorkout().withSets(3).build()`.
 - Test names read as behavior: "rejects a weigh-in above 400 kg".
 - Every e2e journey must also pass the network guard: no request leaves the app's origin.

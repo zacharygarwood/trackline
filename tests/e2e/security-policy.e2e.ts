@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.ts';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 
 test('the landing page shows the app name', async ({ page }) => {
@@ -19,14 +19,16 @@ test('the landing page ships a strict Content Security Policy', async ({ page })
 	expect(policy).not.toContain('unsafe-inline');
 });
 
-test('the landing page loads without Content Security Policy violations', async ({ page }) => {
-	const violations: string[] = [];
-	page.on('console', (message) => {
-		if (message.text().includes('Content Security Policy')) violations.push(message.text());
+for (const path of ['/', '/app']) {
+	test(`${path} loads without Content Security Policy violations`, async ({ page }) => {
+		const violations: string[] = [];
+		page.on('console', (message) => {
+			if (message.text().includes('Content Security Policy')) violations.push(message.text());
+		});
+
+		await page.goto(path);
+		await page.waitForLoadState('networkidle');
+
+		expect(violations).toEqual([]);
 	});
-
-	await page.goto('/');
-	await page.waitForLoadState('networkidle');
-
-	expect(violations).toEqual([]);
-});
+}
