@@ -1,7 +1,7 @@
 # Buffalog
 
 Working name; the final name is pending (see docs/adr/0001-stack.md). The product name lives only in
-`messages.app.name` and this file, so a rename is cheap.
+`src/lib/i18n/messages.en.ts`, `static/manifest.webmanifest`, `package.json`, and this file, so a rename is cheap.
 
 Privacy-first fitness tracker PWA. SvelteKit 3 + Svelte 5 (runes) + TypeScript (strict). SQLite (WASM, OPFS) in a Web Worker. No backend. All data stays on the device.
 
@@ -32,10 +32,12 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 
 ## Conventions
 
-- Import app code through `#lib/...` with the file extension: `import { messages } from '#lib/i18n/messages.en.ts'`.
+- Import app code through `#lib/...` with the file extension: `import { messages } from '#lib/i18n/messages.en.ts'`. Inside `src/lib`, sibling and parent modules use relative imports, also with the extension.
+- SvelteKit 3 modules: `$app/paths` (`resolve`), `$app/state`, `$app/env`. Route paths live in `src/routes/app/app-route.constants.ts`; always link with `resolve(AppRoute.x)`.
+- Design primitives live in `src/lib/design/` (Button, Sheet, NumberPad, Stepper, TabBar, EmptyState, Icon). Logic behind a primitive goes in a plain `.ts` module next to it.
 - User-facing text: `src/lib/i18n/messages.en.ts`. Identifiers: `*.constants.ts` (`as const`). SQL: `*.sql.ts`. These are the only files where string literals are allowed in `src/`.
 - Clock and IdGenerator implementations live in `src/lib/platform/system/`, the only place allowed to read the time or randomness.
-- Unit tests sit next to the code as `*.test.ts`; fakes, builders, and e2e live under `tests/`.
+- Unit tests sit next to the code as `*.test.ts`, component tests as `*.svelte.test.ts` (jsdom). Fakes, builders, test support, and e2e live under `tests/`.
 
 ## Principles
 

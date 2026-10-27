@@ -20,6 +20,7 @@ Adopt the plan's stack, on the versions current in October 2026:
 - **Dependabot** for dependency updates, grouped weekly. It is built into GitHub and needs no app install.
 - **Node 24+**: build scripts in `scripts/` are TypeScript run directly by Node's type stripping.
 - Component tests (`@testing-library/svelte` + jsdom) are added in Phase 1, when the first interactive primitives exist.
+- Phase 1 deviations: SvelteKit's own service worker instead of `@vite-pwa/sveltekit` (ADR 0005) and `node:sqlite` instead of `better-sqlite3` (ADR 0006).
 - The build output uses `404.html` as the SPA fallback, because GitHub Pages serves it for unknown paths. `BASE_PATH` sets the base path for the project-site URL.
 
 No runtime dependencies are added in Phase 0.
