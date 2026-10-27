@@ -1,0 +1,87 @@
+{
+	"name": "buffalog",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build && node scripts/check-bundle-size.ts",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync && simple-git-hooks || echo ''",
+		"check": "pnpm lint && pnpm arch && pnpm test && pnpm build",
+		"lint": "pnpm lint:eslint && pnpm lint:format && pnpm lint:svelte && pnpm lint:types && pnpm lint:css && pnpm lint:unused",
+		"lint:eslint": "eslint --max-warnings 0 .",
+		"lint:format": "prettier --check .",
+		"lint:svelte": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+		"lint:types": "tsc --noEmit",
+		"lint:css": "stylelint \"src/**/*.{css,svelte}\" --allow-empty-input --max-warnings 0",
+		"lint:unused": "knip",
+		"arch": "depcruise src",
+		"format": "prettier --write .",
+		"test": "vitest run --coverage",
+		"test:watch": "vitest",
+		"test:e2e": "playwright test",
+		"test:mutation": "stryker run"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@playwright/test": "^1.60.0",
+		"@stryker-mutator/core": "^10.1.1",
+		"@stryker-mutator/vitest-runner": "^10.1.1",
+		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "^24",
+		"@vitest/coverage-v8": "^4.1.12",
+		"dependency-cruiser": "^18.7.0",
+		"eslint": "^10.4.1",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-import-resolver-typescript": "^4.4.5",
+		"eslint-plugin-i18next": "^6.1.5",
+		"eslint-plugin-import-x": "^4.17.1",
+		"eslint-plugin-jsdoc": "^65.4.2",
+		"eslint-plugin-sonarjs": "^4.2.2",
+		"eslint-plugin-svelte": "^3.19.0",
+		"eslint-plugin-unicorn": "^79.0.0",
+		"globals": "^17.6.0",
+		"knip": "^6.43.0",
+		"lint-staged": "^17.6.0",
+		"postcss-html": "^2.0.0",
+		"prettier": "^3.8.3",
+		"prettier-plugin-svelte": "^4.1.0",
+		"simple-git-hooks": "^2.14.0",
+		"stylelint": "^17.16.0",
+		"stylelint-config-html": "^2.0.0",
+		"stylelint-config-standard": "^40.0.0",
+		"stylelint-declaration-strict-value": "^1.12.1",
+		"svelte": "^5.57.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.60.1",
+		"vite": "^8.3.0",
+		"vitest": "^4.1.8"
+	},
+	"packageManager": "pnpm@12.15.0",
+	"engines": {
+		"node": ">=24"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "pnpm exec lint-staged"
+	},
+	"lint-staged": {
+		"*.{ts,js,svelte}": [
+			"prettier --write",
+			"eslint --max-warnings 0 --fix",
+			"vitest related --run --passWithNoTests"
+		],
+		"*.{css,svelte}": [
+			"stylelint --max-warnings 0"
+		],
+		"*.{json,md,yml,yaml,html}": [
+			"prettier --write"
+		]
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	}
+}

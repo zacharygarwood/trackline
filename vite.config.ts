@@ -1,0 +1,70 @@
+import { defineConfig } from 'vitest/config';
+import adapter from '@sveltejs/adapter-static';
+import { sveltekit } from '@sveltejs/kit/vite';
+
+/**
+ * Hash of the inline `style` attribute on SvelteKit's route announcer, the live region that
+ * tells screen readers about navigation. Allowing this exact hash keeps `'unsafe-inline'` out of
+ * the policy; the CSP end-to-end test fails if a SvelteKit upgrade changes it.
+ */
+const ROUTE_ANNOUNCER_STYLE_HASH = 'sha256-S8qMpvofolR8Mpjy4kQvEm7m1q8clzU4dfDH0AmvZjo=';
+
+type BasePath = '' | `/${string}`;
+
+const isBasePath = (value: string): value is BasePath => value === '' || value.startsWith('/');
+
+/**
+ * Reads the URL prefix the app is served under (for example `/buffalog` on GitHub Pages).
+ *
+ * @returns The base path from the `BASE_PATH` environment variable, or the empty string.
+ * @throws If `BASE_PATH` is set but does not start with a slash.
+ */
+function basePath(): BasePath {
+	const value = process.env.BASE_PATH ?? '';
+	if (!isBasePath(value)) {
+		throw new Error(`BASE_PATH must start with "/": ${value}`);
+	}
+	return value;
+}
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			compilerOptions: {
+				runes: ({ filename }) =>
+					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
+			},
+			adapter: adapter({ fallback: '404.html' }),
+			paths: { base: basePath() },
+			csp: {
+				mode: 'hash',
+				directives: {
+					'default-src': ['self'],
+					'connect-src': ['self'],
+					'img-src': ['self', 'blob:', 'data:'],
+					'worker-src': ['self', 'blob:'],
+					'script-src': ['self', 'wasm-unsafe-eval'],
+					'style-src': ['self', 'unsafe-hashes', ROUTE_ANNOUNCER_STYLE_HASH],
+					'object-src': ['none'],
+					'base-uri': ['none'],
+					'form-action': ['none']
+				}
+			}
+		})
+	],
+	test: {
+		expect: { requireAssertions: true },
+		include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'tests/**/*.test.ts'],
+		environment: 'node',
+		coverage: {
+			provider: 'v8',
+			include: ['src/lib/**/*.ts'],
+			exclude: ['src/lib/**/*.test.ts'],
+			thresholds: {
+				'src/lib/**/{domain,application}/**': { lines: 95 },
+				'src/lib/shared/**': { lines: 95 },
+				'src/lib/**/infrastructure/**': { lines: 85 }
+			}
+		}
+	}
+});
