@@ -12,7 +12,7 @@ async function enter(field: Locator, value: string): Promise<void> {
 	await field.press('Tab');
 }
 
-test('log a workout, repeat it from a template, and keep the streak with a rest day', async ({
+test('log a workout, repeat it from a template, keep the streak with a rest day, and see it in Stats', async ({
 	page
 }) => {
 	await page.clock.setFixedTime(new Date('2026-10-01T09:00:00'));
@@ -78,4 +78,18 @@ test('log a workout, repeat it from a template, and keep the streak with a rest 
 	await expect(
 		page.getByRole('button', { name: messages.training.markRestDay(messages.dates.today) })
 	).toHaveAttribute('aria-pressed', 'true');
+
+	await page.getByRole('link', { name: messages.navigation.stats }).click();
+	await expect(page.getByText(messages.stats.days(2)).first()).toBeVisible();
+	await expect(page.getByRole('img', { name: messages.stats.trainingHeatmap(1, 1) })).toBeVisible();
+	await expect(
+		page.getByRole('img', {
+			name: messages.stats.exerciseSummary({
+				name: 'Squat',
+				sessions: 1,
+				heaviest: '100.0 kg',
+				best: '116.7 kg'
+			})
+		})
+	).toBeVisible();
 });

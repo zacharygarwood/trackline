@@ -12,7 +12,7 @@ describe('layoutLineChart', () => {
 				{ x: 10, y: 81 }
 			],
 			trend: [],
-			goal: undefined
+			goal: []
 		});
 
 		const [older, newer] = layout.dots;
@@ -28,7 +28,7 @@ describe('layoutLineChart', () => {
 				{ x: 1, y: 90 }
 			],
 			trend: [],
-			goal: undefined
+			goal: []
 		});
 
 		expect(layout.top.value).toBe(91);
@@ -44,19 +44,58 @@ describe('layoutLineChart', () => {
 				{ x: 1, y: 2 },
 				{ x: 2, y: 3 }
 			],
-			goal: undefined
+			goal: []
 		});
 
 		expect(layout.trendPath.match(/[ML]/g)).toEqual(['M', 'L', 'L']);
 	});
 
 	it('includes the goal in the vertical range', () => {
-		const input: ChartInput = { ...area, points: [{ x: 0, y: 80 }], trend: [], goal: 70 };
+		const input: ChartInput = {
+			...area,
+			points: [{ x: 0, y: 80 }],
+			trend: [],
+			goal: [{ x: 0, y: 70 }]
+		};
 
 		const layout = layoutLineChart(input);
 
-		expect(layout.goalY).toBeDefined();
+		expect(layout.goalPath).toBeDefined();
 		expect(layout.bottom.value).toBeLessThan(70);
+	});
+
+	it('draws a single goal across the whole width', () => {
+		const layout = layoutLineChart({
+			...area,
+			points: [{ x: 0, y: 80 }],
+			trend: [],
+			goal: [{ x: 0, y: 80 }]
+		});
+
+		expect(layout.goalPath).toBe('M0,50 H100');
+	});
+
+	it('steps the goal line where the goal changes', () => {
+		const layout = layoutLineChart({
+			...area,
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 }
+			],
+			trend: [],
+			goal: [
+				{ x: 0, y: 0 },
+				{ x: 5, y: 10 }
+			]
+		});
+
+		expect(layout.goalPath).toMatch(/^M0,[\d.]+ H50 V[\d.]+ H100$/);
+	});
+
+	it('has no goal line without a goal', () => {
+		expect(
+			layoutLineChart({ ...area, points: [{ x: 0, y: 80 }], trend: [], goal: [] }).goalPath
+		).toBeUndefined();
 	});
 
 	it('centers a single point', () => {
@@ -64,7 +103,7 @@ describe('layoutLineChart', () => {
 			...area,
 			points: [{ x: 5, y: 80 }],
 			trend: [],
-			goal: undefined
+			goal: []
 		});
 
 		expect(layout.dots).toEqual([{ cx: 50, cy: 50 }]);

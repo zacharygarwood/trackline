@@ -230,6 +230,10 @@ export default defineConfig(
 		rules: { 'i18next/no-literal-string': 'off' }
 	},
 	{
+		files: ['src/lib/i18n/messages.*.ts'],
+		rules: { 'max-lines': 'off' }
+	},
+	{
 		files: ['src/**/*.row.ts'],
 		rules: { '@typescript-eslint/consistent-type-definitions': 'off' }
 	},

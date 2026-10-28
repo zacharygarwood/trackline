@@ -213,6 +213,52 @@ export const messages = {
 		goalsSaved: 'Goals saved. Earlier days keep their old goals.',
 		checkGoals: 'Enter numbers of zero or more for every goal.'
 	},
+	stats: {
+		currentStreak: 'Current streak',
+		longestStreak: 'Longest streak',
+		days: (count: number) => countOf(count, 'day', 'days'),
+		activity: 'Last 52 weeks',
+		training: 'Training',
+		foodLogged: 'Food logged',
+		proteinGoalMet: 'Protein goal met',
+		workout: 'Workout',
+		restDay: 'Rest day',
+		trainingHeatmap: (trained: number, rested: number) =>
+			`Trained on ${countOf(trained, 'day', 'days')} and rested on ${countOf(rested, 'day', 'days')} in the last 52 weeks.`,
+		foodHeatmap: (days: number) =>
+			`Food logged on ${countOf(days, 'day', 'days')} in the last 52 weeks.`,
+		proteinHeatmap: (days: number) =>
+			`Protein goal met on ${countOf(days, 'day', 'days')} in the last 52 weeks.`,
+		range: 'Range',
+		fourWeeks: '4 weeks',
+		threeMonths: '3 months',
+		oneYear: '1 year',
+		all: 'All',
+		weight: 'Weight',
+		calories: 'Calories',
+		protein: 'Protein',
+		dailyTotal: 'Daily total',
+		goal: 'Goal',
+		movingAverage: '7-day average',
+		noWeighIns: 'No weigh-ins in this range.',
+		noFood: 'No food logged in this range.',
+		nutritionSummary: (label: string, days: number, average: string) =>
+			`${label} on ${countOf(days, 'logged day', 'logged days')}, averaging ${average}.`,
+		latestGoal: (goal: string) => ` Latest goal ${goal}.`,
+		exerciseProgress: 'Exercise progress',
+		exercise: 'Exercise',
+		heaviestSet: 'Heaviest set',
+		estimatedOneRepMax: 'Estimated one-rep max',
+		noExercises: 'Finish a workout with weighted sets to see exercise progress.',
+		noSessions: 'No sets of this exercise in this range.',
+		exerciseSummary: (summary: {
+			readonly name: string;
+			readonly sessions: number;
+			readonly heaviest: string;
+			readonly best: string;
+		}) =>
+			`${summary.name}: ${countOf(summary.sessions, 'session', 'sessions')}. Heaviest set ${summary.heaviest}, best estimated one-rep max ${summary.best}.`
+	},
 	today: {
 		weighedIn: (weight: string) => `Weighed in: ${weight}`,
 		notWeighedIn: 'Not weighed in yet.',

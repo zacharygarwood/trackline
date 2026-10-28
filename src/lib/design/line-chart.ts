@@ -1,3 +1,5 @@
+import { first } from '../shared/collections.ts';
+
 /** A value to plot: `x` is usually an epoch day, `y` the measured amount. */
 export interface ChartPoint {
 	readonly x: number;
@@ -8,7 +10,8 @@ export interface ChartPoint {
 export interface ChartLayout {
 	readonly dots: readonly { readonly cx: number; readonly cy: number }[];
 	readonly trendPath: string;
-	readonly goalY: number | undefined;
+	/** A dashed step line from the left edge to the right; undefined without a goal. */
+	readonly goalPath: string | undefined;
 	readonly top: { readonly y: number; readonly value: number };
 	readonly bottom: { readonly y: number; readonly value: number };
 }
@@ -17,7 +20,8 @@ export interface ChartLayout {
 export interface ChartInput {
 	readonly points: readonly ChartPoint[];
 	readonly trend: readonly ChartPoint[];
-	readonly goal: number | undefined;
+	/** Goal values, each in effect from its `x` on; one point for a constant goal. */
+	readonly goal: readonly ChartPoint[];
 	readonly width: number;
 	readonly height: number;
 	readonly inset: number;
@@ -45,6 +49,20 @@ function scale(range: Range, from: number, to: number): (value: number) => numbe
 		span === 0 ? (from + to) * HALF : from + ((value - range.min) / span) * (to - from);
 }
 
+interface Scales {
+	readonly x: (value: number) => number;
+	readonly y: (value: number) => number;
+}
+
+function goalPath(goal: readonly ChartPoint[], width: number, scales: Scales): string | undefined {
+	const start = first(goal);
+	if (start === undefined) return undefined;
+	const steps = goal
+		.slice(1)
+		.map((point) => `H${String(scales.x(point.x))} V${String(scales.y(point.y))}`);
+	return [`M0,${String(scales.y(start.y))}`, ...steps, `H${String(width)}`].join(' ');
+}
+
 /**
  * Positions a chart's dots, trend line, and goal line, leaving headroom so
  * nothing touches the edges.
@@ -53,8 +71,8 @@ function scale(range: Range, from: number, to: number): (value: number) => numbe
  * @returns Coordinates with y growing downward, as in SVG.
  */
 export function layoutLineChart(input: ChartInput): ChartLayout {
-	const ys = [...input.points, ...input.trend].map((point) => point.y);
-	const yRange = rangeOf(input.goal === undefined ? ys : [...ys, input.goal], HEADROOM);
+	const ys = [...input.points, ...input.trend, ...input.goal].map((point) => point.y);
+	const yRange = rangeOf(ys, HEADROOM);
 	const xs = [...input.points, ...input.trend].map((point) => point.x);
 	const xRange = { min: Math.min(...xs), max: Math.max(...xs) };
 	const x = scale(xRange, input.inset, input.width - input.inset);
@@ -66,7 +84,7 @@ export function layoutLineChart(input: ChartInput): ChartLayout {
 				(point, index) => `${index === 0 ? 'M' : 'L'}${String(x(point.x))},${String(y(point.y))}`
 			)
 			.join(' '),
-		goalY: input.goal === undefined ? undefined : y(input.goal),
+		goalPath: goalPath(input.goal, input.width, { x, y }),
 		top: { y: input.inset, value: yRange.max },
 		bottom: { y: input.height - input.inset, value: yRange.min }
 	};

@@ -6,6 +6,11 @@ import { RecordWeighIn } from '../body/application/record-weigh-in.ts';
 import { SetWeightGoal } from '../body/application/set-weight-goal.ts';
 import { SqliteWeighInRepository } from '../body/infrastructure/sqlite-weigh-in-repository.ts';
 import { SqliteWeightGoalRepository } from '../body/infrastructure/sqlite-weight-goal-repository.ts';
+import { GetActivity } from '../insights/application/get-activity.ts';
+import { GetExerciseProgress } from '../insights/application/get-exercise-progress.ts';
+import { GetTrends } from '../insights/application/get-trends.ts';
+import { ListTrackedExercises } from '../insights/application/list-tracked-exercises.ts';
+import { SqliteInsightsQueries } from '../insights/infrastructure/sqlite-insights-queries.ts';
 import { ChangeLogAmount } from '../nutrition/application/change-log-amount.ts';
 import { CreateFood } from '../nutrition/application/create-food.ts';
 import { DeleteLogEntry } from '../nutrition/application/delete-log-entry.ts';
@@ -83,6 +88,7 @@ export interface App {
 	readonly settings: ReturnType<typeof wireSettings>;
 	readonly training: ReturnType<typeof wireTraining>;
 	readonly nutrition: ReturnType<typeof wireNutrition>;
+	readonly insights: ReturnType<typeof wireInsights>;
 	/** Hands a file to the browser's download flow. */
 	readonly saveFile: (file: DownloadableFile) => void;
 }
@@ -164,6 +170,16 @@ function wireNutrition({ database, clock }: Infrastructure) {
 	};
 }
 
+function wireInsights({ database, clock }: Infrastructure) {
+	const queries = new SqliteInsightsQueries(database);
+	return {
+		getActivity: new GetActivity(queries, clock),
+		getTrends: new GetTrends({ weight: queries, nutrition: queries, clock }),
+		listTrackedExercises: new ListTrackedExercises(queries),
+		getExerciseProgress: new GetExerciseProgress(queries, clock)
+	};
+}
+
 function wireSettings({ database, databaseFile, clock }: Infrastructure) {
 	const massUnit = new SqliteMassUnitPreference(database);
 	const state = new SqliteAppState(database);
@@ -203,6 +219,7 @@ export function wireApp(infrastructure: Infrastructure): App {
 		settings: wireSettings(infrastructure),
 		training: wireTraining(infrastructure),
 		nutrition: wireNutrition(infrastructure),
+		insights: wireInsights(infrastructure),
 		saveFile: downloadFile
 	};
 }

@@ -7,8 +7,8 @@
 		points: readonly ChartPoint[];
 		/** Smoothed values, drawn as a line. */
 		trend: readonly ChartPoint[];
-		/** A target value, drawn as a dashed line. */
-		goal: number | undefined;
+		/** Target values, each in effect from its point on, drawn as a dashed step line. */
+		goal: readonly ChartPoint[];
 		/** What the chart shows, in words, for screen readers. */
 		summary: string;
 		/** Formats the values on the vertical axis. */
@@ -30,8 +30,8 @@
 
 <svg viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label={summary}>
 	<line class="axis" x1="0" x2={WIDTH} y1={layout.bottom.y} y2={layout.bottom.y} />
-	{#if layout.goalY !== undefined}
-		<line class="goal" x1="0" x2={WIDTH} y1={layout.goalY} y2={layout.goalY} />
+	{#if layout.goalPath !== undefined}
+		<path class="goal" d={layout.goalPath} />
 	{/if}
 	<path class="trend" d={layout.trendPath} />
 	{#each layout.dots as dot, position (position)}
@@ -55,6 +55,7 @@
 	}
 
 	.goal {
+		fill: none;
 		stroke: var(--color-text-muted);
 		stroke-width: 1;
 		stroke-dasharray: 4 4;

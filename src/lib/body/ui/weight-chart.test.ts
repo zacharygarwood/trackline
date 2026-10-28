@@ -33,7 +33,7 @@ describe('weightChartData', () => {
 
 		const data = weightChartData(weighIns, goal, MassUnit.lb);
 
-		expect(data.goal).toBeCloseTo(160);
+		expect(data.goal.map((point) => point.y)).toEqual([expect.closeTo(160)]);
 		expect(data.summary).toContain('Goal 160.0 lb.');
 	});
 });

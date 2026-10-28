@@ -11,7 +11,7 @@ import type { WeighIn } from '../domain/weigh-in.ts';
 export interface WeightChartData {
 	readonly points: readonly ChartPoint[];
 	readonly trend: readonly ChartPoint[];
-	readonly goal: number | undefined;
+	readonly goal: readonly ChartPoint[];
 	readonly summary: string;
 }
 
@@ -35,7 +35,7 @@ export function weightChartData(
 			y: weighIn.weight.toUnit(unit)
 		})),
 		trend: trend.map((point) => ({ x: point.date.toEpochDay(), y: point.weight.toUnit(unit) })),
-		goal: goal?.target.toUnit(unit),
+		goal: goal === undefined ? [] : [{ x: 0, y: goal.target.toUnit(unit) }],
 		summary: summarize(weighIns, trend, unit) + goalSummary(goal, unit)
 	};
 }

@@ -3,6 +3,7 @@ import { FixedClock } from '../../../tests/fakes/fixed-clock.ts';
 import { InMemoryDatabaseFile } from '../../../tests/fakes/in-memory-database-file.ts';
 import { migratedDatabase } from '../../../tests/support/migrated-database.ts';
 import { expectOk } from '../../../tests/support/result.ts';
+import { StatsRange } from '../insights/application/stats-range.constants.ts';
 import { MassUnit } from '../shared/mass-unit.constants.ts';
 import { Mass } from '../shared/mass.ts';
 import { wireApp } from './container.ts';
@@ -31,6 +32,9 @@ describe('wireApp', () => {
 			workouts: 0,
 			foodEntries: 0
 		});
+		expect((await app.insights.getTrends.execute({ range: StatsRange.all })).weight).toHaveLength(
+			1
+		);
 		expect(
 			expectOk(await app.training.startWorkout.execute({ templateId: undefined })).date
 		).toEqual(clock.today());
