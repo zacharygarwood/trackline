@@ -9,7 +9,8 @@ import {
 	formatMass,
 	InvalidMassEntry,
 	massEntry,
-	parseMassEntry
+	parseMassEntry,
+	parseDecimal
 } from './format.ts';
 
 const date = (text: string) => expectOk(LocalDate.parse(text));
@@ -55,5 +56,16 @@ describe('formatDate', () => {
 describe('formatInstantDate', () => {
 	it('shows an instant as a medium date', () => {
 		expect(formatInstantDate(Date.UTC(2026, 9, 27, 12))).toBe('Oct 27, 2026');
+	});
+});
+
+describe('parseDecimal', () => {
+	it('reads numbers with a point or a comma', () => {
+		expect(parseDecimal('12.5')).toBe(12.5);
+		expect(parseDecimal(' 12,5 ')).toBe(12.5);
+	});
+
+	it.each(['', 'abc', '1..2'])('rejects %j', (text) => {
+		expect(parseDecimal(text)).toBeUndefined();
 	});
 });

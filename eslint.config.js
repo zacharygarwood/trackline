@@ -255,6 +255,7 @@ export default defineConfig(
 			'@typescript-eslint/no-magic-numbers': 'off',
 			'sonarjs/no-floating-point-equality': 'off',
 			'sonarjs/no-empty-test-file': 'off',
+			'@typescript-eslint/max-params': 'off',
 			'i18next/no-literal-string': 'off',
 			'max-lines-per-function': 'off',
 			'jsdoc/require-jsdoc': 'off'

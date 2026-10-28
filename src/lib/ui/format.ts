@@ -60,6 +60,27 @@ export function parseMassEntry(entry: string, unit: MassUnit): Result<Mass, Inva
 }
 
 /**
+ * The hour of the day, 0–23, of an instant in the device's time zone.
+ *
+ * @param epochMilliseconds - The instant.
+ */
+export function hourOf(epochMilliseconds: number): number {
+	return new Date(epochMilliseconds).getHours();
+}
+
+/**
+ * Reads a decimal number typed by the user, accepting a comma as the decimal separator.
+ *
+ * @param text - What the user typed.
+ * @returns The number, or undefined if the text is not one.
+ */
+export function parseDecimal(text: string): number | undefined {
+	const trimmed = text.trim().replace(',', '.');
+	const value = Number(trimmed);
+	return trimmed === '' || !Number.isFinite(value) ? undefined : value;
+}
+
+/**
  * A date for lists: "Today", "Yesterday", or a short date like "Tue, Oct 27".
  *
  * @param date - The date to show.

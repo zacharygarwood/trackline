@@ -9,6 +9,8 @@
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
+	import DailyGoalsForm from '#lib/nutrition/ui/DailyGoalsForm.svelte';
+	import { DailyGoalsEditor } from '#lib/nutrition/ui/daily-goals-editor.svelte.ts';
 	import { UnitsSetting } from '#lib/settings/ui/units-setting.svelte.ts';
 	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
 	import { AppRoute } from '../app-route.constants.ts';
@@ -21,12 +23,15 @@
 	let app: App | undefined = $state();
 	let units: UnitsSetting | undefined = $state();
 	let goal: WeightGoalEditor | undefined = $state();
+	let dailyGoals: DailyGoalsEditor | undefined = $state();
 	let editingGoal = $state(false);
 
 	void getAppContext().then(async (ready) => {
 		const nextUnits = new UnitsSetting(ready.settings);
 		const nextGoal = new WeightGoalEditor(ready.body);
-		await Promise.all([nextUnits.load(), nextGoal.load()]);
+		const nextDailyGoals = new DailyGoalsEditor(ready.nutrition, ready.clock);
+		await Promise.all([nextUnits.load(), nextGoal.load(), nextDailyGoals.load()]);
+		dailyGoals = nextDailyGoals;
 		units = nextUnits;
 		goal = nextGoal;
 		app = ready;
@@ -38,7 +43,7 @@
 	}
 </script>
 
-{#if app !== undefined && units !== undefined && goal !== undefined}
+{#if app !== undefined && units !== undefined && goal !== undefined && dailyGoals !== undefined}
 	{@const ready = app}
 	{@const unitsSetting = units}
 	{@const goalEditor = goal}
@@ -57,6 +62,7 @@
 				{goalEditor.goal === undefined ? messages.body.setGoal : messages.body.changeGoal}
 			</Button>
 		</section>
+		<DailyGoalsForm editor={dailyGoals} />
 		<p class="note">{messages.welcome.optional}</p>
 		<Button onclick={() => start(ready)}>{messages.welcome.start}</Button>
 	</div>

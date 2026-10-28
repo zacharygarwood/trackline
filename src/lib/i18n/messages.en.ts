@@ -96,8 +96,16 @@ export const messages = {
 		deleteConfirmWord: 'delete',
 		deletePrompt: 'Type delete to confirm',
 		deleteConfirm: 'Delete everything',
-		recordCount: (counts: { readonly weighIns: number; readonly workouts: number }) =>
-			`${countOf(counts.weighIns, 'weigh-in', 'weigh-ins')}, ${countOf(counts.workouts, 'workout', 'workouts')}`
+		recordCount: (counts: {
+			readonly weighIns: number;
+			readonly workouts: number;
+			readonly foodEntries: number;
+		}) =>
+			[
+				countOf(counts.weighIns, 'weigh-in', 'weigh-ins'),
+				countOf(counts.workouts, 'workout', 'workouts'),
+				countOf(counts.foodEntries, 'food entry', 'food entries')
+			].join(', ')
 	},
 	training: {
 		startWorkout: 'Start workout',
@@ -148,6 +156,72 @@ export const messages = {
 		deleteTemplate: 'Delete template',
 		workoutSummary: (exercises: string, sets: number) =>
 			`${exercises} · ${countOf(sets, 'set', 'sets')}`
+	},
+	nutrition: {
+		logFood: 'Log food',
+		previousDay: 'Previous day',
+		nextDay: 'Next day',
+		breakfast: 'Breakfast',
+		lunch: 'Lunch',
+		dinner: 'Dinner',
+		snacks: 'Snacks',
+		meal: 'Meal',
+		nothingLogged: 'Nothing logged.',
+		search: 'Search foods',
+		savedMeals: 'Saved meals',
+		recentFoods: 'Foods',
+		noFoods: 'No foods yet. Create one to log it.',
+		newFood: 'New food',
+		foodName: 'Name',
+		referenceAmount: 'Amount',
+		referenceUnit: 'Unit (g, ml, slice…)',
+		macrosFor: 'Macros for that amount',
+		calories: 'Calories',
+		protein: 'Protein',
+		carbs: 'Carbs',
+		fat: 'Fat',
+		saveFood: 'Save food',
+		amountOf: (unit: string) => `Amount (${unit})`,
+		log: 'Log',
+		saveAmount: 'Save',
+		deleteEntry: 'Remove from log',
+		enterAmount: 'Enter an amount greater than zero.',
+		checkFood:
+			'Check the food: it needs a name, a positive amount, a unit, and macros of zero or more.',
+		entry: (name: string, amount: string, calories: string) => `${name}, ${amount}, ${calories}`,
+		amountWithUnit: (amount: string, unit: string) => `${amount} ${unit}`,
+		entryDetail: (amount: string, calories: string) => `${amount} · ${calories}`,
+		kcal: (calories: string) => `${calories} kcal`,
+		grams: (grams: string) => `${grams} g`,
+		macroLine: (amounts: {
+			readonly calories: string;
+			readonly protein: string;
+			readonly carbs: string;
+			readonly fat: string;
+		}) =>
+			`${amounts.calories} kcal · P ${amounts.protein} g · C ${amounts.carbs} g · F ${amounts.fat} g`,
+		saveSlotAsMeal: (slot: string) => `Save ${slot.toLowerCase()} as a meal`,
+		mealName: 'Meal name',
+		saveMeal: 'Save meal',
+		mealNameProblem: 'Enter a name of up to 60 characters.',
+		progressOf: (label: string, eaten: string, target: string) => `${label}: ${eaten} of ${target}`,
+		remaining: (amount: string) => `${amount} left`,
+		over: (amount: string) => `${amount} over`,
+		noGoals: 'No daily goals yet. Set them in Settings.',
+		dailyGoals: 'Daily goals',
+		saveGoals: 'Save goals',
+		goalsSaved: 'Goals saved. Earlier days keep their old goals.',
+		checkGoals: 'Enter numbers of zero or more for every goal.'
+	},
+	today: {
+		weighedIn: (weight: string) => `Weighed in: ${weight}`,
+		notWeighedIn: 'Not weighed in yet.',
+		workoutDone: 'Workout done.',
+		restDayMarked: 'Rest day.',
+		noTraining: 'No workout yet today.',
+		training: 'Training',
+		food: 'Food',
+		body: 'Body'
 	},
 	welcome: {
 		title: 'Welcome',

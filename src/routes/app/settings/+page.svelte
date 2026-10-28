@@ -6,6 +6,8 @@
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
+	import DailyGoalsForm from '#lib/nutrition/ui/DailyGoalsForm.svelte';
+	import { DailyGoalsEditor } from '#lib/nutrition/ui/daily-goals-editor.svelte.ts';
 	import DataSection from '#lib/settings/ui/DataSection.svelte';
 	import { DataPanel } from '#lib/settings/ui/data-panel.svelte.ts';
 	import { UnitsSetting } from '#lib/settings/ui/units-setting.svelte.ts';
@@ -18,6 +20,7 @@
 
 	let units: UnitsSetting | undefined = $state();
 	let goal: WeightGoalEditor | undefined = $state();
+	let dailyGoals: DailyGoalsEditor | undefined = $state();
 	let data: DataPanel | undefined = $state();
 	let editingGoal = $state(false);
 
@@ -25,14 +28,16 @@
 		const nextUnits = new UnitsSetting(app.settings);
 		const nextGoal = new WeightGoalEditor(app.body);
 		const nextData = new DataPanel(app.settings, app.saveFile);
-		await Promise.all([nextUnits.load(), nextGoal.load(), nextData.load()]);
+		const nextDailyGoals = new DailyGoalsEditor(app.nutrition, app.clock);
+		await Promise.all([nextUnits.load(), nextGoal.load(), nextData.load(), nextDailyGoals.load()]);
+		dailyGoals = nextDailyGoals;
 		units = nextUnits;
 		goal = nextGoal;
 		data = nextData;
 	});
 </script>
 
-{#if units !== undefined && goal !== undefined && data !== undefined}
+{#if units !== undefined && goal !== undefined && data !== undefined && dailyGoals !== undefined}
 	{@const unitsSetting = units}
 	{@const goalEditor = goal}
 	<div class="settings">
@@ -50,6 +55,8 @@
 				{goalEditor.goal === undefined ? messages.body.setGoal : messages.body.changeGoal}
 			</Button>
 		</section>
+
+		<DailyGoalsForm editor={dailyGoals} />
 
 		<DataSection
 			panel={data}
