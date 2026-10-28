@@ -26,6 +26,9 @@ describe('wireApp', () => {
 
 		expect(await app.body.listWeighIns.execute()).toHaveLength(1);
 		expect(await app.settings.getMassUnit.execute()).toBe(MassUnit.lb);
-		expect(await app.settings.countRecords.execute()).toEqual({ weighIns: 1 });
+		expect(await app.settings.countRecords.execute()).toEqual({ weighIns: 1, workouts: 0 });
+		expect(
+			expectOk(await app.training.startWorkout.execute({ templateId: undefined })).date
+		).toEqual(clock.today());
 	});
 });

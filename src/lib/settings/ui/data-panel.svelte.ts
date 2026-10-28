@@ -33,7 +33,7 @@ export interface PendingRestore {
  * @param counts - The record counts.
  */
 export function describeCounts(counts: DataCounts): string {
-	return messages.settings.recordCount(counts.weighIns);
+	return messages.settings.recordCount(counts);
 }
 
 function problemMessage(problem: RestoreProblem): string {

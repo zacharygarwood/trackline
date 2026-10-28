@@ -19,7 +19,7 @@ test('export a backup, delete all data, and restore everything from the backup',
 
 	await page.getByRole('button', { name: messages.settings.deleteAll }).click();
 	const deleteSheet = page.getByRole('dialog', { name: messages.settings.deleteTitle });
-	await expect(deleteSheet).toContainText('(1 weigh-in)');
+	await expect(deleteSheet).toContainText('(1 weigh-in, 0 workouts)');
 	const confirm = deleteSheet.getByRole('button', { name: messages.settings.deleteConfirm });
 	await expect(confirm).toBeDisabled();
 	await deleteSheet.getByRole('textbox').fill(messages.settings.deleteConfirmWord);
@@ -33,7 +33,7 @@ test('export a backup, delete all data, and restore everything from the backup',
 	await page.goto('/app/settings');
 	await page.locator('input[type="file"]').setInputFiles(backupPath);
 	const restoreSheet = page.getByRole('dialog', { name: messages.settings.restoreTitle });
-	await expect(restoreSheet).toContainText('(0 weigh-ins)');
+	await expect(restoreSheet).toContainText('(0 weigh-ins, 0 workouts)');
 	const reloaded = page.waitForEvent('load');
 	await restoreSheet.getByRole('button', { name: messages.settings.restoreConfirm }).click();
 	await reloaded;

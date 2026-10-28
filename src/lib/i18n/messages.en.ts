@@ -1,5 +1,8 @@
 const APP_NAME = 'Buffalog';
 
+const countOf = (count: number, one: string, many: string) =>
+	`${String(count)} ${count === 1 ? one : many}`;
+
 /**
  * Every user-facing English string in the app, grouped by where it appears.
  *
@@ -93,8 +96,58 @@ export const messages = {
 		deleteConfirmWord: 'delete',
 		deletePrompt: 'Type delete to confirm',
 		deleteConfirm: 'Delete everything',
-		recordCount: (weighIns: number) =>
-			`${String(weighIns)} ${weighIns === 1 ? 'weigh-in' : 'weigh-ins'}`
+		recordCount: (counts: { readonly weighIns: number; readonly workouts: number }) =>
+			`${countOf(counts.weighIns, 'weigh-in', 'weigh-ins')}, ${countOf(counts.workouts, 'workout', 'workouts')}`
+	},
+	training: {
+		startWorkout: 'Start workout',
+		templates: 'Templates',
+		noTemplates: 'No templates yet. Finish a workout and save it as a template.',
+		recent: 'Recent workouts',
+		noWorkouts: 'No workouts yet. Start one to log your first sets.',
+		thisWeek: 'This week',
+		streak: (current: number, longest: number) =>
+			`Streak: ${countOf(current, 'day', 'days')}. Best: ${countOf(longest, 'day', 'days')}.`,
+		restDay: 'Rest day',
+		markRestDay: (date: string) => `Mark ${date} as a rest day`,
+		trained: 'Workout',
+		nothingLogged: 'Nothing logged',
+		addExercise: 'Add exercise',
+		exerciseName: 'Exercise name',
+		addNamed: (name: string) => `Add “${name}”`,
+		addSet: 'Add set',
+		removeExercise: (name: string) => `Remove ${name}`,
+		setNumber: (position: number) => `Set ${String(position)}`,
+		reps: 'Reps',
+		weight: (unit: string) => `Weight (${unit})`,
+		completeSet: (position: number) => `Complete set ${String(position)}`,
+		removeSet: (position: number) => `Remove set ${String(position)}`,
+		lastTime: (sets: string) => `Last time: ${sets}`,
+		firstTime: 'First time doing this exercise.',
+		setSummary: (reps: number, weight: string) => `${String(reps)} × ${weight}`,
+		bodyweight: 'bodyweight',
+		note: 'Note',
+		finishWorkout: 'Finish workout',
+		discardWorkout: 'Discard workout',
+		discardTitle: 'Discard workout',
+		discardWarning: 'Everything logged in this workout will be lost.',
+		keepWorkout: 'Keep going',
+		nothingCompleted: 'No sets were completed, so the workout was discarded.',
+		workoutSaved: 'Workout saved',
+		saveAsTemplatePrompt: 'Save this workout as a template to repeat it in one tap.',
+		templateName: 'Template name',
+		saveTemplate: 'Save template',
+		notNow: 'Not now',
+		enterName: 'Enter a name of up to 60 characters.',
+		exerciseAlreadyAdded: 'That exercise is already in this workout.',
+		templateActions: (name: string) => `${name} options`,
+		templateSummary: (exercises: number) => countOf(exercises, 'exercise', 'exercises'),
+		rename: 'Rename',
+		moveUp: 'Move up',
+		moveDown: 'Move down',
+		deleteTemplate: 'Delete template',
+		workoutSummary: (exercises: string, sets: number) =>
+			`${exercises} · ${countOf(sets, 'set', 'sets')}`
 	},
 	welcome: {
 		title: 'Welcome',

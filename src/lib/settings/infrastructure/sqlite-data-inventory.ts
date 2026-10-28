@@ -15,7 +15,10 @@ export class SqliteDataInventory implements DataInventory {
 	async count(): Promise<DataCounts> {
 		const row = first(await this.database.query(COUNT_RECORDS));
 		const weighIns = row?.weigh_ins;
-		if (typeof weighIns !== 'number') throw new Error('Could not count records');
-		return { weighIns };
+		const workouts = row?.workouts;
+		if (typeof weighIns !== 'number' || typeof workouts !== 'number') {
+			throw new Error('Could not count records');
+		}
+		return { weighIns, workouts };
 	}
 }

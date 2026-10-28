@@ -1,6 +1,6 @@
 # Test rules
 
-- Pyramid: domain and application tests (Vitest, Node) carry most of the confidence; persistence tests run real SQLite through better-sqlite3; component tests cover interactive primitives; Playwright covers the short list of critical journeys.
+- Pyramid: domain and application tests (Vitest, Node) carry most of the confidence; persistence tests run real SQLite through Node's built-in `node:sqlite` (ADR 0006); component tests cover interactive primitives; Playwright covers the short list of critical journeys.
 - Unit and integration suites together stay under 10 seconds. Persistence under 3 s, components under 3 s, e2e under 2 minutes in CI.
 - Write domain and use case tests first.
 - Fakes, not mocks. Every repository interface has a hand-written in-memory fake in `tests/fakes/` that passes the same contract suite as the SQLite implementation.

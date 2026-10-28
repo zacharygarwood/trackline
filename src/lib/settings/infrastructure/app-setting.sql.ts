@@ -31,6 +31,7 @@ export function writeSetting(key: SettingKey, value: string): SqlStatement {
 /** Counts the records a restore or deletion would remove. */
 export const COUNT_RECORDS: SqlStatement = {
 	name: 'count records',
-	sql: 'SELECT (SELECT count(*) FROM weigh_in) AS weigh_ins',
+	sql: `SELECT (SELECT count(*) FROM weigh_in) AS weigh_ins,
+		(SELECT count(*) FROM workout WHERE finished_at IS NOT NULL) AS workouts`,
 	params: []
 };

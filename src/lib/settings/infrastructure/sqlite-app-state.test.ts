@@ -32,6 +32,6 @@ describe('SqliteDataInventory', () => {
 		await weighIns.save(aWeighIn().on('2026-10-01').build());
 		await weighIns.save(aWeighIn().on('2026-10-02').build());
 
-		expect(await new SqliteDataInventory(database).count()).toEqual({ weighIns: 2 });
+		expect(await new SqliteDataInventory(database).count()).toEqual({ weighIns: 2, workouts: 0 });
 	});
 });

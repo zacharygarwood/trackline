@@ -7,4 +7,4 @@
 - Schema: every table `STRICT`, `PRAGMA foreign_keys = ON`, TEXT UUIDv7 ids, TEXT `YYYY-MM-DD` dates, INTEGER epoch-ms timestamps, REAL kilograms and grams. Child rows cascade on delete of their root.
 - Add an index only when a query needs it, and name that query in the migration.
 - Migrations are numbered SQL files in `src/lib/platform/db/migrations/`. Never edit one that has shipped; add a new one with /migration and update the schema snapshot.
-- Each repository has a contract test suite shared with its in-memory fake in `tests/fakes/`, run against better-sqlite3 with all migrations applied.
+- Each repository has a contract test suite shared with its in-memory fake in `tests/fakes/`, run against `node:sqlite` with all migrations applied (`migratedDatabase()` in `tests/support/`).
