@@ -51,7 +51,7 @@ describe('backup use cases', () => {
 		const preview = expectOk(
 			await new PreviewRestore(
 				codec,
-				new FixedDataInventory({ weighIns: 4, workouts: 0 }),
+				new FixedDataInventory({ weighIns: 4, workouts: 0, foodEntries: 0 }),
 				2
 			).execute({
 				file: file.bytes
@@ -60,7 +60,7 @@ describe('backup use cases', () => {
 
 		expect(preview).toEqual({
 			backupCreatedAt: clock.now(),
-			replaces: { weighIns: 4, workouts: 0 }
+			replaces: { weighIns: 4, workouts: 0, foodEntries: 0 }
 		});
 		expect(database.bytes).toEqual(new Uint8Array([1]));
 	});
@@ -88,7 +88,7 @@ describe('backup use cases', () => {
 	it('refuses a file that is not a backup', async () => {
 		const preview = await new PreviewRestore(
 			codec,
-			new FixedDataInventory({ weighIns: 0, workouts: 0 }),
+			new FixedDataInventory({ weighIns: 0, workouts: 0, foodEntries: 0 }),
 			2
 		).execute({
 			file: new Uint8Array([1, 2, 3])

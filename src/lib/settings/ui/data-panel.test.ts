@@ -24,7 +24,7 @@ describe('DataPanel', () => {
 		const clock = new FixedClock(Date.UTC(2026, 9, 27, 12), '2026-10-27');
 		const state = new InMemoryAppState();
 		const codec = new ZipBackupCodec();
-		const inventory = new FixedDataInventory({ weighIns: 3, workouts: 1 });
+		const inventory = new FixedDataInventory({ weighIns: 3, workouts: 1, foodEntries: 0 });
 		database = new InMemoryDatabaseFile(new Uint8Array([5]));
 		saved = [];
 		panel = new DataPanel(
@@ -68,7 +68,7 @@ describe('DataPanel', () => {
 
 		await panel.choose(backup.bytes);
 		expect(panel.pendingRestore?.summary).toBe(
-			'This replaces everything on this device (3 weigh-ins, 1 workout) with the backup from Oct 27, 2026.'
+			'This replaces everything on this device (3 weigh-ins, 1 workout, 0 food entries) with the backup from Oct 27, 2026.'
 		);
 
 		expect(await panel.restore()).toBe(true);
@@ -83,7 +83,7 @@ describe('DataPanel', () => {
 	});
 
 	it('says exactly what deleting everything removes', async () => {
-		expect(await panel.deletionSummary()).toContain('(3 weigh-ins, 1 workout)');
+		expect(await panel.deletionSummary()).toContain('(3 weigh-ins, 1 workout, 0 food entries)');
 
 		await panel.deleteAll();
 

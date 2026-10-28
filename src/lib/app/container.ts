@@ -6,6 +6,25 @@ import { RecordWeighIn } from '../body/application/record-weigh-in.ts';
 import { SetWeightGoal } from '../body/application/set-weight-goal.ts';
 import { SqliteWeighInRepository } from '../body/infrastructure/sqlite-weigh-in-repository.ts';
 import { SqliteWeightGoalRepository } from '../body/infrastructure/sqlite-weight-goal-repository.ts';
+import { ChangeLogAmount } from '../nutrition/application/change-log-amount.ts';
+import { CreateFood } from '../nutrition/application/create-food.ts';
+import { DeleteLogEntry } from '../nutrition/application/delete-log-entry.ts';
+import { DeleteSavedMeal } from '../nutrition/application/delete-saved-meal.ts';
+import { GetDailyGoals } from '../nutrition/application/get-daily-goals.ts';
+import { GetDayNutrition } from '../nutrition/application/get-day-nutrition.ts';
+import { GetLastAmount } from '../nutrition/application/get-last-amount.ts';
+import { ListFoods } from '../nutrition/application/list-foods.ts';
+import { ListSavedMeals } from '../nutrition/application/list-saved-meals.ts';
+import { LogFood } from '../nutrition/application/log-food.ts';
+import { LogSavedMeal } from '../nutrition/application/log-saved-meal.ts';
+import { SaveMealFromSlot } from '../nutrition/application/save-meal-from-slot.ts';
+import { SetDailyGoals } from '../nutrition/application/set-daily-goals.ts';
+import {
+	SqliteDailyGoalsRepository,
+	SqliteFoodLogRepository,
+	SqliteFoodRepository,
+	SqliteSavedMealRepository
+} from '../nutrition/infrastructure/sqlite-nutrition-repositories.ts';
 import { downloadFile, type DownloadableFile } from '../platform/backup/download-file.ts';
 import { bundledMigrations } from '../platform/db/bundled-migrations.ts';
 import { migrate } from '../platform/db/migrate.ts';
@@ -63,6 +82,7 @@ export interface App {
 	readonly body: ReturnType<typeof wireBody>;
 	readonly settings: ReturnType<typeof wireSettings>;
 	readonly training: ReturnType<typeof wireTraining>;
+	readonly nutrition: ReturnType<typeof wireNutrition>;
 	/** Hands a file to the browser's download flow. */
 	readonly saveFile: (file: DownloadableFile) => void;
 }
@@ -121,6 +141,29 @@ function wireTraining({ database, clock }: Infrastructure) {
 	};
 }
 
+function wireNutrition({ database, clock }: Infrastructure) {
+	const ids = new UuidV7IdGenerator(clock);
+	const foods = new SqliteFoodRepository(database);
+	const meals = new SqliteSavedMealRepository(database);
+	const log = new SqliteFoodLogRepository(database);
+	const goals = new SqliteDailyGoalsRepository(database);
+	return {
+		createFood: new CreateFood(foods, ids),
+		listFoods: new ListFoods(foods),
+		logFood: new LogFood({ foods, log, clock, ids }),
+		changeLogAmount: new ChangeLogAmount(log),
+		deleteLogEntry: new DeleteLogEntry(log),
+		getDayNutrition: new GetDayNutrition(log, goals),
+		getLastAmount: new GetLastAmount(log),
+		saveMealFromSlot: new SaveMealFromSlot({ log, meals, ids }),
+		listSavedMeals: new ListSavedMeals(meals),
+		deleteSavedMeal: new DeleteSavedMeal(meals),
+		logSavedMeal: new LogSavedMeal({ meals, foods, log, clock, ids }),
+		setDailyGoals: new SetDailyGoals(goals, clock),
+		getDailyGoals: new GetDailyGoals(goals)
+	};
+}
+
 function wireSettings({ database, databaseFile, clock }: Infrastructure) {
 	const massUnit = new SqliteMassUnitPreference(database);
 	const state = new SqliteAppState(database);
@@ -159,6 +202,7 @@ export function wireApp(infrastructure: Infrastructure): App {
 		body: wireBody(infrastructure),
 		settings: wireSettings(infrastructure),
 		training: wireTraining(infrastructure),
+		nutrition: wireNutrition(infrastructure),
 		saveFile: downloadFile
 	};
 }

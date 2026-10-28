@@ -32,6 +32,7 @@ export function writeSetting(key: SettingKey, value: string): SqlStatement {
 export const COUNT_RECORDS: SqlStatement = {
 	name: 'count records',
 	sql: `SELECT (SELECT count(*) FROM weigh_in) AS weigh_ins,
-		(SELECT count(*) FROM workout WHERE finished_at IS NOT NULL) AS workouts`,
+		(SELECT count(*) FROM workout WHERE finished_at IS NOT NULL) AS workouts,
+		(SELECT count(*) FROM food_log_entry) AS food_entries`,
 	params: []
 };
