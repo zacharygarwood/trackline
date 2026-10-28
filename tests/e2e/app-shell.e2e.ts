@@ -61,3 +61,21 @@ test('the landing page links to the app', async ({ page }) => {
 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.welcome.title);
 });
+
+test('iPhone Safari users see how to add the app to the home screen until they dismiss it', async ({
+	page
+}) => {
+	await page.addInitScript(() => {
+		Object.defineProperty(navigator, 'standalone', { value: false });
+	});
+	await finishFirstRun(page);
+
+	const hint = page.getByRole('status').filter({ hasText: messages.app.installHint });
+	await expect(hint).toBeVisible();
+	await hint.getByRole('button', { name: messages.app.dismiss }).click();
+	await expect(hint).toBeHidden();
+
+	await page.reload();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+	await expect(page.getByText(messages.app.installHint)).toBeHidden();
+});

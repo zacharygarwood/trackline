@@ -1,12 +1,16 @@
 import type { SqlDriver } from '../../platform/db/sql-driver.ts';
 import { first } from '../../shared/collections.ts';
-import type { LastExportStore, SetupStatusStore } from '../domain/app-state-repository.ts';
+import type {
+	InstallHintStore,
+	LastExportStore,
+	SetupStatusStore
+} from '../domain/app-state-repository.ts';
 import { readSetting, SettingKey, writeSetting } from './app-setting.sql.ts';
 
 const COMPLETE = '1';
 
-/** Backup and first-run state stored in the `app_setting` table. */
-export class SqliteAppState implements LastExportStore, SetupStatusStore {
+/** Backup, first-run, and install hint state stored in the `app_setting` table. */
+export class SqliteAppState implements LastExportStore, SetupStatusStore, InstallHintStore {
 	constructor(private readonly database: SqlDriver) {}
 
 	/**
@@ -36,6 +40,16 @@ export class SqliteAppState implements LastExportStore, SetupStatusStore {
 	/** {@inheritDoc SetupStatusStore.markComplete} */
 	async markComplete(): Promise<void> {
 		await this.database.execute(writeSetting(SettingKey.setupComplete, COMPLETE));
+	}
+
+	/** {@inheritDoc InstallHintStore.isInstallHintDismissed} */
+	async isInstallHintDismissed(): Promise<boolean> {
+		return (await this.setting(SettingKey.installHintDismissed)) === COMPLETE;
+	}
+
+	/** {@inheritDoc InstallHintStore.dismissInstallHint} */
+	async dismissInstallHint(): Promise<void> {
+		await this.database.execute(writeSetting(SettingKey.installHintDismissed, COMPLETE));
 	}
 
 	private async setting(key: SettingKey): Promise<string | undefined> {

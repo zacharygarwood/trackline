@@ -6,6 +6,14 @@ export interface LastExportStore {
 	write(exportedAt: number): Promise<void>;
 }
 
+/** Remembers whether the user dismissed the hint to add the app to the home screen. */
+export interface InstallHintStore {
+	/** Whether the hint was dismissed. */
+	isInstallHintDismissed(): Promise<boolean>;
+	/** Records that the hint was dismissed. */
+	dismissInstallHint(): Promise<void>;
+}
+
 /** Remembers whether the user has been through the first-run screen. */
 export interface SetupStatusStore {
 	/** Whether first-run setup is done. */

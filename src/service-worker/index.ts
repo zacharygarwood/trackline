@@ -2,6 +2,7 @@ import { version } from '$app/env';
 import { assets, immutable, prerendered } from '$app/manifest';
 import { self as worker } from '$app/service-worker';
 import { CACHE_PREFIX } from './cache.constants.ts';
+import { SKIP_WAITING } from '../lib/platform/pwa/update-message.constants.ts';
 
 const cacheName = CACHE_PREFIX + version;
 const appFiles = [...immutable, ...assets, ...prerendered].map((file) => file.path);
@@ -38,4 +39,8 @@ worker.addEventListener('fetch', (event) => {
 	if (event.request.method === 'GET' && url.origin === worker.location.origin) {
 		event.respondWith(respond(event.request));
 	}
+});
+
+worker.addEventListener('message', (event) => {
+	if (event.data === SKIP_WAITING) void worker.skipWaiting();
 });

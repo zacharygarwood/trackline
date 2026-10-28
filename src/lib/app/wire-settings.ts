@@ -2,6 +2,7 @@ import { bundledMigrations } from '../platform/db/bundled-migrations.ts';
 import { CompleteSetup } from '../settings/application/complete-setup.ts';
 import { CountRecords } from '../settings/application/count-records.ts';
 import { DeleteAllData } from '../settings/application/delete-all-data.ts';
+import { DismissInstallHint } from '../settings/application/dismiss-install-hint.ts';
 import { ExportBackup } from '../settings/application/export-backup.ts';
 import { GetBackupStatus } from '../settings/application/get-backup-status.ts';
 import { GetMassUnit } from '../settings/application/get-mass-unit.ts';
@@ -9,6 +10,7 @@ import { GetSetupStatus } from '../settings/application/get-setup-status.ts';
 import { PreviewRestore } from '../settings/application/preview-restore.ts';
 import { RestoreBackup } from '../settings/application/restore-backup.ts';
 import { SetMassUnit } from '../settings/application/set-mass-unit.ts';
+import { ShouldShowInstallHint } from '../settings/application/should-show-install-hint.ts';
 import { GetWeekStart } from '../settings/application/get-week-start.ts';
 import { SetWeekStart } from '../settings/application/set-week-start.ts';
 import { FolderPhotoArchive } from '../settings/infrastructure/folder-photo-archive.ts';
@@ -66,6 +68,8 @@ export function wireSettings(infrastructure: Infrastructure) {
 		setWeekStart: new SetWeekStart(weekStart),
 		getSetupStatus: new GetSetupStatus(state),
 		completeSetup: new CompleteSetup(state),
+		shouldShowInstallHint: new ShouldShowInstallHint(state),
+		dismissInstallHint: new DismissInstallHint(state),
 		...wireBackup(infrastructure)
 	};
 }

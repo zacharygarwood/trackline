@@ -23,6 +23,15 @@ describe('SqliteAppState', () => {
 
 		expect(await state.isComplete()).toBe(true);
 	});
+
+	it('remembers that the install hint was dismissed', async () => {
+		const state = new SqliteAppState(await migratedDatabase());
+		expect(await state.isInstallHintDismissed()).toBe(false);
+
+		await state.dismissInstallHint();
+
+		expect(await state.isInstallHintDismissed()).toBe(true);
+	});
 });
 
 describe('SqliteDataInventory', () => {

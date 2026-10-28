@@ -9,6 +9,10 @@ body {
 	overscroll-behavior: none;
 }
 
+html {
+	scroll-padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
+}
+
 body {
 	margin: 0;
 	background: var(--color-background);
@@ -56,4 +60,9 @@ input,
 textarea {
 	min-width: 0;
 	max-width: 100%;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: var(--duration-quick);
 }
