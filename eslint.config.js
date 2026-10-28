@@ -108,6 +108,7 @@ export default defineConfig(
 				{ considerDefaultExhaustiveForUnions: false, requireDefaultForNonUnion: true }
 			],
 			'@typescript-eslint/prefer-readonly': 'error',
+			'@typescript-eslint/no-extraneous-class': ['error', { allowEmpty: true }],
 			'@typescript-eslint/no-magic-numbers': [
 				'error',
 				{
