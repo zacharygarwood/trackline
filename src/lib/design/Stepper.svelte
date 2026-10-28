@@ -77,7 +77,9 @@
 	}
 
 	input {
-		width: 5ch;
+		flex: 1;
+		width: 100%;
+		min-width: 3ch;
 		min-height: var(--tap-target);
 		border: none;
 		border-radius: var(--radius-small);

@@ -10,6 +10,8 @@ export const ICON_PATHS = {
 	close: 'M6 6l12 12M18 6L6 18',
 	backspace: 'M9 6h11v12H9l-5-6zM12.5 10l4 4M16.5 10l-4 4',
 	minus: 'M6 12h12',
+	check: 'M5 12.5l4.5 4.5L19 7.5',
+	more: 'M6 12h.01M12 12h.01M18 12h.01',
 	plus: 'M12 6v12M6 12h12'
 } as const;
 
