@@ -30,7 +30,7 @@
 		summary={data.summary}
 		formatValue={formatAxis}
 	/>
-	<figcaption>
+	<figcaption aria-hidden="true">
 		<span class="trend">{messages.body.trendLegend}</span>
 		{#if goal !== undefined}
 			<span class="goal">{messages.body.goalLegend}</span>

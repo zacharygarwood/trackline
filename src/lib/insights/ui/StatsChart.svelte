@@ -42,7 +42,7 @@
 				summary={data.summary}
 				formatValue={formatAxis}
 			/>
-			<figcaption>
+			<figcaption aria-hidden="true">
 				{#each legend as entry (entry.label)}
 					<span class={entry.mark}>{entry.label}</span>
 				{/each}

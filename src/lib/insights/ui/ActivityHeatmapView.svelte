@@ -22,7 +22,7 @@
 	<h3>{heatmap.title}</h3>
 	<Heatmap {today} weeks={WEEKS} {weekStart} shadeOf={heatmap.shadeOf} summary={heatmap.summary} />
 	{#if heatmap.legend.length > 0}
-		<p class="legend">
+		<p class="legend" aria-hidden="true">
 			{#each heatmap.legend as entry (entry.label)}
 				<span class={entry.shade}>{entry.label}</span>
 			{/each}

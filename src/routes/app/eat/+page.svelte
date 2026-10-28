@@ -35,7 +35,7 @@
 	{@const ready = day}
 	<div class="eat">
 		<Button onclick={() => (logging = true)}>{messages.nutrition.logFood}</Button>
-		<nav class="day-switcher">
+		<div class="day-switcher" role="group" aria-label={messages.nutrition.day}>
 			<button
 				type="button"
 				aria-label={messages.nutrition.previousDay}
@@ -52,7 +52,7 @@
 			>
 				<Icon name="plus" />
 			</button>
-		</nav>
+		</div>
 		<MacroProgress summary={ready.day.summary} />
 		{#each MEAL_SLOTS as slot (slot)}
 			{@const entries = ready.entriesIn(slot)}

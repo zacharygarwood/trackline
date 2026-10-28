@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { setAppContext } from '#lib/app/app-context.ts';
 	import { startApp, type App } from '#lib/app/container.ts';
+	import { ARIA_CURRENT_PAGE } from '#lib/design/html.constants.ts';
 	import Icon from '#lib/design/Icon.svelte';
 	import Notice from '#lib/design/Notice.svelte';
 	import TabBar from '#lib/design/TabBar.svelte';
@@ -106,7 +107,11 @@
 	<header>
 		<h1>{title}</h1>
 		{#if !onWelcome}
-			<a href={settingsHref} aria-label={messages.navigation.settings}>
+			<a
+				href={settingsHref}
+				aria-label={messages.navigation.settings}
+				aria-current={page.url.pathname === settingsHref ? ARIA_CURRENT_PAGE : undefined}
+			>
 				<Icon name="settings" />
 			</a>
 		{/if}

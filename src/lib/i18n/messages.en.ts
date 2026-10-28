@@ -266,6 +266,7 @@ export const messages = {
 	},
 	nutrition: {
 		logFood: 'Log food',
+		day: 'Day',
 		previousDay: 'Previous day',
 		nextDay: 'Next day',
 		breakfast: 'Breakfast',
