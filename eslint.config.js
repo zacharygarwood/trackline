@@ -138,6 +138,7 @@ export default defineConfig(
 				{
 					publicOnly: true,
 					enableFixer: false,
+					checkConstructors: false,
 					require: {
 						FunctionDeclaration: true,
 						ClassDeclaration: true,
@@ -228,6 +229,10 @@ export default defineConfig(
 		rules: { 'i18next/no-literal-string': 'off' }
 	},
 	{
+		files: ['src/**/*.row.ts'],
+		rules: { '@typescript-eslint/consistent-type-definitions': 'off' }
+	},
+	{
 		files: ['src/lib/design/**'],
 		rules: { 'svelte/no-navigation-without-resolve': 'off' }
 	},
@@ -248,6 +253,7 @@ export default defineConfig(
 		rules: {
 			'@typescript-eslint/no-magic-numbers': 'off',
 			'sonarjs/no-floating-point-equality': 'off',
+			'sonarjs/no-empty-test-file': 'off',
 			'i18next/no-literal-string': 'off',
 			'max-lines-per-function': 'off',
 			'jsdoc/require-jsdoc': 'off'

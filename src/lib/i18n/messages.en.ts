@@ -30,6 +30,45 @@ export const messages = {
 	placeholder: {
 		comingSoon: 'Nothing here yet. This section is being built.'
 	},
+	units: {
+		kg: 'kg',
+		lb: 'lb',
+		kgLong: 'Kilograms',
+		lbLong: 'Pounds'
+	},
+	dates: {
+		today: 'Today',
+		yesterday: 'Yesterday'
+	},
+	body: {
+		weighIn: 'Weigh in',
+		save: 'Save',
+		deleteWeighIn: 'Delete weigh-in',
+		history: 'History',
+		empty: 'No weigh-ins yet. Weigh in to start your graph.',
+		enterWeight: 'Enter your weight.',
+		weightOutOfRange: (min: string, max: string) => `Enter a weight between ${min} and ${max}.`,
+		editWeighIn: (date: string, weight: string) => `${date}, ${weight}. Edit`,
+		chartTitle: 'Weight',
+		chartSummary: (count: number, latest: string, average: string) =>
+			`Weight chart with ${String(count)} ${count === 1 ? 'weigh-in' : 'weigh-ins'}. Latest ${latest}, 7-day average ${average}.`,
+		chartGoal: (goal: string) => ` Goal ${goal}.`,
+		trendLegend: '7-day average',
+		goalLegend: 'Goal',
+		goalWeight: 'Goal weight',
+		noGoal: 'No goal set.',
+		goalSummary: (target: string, direction: string) => `${target}, ${direction}`,
+		setGoal: 'Set goal',
+		changeGoal: 'Change goal',
+		removeGoal: 'Remove goal',
+		direction: 'Direction',
+		lose: 'Lose',
+		gain: 'Gain',
+		maintain: 'Maintain'
+	},
+	settings: {
+		units: 'Units'
+	},
 	design: {
 		close: 'Close',
 		decimalSeparator: 'Decimal point',

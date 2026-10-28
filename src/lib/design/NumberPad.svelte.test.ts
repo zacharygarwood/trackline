@@ -7,8 +7,8 @@ import type { NumberPadLimits } from './number-pad.ts';
 
 const weight: NumberPadLimits = { allowDecimal: true, maxIntegerDigits: 3, maxFractionDigits: 1 };
 
-function renderPad(initial: string, limits = weight) {
-	const state = $state({ value: initial });
+function renderPad(initial: string, limits = weight, selected = false) {
+	const state = $state({ value: initial, selected });
 	render(NumberPad, {
 		props: {
 			get value() {
@@ -16,6 +16,12 @@ function renderPad(initial: string, limits = weight) {
 			},
 			set value(next) {
 				state.value = next;
+			},
+			get selected() {
+				return state.selected;
+			},
+			set selected(next) {
+				state.selected = next;
 			},
 			limits
 		}
@@ -42,6 +48,17 @@ describe('NumberPad', () => {
 		await userEvent.click(screen.getByRole('button', { name: messages.design.deleteDigit }));
 
 		expect(state.value).toBe('80.');
+	});
+
+	it('replaces a selected suggestion with the first key press', async () => {
+		const state = renderPad('80.4', weight, true);
+		const user = userEvent.setup();
+
+		await user.click(screen.getByRole('button', { name: '7' }));
+		await user.click(screen.getByRole('button', { name: '9' }));
+
+		expect(state.value).toBe('79');
+		expect(state.selected).toBe(false);
 	});
 
 	it('has no decimal key for whole numbers', () => {

@@ -10,12 +10,18 @@
 		value: string;
 		/** Whether decimals are allowed and how many digits fit. */
 		limits: NumberPadLimits;
+		/**
+		 * Whether the value is a suggestion the next key press replaces, like
+		 * selected text. Pressing any key clears it; bind to it.
+		 */
+		selected?: boolean;
 	}
 
-	let { value = $bindable(), limits }: Props = $props();
+	let { value = $bindable(), limits, selected = $bindable(false) }: Props = $props();
 
 	function press(key: string): void {
-		value = pressKey(value, key, limits);
+		value = pressKey(selected ? '' : value, key, limits);
+		selected = false;
 	}
 </script>
 
