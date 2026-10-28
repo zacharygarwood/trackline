@@ -12,8 +12,6 @@ test('create a food, log a different amount, and see scaled macros and goal prog
 	await page.getByRole('textbox', { name: messages.nutrition.protein }).fill(goals.protein);
 	await page.getByRole('textbox', { name: messages.nutrition.carbs }).fill(goals.carbs);
 	await page.getByRole('textbox', { name: messages.nutrition.fat }).fill(goals.fat);
-	await page.getByRole('button', { name: messages.nutrition.saveGoals }).click();
-	await expect(page.getByText(messages.nutrition.goalsSaved)).toBeVisible();
 	await page.getByRole('button', { name: messages.welcome.start }).click();
 
 	await page.getByRole('link', { name: messages.navigation.eat }).click();

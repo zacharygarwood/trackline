@@ -46,9 +46,9 @@ export class DailyGoalsEditor {
 	/**
 	 * Saves new targets from today on.
 	 *
-	 * @returns A confirmation, or a message if a value was rejected.
+	 * @returns A message to show if a value was rejected.
 	 */
-	async save(form: GoalsForm): Promise<string> {
+	async save(form: GoalsForm): Promise<string | undefined> {
 		const result = await this.useCases.setDailyGoals.execute({
 			targets: {
 				calories: numberOf(form.calories),
@@ -59,6 +59,16 @@ export class DailyGoalsEditor {
 		});
 		if (!result.ok) return messages.nutrition.checkGoals;
 		this.targets = result.value.targets;
-		return messages.nutrition.goalsSaved;
+		return undefined;
+	}
+
+	/**
+	 * Saves the targets if any field was filled in; an untouched form saves nothing.
+	 *
+	 * @returns A message to show if a value was rejected.
+	 */
+	saveIfFilled(form: GoalsForm): Promise<string | undefined> {
+		const filled = Object.values(form).some((value) => value.trim() !== '');
+		return filled ? this.save(form) : Promise.resolve(undefined);
 	}
 }

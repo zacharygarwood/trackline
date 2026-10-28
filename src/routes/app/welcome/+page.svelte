@@ -2,78 +2,97 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getAppContext } from '#lib/app/app-context.ts';
-	import type { App } from '#lib/app/container.ts';
-	import WeightGoalSheet from '#lib/body/ui/WeightGoalSheet.svelte';
-	import { WeightGoalEditor } from '#lib/body/ui/weight-goal-editor.svelte.ts';
+	import { GoalDirection } from '#lib/body/domain/goal-direction.constants.ts';
+	import { DIRECTION_LABELS, WeightGoalEditor } from '#lib/body/ui/weight-goal-editor.svelte.ts';
 	import Button from '#lib/design/Button.svelte';
-	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
+	import UnitField from '#lib/design/UnitField.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
-	import DailyGoalsForm from '#lib/nutrition/ui/DailyGoalsForm.svelte';
-	import { DailyGoalsEditor } from '#lib/nutrition/ui/daily-goals-editor.svelte.ts';
+	import DailyGoalsFields from '#lib/nutrition/ui/DailyGoalsFields.svelte';
+	import { DailyGoalsEditor, type GoalsForm } from '#lib/nutrition/ui/daily-goals-editor.svelte.ts';
 	import { UnitsSetting } from '#lib/settings/ui/units-setting.svelte.ts';
+	import { WelcomeSetup } from '#lib/settings/ui/welcome-setup.svelte.ts';
 	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
+	import { unitLabel } from '#lib/ui/format.ts';
 	import { AppRoute } from '../app-route.constants.ts';
+
+	/** Everything the screen needs once the app has started. */
+	interface Ready {
+		readonly units: UnitsSetting;
+		readonly goal: WeightGoalEditor;
+		readonly dailyGoals: DailyGoalsEditor;
+		readonly setup: WelcomeSetup;
+	}
 
 	const unitOptions = [
 		{ value: MassUnit.kg, label: messages.units.kgLong },
 		{ value: MassUnit.lb, label: messages.units.lbLong }
 	];
+	const directions = Object.values(GoalDirection).map((value) => ({
+		value,
+		label: DIRECTION_LABELS[value]
+	}));
 
-	let app: App | undefined = $state();
-	let units: UnitsSetting | undefined = $state();
-	let goal: WeightGoalEditor | undefined = $state();
-	let dailyGoals: DailyGoalsEditor | undefined = $state();
-	let editingGoal = $state(false);
+	let ready: Ready | undefined = $state();
+	let goalEntry = $state('');
+	let direction: GoalDirection = $state(GoalDirection.lose);
+	let dailyGoals: GoalsForm = $state({ calories: '', protein: '', carbs: '', fat: '' });
 
-	void getAppContext().then(async (ready) => {
-		const nextUnits = new UnitsSetting(ready.settings);
-		const nextGoal = new WeightGoalEditor(ready.body);
-		const nextDailyGoals = new DailyGoalsEditor(ready.nutrition, ready.clock);
-		await Promise.all([nextUnits.load(), nextGoal.load(), nextDailyGoals.load()]);
-		dailyGoals = nextDailyGoals;
-		units = nextUnits;
-		goal = nextGoal;
-		app = ready;
+	void getAppContext().then(async (app) => {
+		const units = new UnitsSetting(app.settings);
+		await units.load();
+		ready = {
+			units,
+			goal: new WeightGoalEditor(app.body),
+			dailyGoals: new DailyGoalsEditor(app.nutrition, app.clock),
+			setup: new WelcomeSetup(app.settings.completeSetup)
+		};
 	});
 
-	async function start(ready: App): Promise<void> {
-		await ready.settings.completeSetup.execute();
-		await goto(resolve(AppRoute.today), { replaceState: true });
+	async function start(screen: Ready): Promise<void> {
+		const finished = await screen.setup.finish([
+			() => screen.goal.saveIfFilled(goalEntry, direction, screen.units.unit),
+			() => screen.dailyGoals.saveIfFilled(dailyGoals)
+		]);
+		if (finished) await goto(resolve(AppRoute.today), { replaceState: true });
 	}
 </script>
 
-{#if app !== undefined && units !== undefined && goal !== undefined && dailyGoals !== undefined}
-	{@const ready = app}
-	{@const unitsSetting = units}
-	{@const goalEditor = goal}
+{#if ready !== undefined}
+	{@const screen = ready}
 	<div class="welcome">
-		<p>{messages.welcome.privacy}</p>
 		<SegmentedControl
 			label={messages.settings.units}
 			options={unitOptions}
-			value={unitsSetting.unit}
-			onchange={(unit: MassUnit) => void unitsSetting.choose(unit)}
+			value={screen.units.unit}
+			onchange={(unit: MassUnit) => void screen.units.choose(unit)}
 		/>
-		<section>
-			<h2>{messages.body.goalWeight}</h2>
-			<p>{goalEditor.describe(unitsSetting.unit)}</p>
-			<Button variant={ButtonVariant.secondary} onclick={() => (editingGoal = true)}>
-				{goalEditor.goal === undefined ? messages.body.setGoal : messages.body.changeGoal}
-			</Button>
-		</section>
-		<DailyGoalsForm editor={dailyGoals} />
-		<p class="note">{messages.welcome.optional}</p>
-		<Button onclick={() => start(ready)}>{messages.welcome.start}</Button>
-	</div>
 
-	{#if editingGoal}
-		<WeightGoalSheet
-			editor={goalEditor}
-			unit={unitsSetting.unit}
-			onclose={() => (editingGoal = false)}
-		/>
-	{/if}
+		<section>
+			<UnitField
+				label={messages.welcome.optional(messages.body.goalWeight)}
+				unit={unitLabel(screen.units.unit)}
+				bind:value={goalEntry}
+			/>
+			{#if goalEntry.trim() !== ''}
+				<SegmentedControl
+					label={messages.body.direction}
+					options={directions}
+					bind:value={direction}
+				/>
+			{/if}
+		</section>
+
+		<section>
+			<h2>{messages.welcome.optional(messages.nutrition.dailyGoals)}</h2>
+			<DailyGoalsFields bind:form={dailyGoals} />
+		</section>
+
+		{#if screen.setup.problem !== undefined}
+			<p class="problem" role="alert">{screen.setup.problem}</p>
+		{/if}
+		<Button onclick={() => start(screen)}>{messages.welcome.start}</Button>
+	</div>
 {/if}
 
 <style>
@@ -87,17 +106,11 @@
 	section {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--space-2);
+		gap: var(--space-3);
 	}
 
 	h2 {
-		color: var(--color-text-muted);
 		font-size: var(--font-size-small);
 		font-weight: var(--font-weight-regular);
-	}
-
-	.note {
-		color: var(--color-text-muted);
 	}
 </style>

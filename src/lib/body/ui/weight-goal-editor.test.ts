@@ -17,6 +17,22 @@ function editor() {
 }
 
 describe('WeightGoalEditor', () => {
+	it('skips a blank entry instead of rejecting it', async () => {
+		const goalEditor = editor();
+
+		expect(await goalEditor.saveIfFilled('  ', GoalDirection.lose, MassUnit.kg)).toBeUndefined();
+		await goalEditor.load();
+		expect(goalEditor.goal).toBeUndefined();
+	});
+
+	it('saves a filled-in entry', async () => {
+		const goalEditor = editor();
+
+		expect(await goalEditor.saveIfFilled('165', GoalDirection.gain, MassUnit.lb)).toBeUndefined();
+		await goalEditor.load();
+		expect(goalEditor.describe(MassUnit.lb)).toBe('165.0 lb, Gain');
+	});
+
 	it('says when no goal is set', async () => {
 		const goalEditor = editor();
 		await goalEditor.load();

@@ -63,6 +63,14 @@ export const MACRO_LABELS: Readonly<Record<keyof Macros, string>> = {
 	fat: messages.nutrition.fat
 };
 
+/** The unit each macro is entered in. */
+export const MACRO_UNITS: Readonly<Record<keyof Macros, string>> = {
+	calories: messages.units.kcal,
+	protein: messages.units.grams,
+	carbs: messages.units.grams,
+	fat: messages.units.grams
+};
+
 /**
  * One macro amount for display: calories as kcal, the others in grams.
  *

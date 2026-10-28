@@ -112,6 +112,8 @@ export const messages = {
 	units: {
 		kg: 'kg',
 		lb: 'lb',
+		kcal: 'kcal',
+		grams: 'g',
 		kgLong: 'Kilograms',
 		lbLong: 'Pounds'
 	},
@@ -379,9 +381,7 @@ export const messages = {
 	},
 	welcome: {
 		title: 'Welcome',
-		privacy:
-			'Everything you log stays on this device. There is no account and nothing is uploaded. Because of that, your backups are up to you: export one from Settings now and then.',
-		optional: 'You can change all of this later in Settings.',
+		optional: (label: string) => `${label} (optional)`,
 		start: 'Get started'
 	},
 	design: {

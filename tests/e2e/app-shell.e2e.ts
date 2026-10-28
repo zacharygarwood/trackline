@@ -14,7 +14,7 @@ test('a new user starts on the welcome screen, then lands on Today', async ({ pa
 	await page.goto('/app');
 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.welcome.title);
-	await expect(page.getByText(messages.welcome.privacy)).toBeVisible();
+	await expect(page.getByRole('radio', { name: messages.units.kgLong })).toBeChecked();
 	await expect(page.getByRole('navigation', { name: messages.navigation.tabs })).toBeHidden();
 	await page.getByRole('button', { name: messages.welcome.start }).click();
 
@@ -78,4 +78,34 @@ test('iPhone Safari users see how to add the app to the home screen until they d
 	await page.reload();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
 	await expect(page.getByText(messages.app.installHint)).toBeHidden();
+});
+
+test('first-run goals are saved with Get started, in the chosen units', async ({ page }) => {
+	await page.goto('/app/welcome');
+	await page.getByText(messages.units.lbLong).click();
+	const goalWeight = page.getByRole('textbox', {
+		name: messages.welcome.optional(messages.body.goalWeight)
+	});
+	await expect(goalWeight.locator('..')).toContainText(messages.units.lb);
+	await goalWeight.fill('165');
+	await page.getByText(messages.body.gain).click();
+	await page.getByRole('textbox', { name: messages.nutrition.calories }).fill('2400');
+	await page.getByRole('button', { name: messages.welcome.start }).click();
+
+	await expect(page.getByRole('alert')).toHaveText(messages.nutrition.checkGoals);
+	for (const macro of [
+		messages.nutrition.protein,
+		messages.nutrition.carbs,
+		messages.nutrition.fat
+	]) {
+		await page.getByRole('textbox', { name: macro }).fill('100');
+	}
+	await page.getByRole('button', { name: messages.welcome.start }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+
+	await page.goto('/app/settings');
+	await expect(page.getByText('165.0 lb, Gain')).toBeVisible();
+	await expect(page.getByRole('textbox', { name: messages.nutrition.calories })).toHaveValue(
+		'2400'
+	);
 });

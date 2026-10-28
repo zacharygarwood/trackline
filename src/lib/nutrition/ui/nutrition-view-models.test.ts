@@ -104,9 +104,9 @@ describe('DailyGoalsEditor', () => {
 		await editor.load();
 		expect(editor.form).toEqual({ calories: '', protein: '', carbs: '', fat: '' });
 
-		expect(await editor.save({ calories: '2200', protein: '160', carbs: '250', fat: '70' })).toBe(
-			'Goals saved. Earlier days keep their old goals.'
-		);
+		expect(
+			await editor.save({ calories: '2200', protein: '160', carbs: '250', fat: '70' })
+		).toBeUndefined();
 
 		await editor.load();
 		expect(editor.form).toEqual({ calories: '2200', protein: '160', carbs: '250', fat: '70' });
@@ -117,6 +117,20 @@ describe('DailyGoalsEditor', () => {
 		const editor = new DailyGoalsEditor(app, app.clock);
 
 		expect(await editor.save({ calories: '', protein: '1', carbs: '1', fat: '1' })).toBe(
+			'Enter numbers of zero or more for every goal.'
+		);
+	});
+
+	it('skips saving when every field is blank, and saves once one is filled', async () => {
+		const app = nutritionApp();
+		const editor = new DailyGoalsEditor(app, app.clock);
+		const blank = { calories: ' ', protein: '', carbs: '', fat: '' };
+
+		expect(await editor.saveIfFilled(blank)).toBeUndefined();
+		await editor.load();
+		expect(editor.targets).toBeUndefined();
+
+		expect(await editor.saveIfFilled({ ...blank, calories: '2000' })).toBe(
 			'Enter numbers of zero or more for every goal.'
 		);
 	});

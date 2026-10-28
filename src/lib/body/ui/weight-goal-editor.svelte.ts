@@ -65,6 +65,19 @@ export class WeightGoalEditor {
 		return undefined;
 	}
 
+	/**
+	 * Sets the goal if a target was typed; a blank entry sets nothing.
+	 *
+	 * @returns A message to show if the entry was rejected.
+	 */
+	saveIfFilled(
+		entry: string,
+		direction: GoalDirection,
+		unit: MassUnit
+	): Promise<string | undefined> {
+		return entry.trim() === '' ? Promise.resolve(undefined) : this.save(entry, direction, unit);
+	}
+
 	/** Removes the goal. */
 	async remove(): Promise<void> {
 		await this.useCases.clearWeightGoal.execute();

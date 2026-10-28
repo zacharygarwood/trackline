@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { messages } from '../../i18n/messages.en.ts';
 	import { MACRO_KEYS } from './macro-key.constants.ts';
-	import { MACRO_LABELS } from './nutrition-format.ts';
+	import UnitField from '../../design/UnitField.svelte';
+	import { MACRO_LABELS, MACRO_UNITS } from './nutrition-format.ts';
 	import type { FoodForm } from './nutrition-day.svelte.ts';
 
 	/** Props for the fields of a new food. */
@@ -12,7 +13,11 @@
 
 	let { form = $bindable() }: Props = $props();
 
-	const macroFields = MACRO_KEYS.map((key) => ({ key, label: MACRO_LABELS[key] }));
+	const macroFields = MACRO_KEYS.map((key) => ({
+		key,
+		label: MACRO_LABELS[key],
+		unit: MACRO_UNITS[key]
+	}));
 </script>
 
 <label>
@@ -44,16 +49,13 @@
 <p class="hint">{messages.nutrition.macrosFor}</p>
 <div class="macros">
 	{#each macroFields as field (field.key)}
-		<label>
-			<span>{field.label}</span>
-			<input
-				type="text"
-				inputmode="decimal"
-				bind:value={
-					() => form[field.key], (value: string) => (form = { ...form, [field.key]: value })
-				}
-			/>
-		</label>
+		<UnitField
+			label={field.label}
+			unit={field.unit}
+			bind:value={
+				() => form[field.key], (value: string) => (form = { ...form, [field.key]: value })
+			}
+		/>
 	{/each}
 </div>
 
