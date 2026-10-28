@@ -1,9 +1,14 @@
 import type { SqlStatement } from '../../platform/db/sql.ts';
+import type { ProgressPhotoRow } from './progress-photo.row.ts';
 import type { WeighInRow } from './weigh-in.row.ts';
 import type { WeightGoalRow } from './weight-goal.row.ts';
 
 /** Table names, for error messages about corrupt rows. */
-export const BodyTable = { weighIn: 'weigh_in', weightGoal: 'weight_goal' } as const;
+export const BodyTable = {
+	weighIn: 'weigh_in',
+	weightGoal: 'weight_goal',
+	progressPhoto: 'progress_photo'
+} as const;
 
 /** Inserts a weigh-in, or updates the row with the same id. */
 export function saveWeighIn(row: WeighInRow): SqlStatement {
@@ -58,3 +63,28 @@ export const CLEAR_WEIGHT_GOAL: SqlStatement = {
 	sql: 'DELETE FROM weight_goal',
 	params: []
 };
+
+/** Lists every progress photo, newest date first. */
+export const FIND_ALL_PROGRESS_PHOTOS: SqlStatement = {
+	name: 'find all progress photos',
+	sql: 'SELECT id, date, pose, width, height FROM progress_photo ORDER BY date DESC, id DESC',
+	params: []
+};
+
+/** Inserts a progress photo, or replaces the row with the same id. */
+export function saveProgressPhoto(row: ProgressPhotoRow): SqlStatement {
+	return {
+		name: 'save progress photo',
+		sql: 'INSERT OR REPLACE INTO progress_photo (id, date, pose, width, height) VALUES (?, ?, ?, ?, ?)',
+		params: [row.id, row.date, row.pose, row.width, row.height]
+	};
+}
+
+/** Deletes one progress photo. */
+export function deleteProgressPhoto(id: string): SqlStatement {
+	return {
+		name: 'delete progress photo',
+		sql: 'DELETE FROM progress_photo WHERE id = ?',
+		params: [id]
+	};
+}

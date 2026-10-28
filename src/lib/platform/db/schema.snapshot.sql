@@ -52,6 +52,14 @@ CREATE TABLE food_log_entry (
 	logged_at INTEGER NOT NULL
 ) STRICT;
 
+CREATE TABLE progress_photo (
+	id TEXT PRIMARY KEY NOT NULL,
+	date TEXT NOT NULL,
+	pose TEXT NOT NULL CHECK (pose IN ('front', 'side', 'back')),
+	width INTEGER NOT NULL CHECK (width > 0),
+	height INTEGER NOT NULL CHECK (height > 0)
+) STRICT;
+
 CREATE TABLE rest_day (
 	id TEXT PRIMARY KEY NOT NULL,
 	date TEXT NOT NULL UNIQUE

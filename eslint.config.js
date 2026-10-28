@@ -242,7 +242,7 @@ export default defineConfig(
 		rules: { 'svelte/no-navigation-without-resolve': 'off' }
 	},
 	{
-		files: ['src/lib/platform/db/worker.ts'],
+		files: ['src/lib/platform/db/worker.ts', 'src/lib/platform/photos/photo-writer.worker.ts'],
 		rules: { 'sonarjs/post-message': 'off' }
 	},
 	{
