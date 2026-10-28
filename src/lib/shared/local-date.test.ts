@@ -60,3 +60,14 @@ describe('LocalDate arithmetic', () => {
 		expect(date('2026-10-27').compareTo(date('2026-10-27'))).toBe(0);
 	});
 });
+
+describe('LocalDate.toEpochDay', () => {
+	it('counts days since 1970-01-01', () => {
+		expect(date('1970-01-01').toEpochDay()).toBe(0);
+		expect(date('1970-01-11').toEpochDay()).toBe(10);
+	});
+
+	it('differs by one between consecutive days, even across daylight saving changes', () => {
+		expect(date('2026-03-09').toEpochDay() - date('2026-03-08').toEpochDay()).toBe(1);
+	});
+});

@@ -4,6 +4,7 @@ const MIN_YEAR = 1000;
 const MAX_YEAR = 9999;
 const MONTHS_PER_YEAR = 12;
 const TWO_DIGITS = 2;
+const MILLISECONDS_PER_DAY = 86_400_000;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** The year, month (1–12), and day of month of a calendar date. */
@@ -72,6 +73,11 @@ export class LocalDate {
 	addDays(days: number): LocalDate {
 		const moved = new Date(Date.UTC(this.year, this.month - 1, this.day + days));
 		return new LocalDate(moved.getUTCFullYear(), moved.getUTCMonth() + 1, moved.getUTCDate());
+	}
+
+	/** Days since 1970-01-01, for spacing dates evenly on a chart or measuring gaps. */
+	toEpochDay(): number {
+		return Date.UTC(this.year, this.month - 1, this.day) / MILLISECONDS_PER_DAY;
 	}
 
 	/**
