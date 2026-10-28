@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { setAppContext } from '#lib/app/app-context.ts';
 	import { startApp } from '#lib/app/container.ts';
 	import Icon from '#lib/design/Icon.svelte';
 	import TabBar from '#lib/design/TabBar.svelte';
@@ -26,10 +26,8 @@
 		)?.title
 	);
 
-	onMount(() => {
-		startApp().catch(() => {
-			storageFailed = true;
-		});
+	setAppContext(startApp()).catch(() => {
+		storageFailed = true;
 	});
 </script>
 
