@@ -12,7 +12,10 @@ import { SqlRequestKind } from './sql-request.constants.ts';
 export interface SqlWorkerPort {
 	postMessage(message: SqlRequestMessage): void;
 	addEventListener(type: 'message', listener: (event: MessageEvent<unknown>) => void): void;
+	addEventListener(type: 'error', listener: () => void): void;
 }
+
+const WORKER_FAILED = 'The database worker failed to start';
 
 interface PendingRequest {
 	readonly resolve: (rows: readonly SqlRow[]) => void;
@@ -26,11 +29,15 @@ interface PendingRequest {
 export class WorkerSqlDriver implements SqlDriver {
 	private readonly pending = new Map<number, PendingRequest>();
 	private nextId = 0;
+	private failed = false;
 
 	/** @param port - The worker running {@link executeRequest} on SQLite. */
 	constructor(private readonly port: SqlWorkerPort) {
 		port.addEventListener('message', (event) => {
 			this.settle(event.data);
+		});
+		port.addEventListener('error', () => {
+			this.fail();
 		});
 	}
 
@@ -50,11 +57,21 @@ export class WorkerSqlDriver implements SqlDriver {
 	}
 
 	private send(request: SqlRequest): Promise<readonly SqlRow[]> {
+		if (this.failed) return Promise.reject(new Error(WORKER_FAILED));
 		const id = this.nextId++;
 		return new Promise((resolve, reject) => {
 			this.pending.set(id, { resolve, reject });
 			this.port.postMessage({ id, request });
 		});
+	}
+
+	/** The worker itself crashed: nothing pending or future will ever be answered. */
+	private fail(): void {
+		this.failed = true;
+		this.pending.forEach((request) => {
+			request.reject(new Error(WORKER_FAILED));
+		});
+		this.pending.clear();
 	}
 
 	private settle(data: unknown): void {

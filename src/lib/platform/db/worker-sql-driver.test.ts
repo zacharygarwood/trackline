@@ -7,6 +7,21 @@ import { WorkerSqlDriver, type SqlWorkerPort } from './worker-sql-driver.ts';
 
 const ports: MessagePort[] = [];
 
+type Listener = (event: MessageEvent<unknown>) => void;
+
+/** A port whose `addEventListener` forwards both overloads to one handler. */
+function fakePort(
+	postMessage: SqlWorkerPort['postMessage'],
+	listen: (type: string, listener: Listener) => void
+): SqlWorkerPort {
+	function addEventListener(type: 'message', listener: Listener): void;
+	function addEventListener(type: 'error', listener: () => void): void;
+	function addEventListener(type: string, listener: Listener): void {
+		listen(type, listener);
+	}
+	return { postMessage, addEventListener };
+}
+
 /** Connects a driver to a fake worker that runs requests on in-memory SQLite. */
 function connectedDriver(): WorkerSqlDriver {
 	const { port1: mainThread, port2: worker } = new MessageChannel();
@@ -17,17 +32,20 @@ function connectedDriver(): WorkerSqlDriver {
 			worker.postMessage({ id: data.id, response: executeRequest(executor, data.request) });
 		}
 	});
-	const port: SqlWorkerPort = {
-		postMessage: (message) => {
-			mainThread.postMessage(message);
-		},
-		addEventListener: (type, listener) => {
-			mainThread.on(type, (data: unknown) => {
-				listener(new MessageEvent(type, { data }));
-			});
-		}
-	};
-	return new WorkerSqlDriver(port);
+	return new WorkerSqlDriver(
+		fakePort(
+			(message) => {
+				mainThread.postMessage(message);
+			},
+			(type, listener) => {
+				if (type === 'message') {
+					mainThread.on('message', (data: unknown) => {
+						listener(new MessageEvent('message', { data }));
+					});
+				}
+			}
+		)
+	);
 }
 
 afterEach(() => {
@@ -70,6 +88,42 @@ describe('WorkerSqlDriver', () => {
 		await expect(driver.query(statement('SELECT * FROM missing_table'))).rejects.toThrow(
 			'missing_table'
 		);
+	});
+});
+
+describe('WorkerSqlDriver when the worker crashes', () => {
+	function crashingDriver() {
+		const listeners: Listener[] = [];
+		const port = fakePort(
+			() => {
+				/* a crashed worker never answers */
+			},
+			(type, listener) => {
+				if (type === 'error') listeners.push(listener);
+			}
+		);
+		const crash = () => {
+			listeners.forEach((listener) => {
+				listener(new MessageEvent('error'));
+			});
+		};
+		return { driver: new WorkerSqlDriver(port), crash };
+	}
+
+	it('rejects requests that were waiting for an answer', async () => {
+		const { driver, crash } = crashingDriver();
+		const pending = driver.query(statement('SELECT 1'));
+
+		crash();
+
+		await expect(pending).rejects.toThrow('failed to start');
+	});
+
+	it('rejects later requests immediately', async () => {
+		const { driver, crash } = crashingDriver();
+		crash();
+
+		await expect(driver.execute(statement('SELECT 1'))).rejects.toThrow('failed to start');
 	});
 });
 
