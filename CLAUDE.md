@@ -16,7 +16,8 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 
 ## Architecture (non-negotiable)
 
-- Bounded contexts: training, nutrition, body, insights, plus a small shared kernel.
+- Bounded contexts: training, nutrition, body, insights, settings (preferences), plus a small shared kernel.
+- Screens get use cases with `getAppContext()` (a `Promise<App>` set by the app shell) and keep state in `*.svelte.ts` view models in `<context>/ui/` (ADR 0007).
 - Layers per context: domain -> application -> infrastructure / ui. Dependencies point inward only.
 - Domain: pure TypeScript, no Svelte, no SQL, no browser APIs.
 - Domain models, \*Row database models, and \*Mapper converters are always separate types.
