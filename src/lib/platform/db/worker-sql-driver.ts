@@ -1,10 +1,11 @@
 import type { SqlRow, SqlStatement } from './sql.ts';
 import type { SqlDriver } from './sql-driver.ts';
+import { first } from '../../shared/collections.ts';
 import {
 	isSqlResponseMessage,
-	type SqlRequest,
 	type SqlRequestMessage,
-	type SqlResponse
+	type SqlResponse,
+	type WorkerRequest
 } from './sql-protocol.ts';
 import { SqlRequestKind } from './sql-request.constants.ts';
 
@@ -56,7 +57,25 @@ export class WorkerSqlDriver implements SqlDriver {
 		await this.send({ kind: SqlRequestKind.transaction, statements });
 	}
 
-	private send(request: SqlRequest): Promise<readonly SqlRow[]> {
+	/** The database file's bytes, for a backup. */
+	async exportFile(): Promise<Uint8Array> {
+		const file = first(await this.send({ kind: SqlRequestKind.exportFile }))?.file;
+		if (!(file instanceof Uint8Array))
+			throw new Error('The worker did not return the database file');
+		return file;
+	}
+
+	/** Replaces the database with a backup's database file. Reload the app afterwards. */
+	async replaceFile(file: Uint8Array): Promise<void> {
+		await this.send({ kind: SqlRequestKind.replaceFile, file });
+	}
+
+	/** Deletes the database file and starts an empty one. Reload the app afterwards. */
+	async wipe(): Promise<void> {
+		await this.send({ kind: SqlRequestKind.wipe });
+	}
+
+	private send(request: WorkerRequest): Promise<readonly SqlRow[]> {
 		if (this.failed) return Promise.reject(new Error(WORKER_FAILED));
 		const id = this.nextId++;
 		return new Promise((resolve, reject) => {

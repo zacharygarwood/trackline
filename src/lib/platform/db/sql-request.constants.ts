@@ -2,5 +2,8 @@
 export const SqlRequestKind = {
 	query: 'query',
 	execute: 'execute',
-	transaction: 'transaction'
+	transaction: 'transaction',
+	exportFile: 'exportFile',
+	replaceFile: 'replaceFile',
+	wipe: 'wipe'
 } as const;

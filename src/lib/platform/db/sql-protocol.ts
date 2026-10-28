@@ -10,6 +10,18 @@ export type SqlRequest =
 			readonly statements: readonly SqlStatement[];
 	  };
 
+/**
+ * A request about the database file itself. Exporting answers with one row
+ * whose `file` column holds the database bytes, like selecting a BLOB.
+ */
+export type DatabaseFileRequest =
+	| { readonly kind: typeof SqlRequestKind.exportFile }
+	| { readonly kind: typeof SqlRequestKind.replaceFile; readonly file: Uint8Array }
+	| { readonly kind: typeof SqlRequestKind.wipe };
+
+/** Anything the database worker can be asked to do. */
+export type WorkerRequest = SqlRequest | DatabaseFileRequest;
+
 /** The worker's answer: rows on success, an error message on failure. */
 export type SqlResponse =
 	| { readonly ok: true; readonly rows: readonly SqlRow[] }
@@ -18,7 +30,7 @@ export type SqlResponse =
 /** A request tagged with an id so its response can be matched to it. */
 export interface SqlRequestMessage {
 	readonly id: number;
-	readonly request: SqlRequest;
+	readonly request: WorkerRequest;
 }
 
 /** A response tagged with the id of the request it answers. */
@@ -44,8 +56,23 @@ function isStatement(value: unknown): value is SqlStatement {
 	);
 }
 
-function isRequest(value: unknown): value is SqlRequest {
-	if (!isRecord(value)) return false;
+function isRequest(value: unknown): value is WorkerRequest {
+	return isRecord(value) && (isFileRequest(value) || isStatementRequest(value));
+}
+
+function isFileRequest(value: Readonly<Record<string, unknown>>): boolean {
+	switch (value.kind) {
+		case SqlRequestKind.exportFile:
+		case SqlRequestKind.wipe:
+			return true;
+		case SqlRequestKind.replaceFile:
+			return value.file instanceof Uint8Array;
+		default:
+			return false;
+	}
+}
+
+function isStatementRequest(value: Readonly<Record<string, unknown>>): boolean {
 	switch (value.kind) {
 		case SqlRequestKind.query:
 		case SqlRequestKind.execute:
@@ -88,4 +115,17 @@ export function isSqlResponseMessage(value: unknown): value is SqlResponseMessag
  */
 export function isSqlWorkerSetup(value: unknown): value is SqlWorkerSetup {
 	return isRecord(value) && typeof value.wasmUrl === 'string';
+}
+
+/**
+ * Whether a request runs SQL, as opposed to acting on the database file.
+ *
+ * @param request - A request received by the worker.
+ */
+export function isSqlRequest(request: WorkerRequest): request is SqlRequest {
+	return (
+		request.kind === SqlRequestKind.query ||
+		request.kind === SqlRequestKind.execute ||
+		request.kind === SqlRequestKind.transaction
+	);
 }

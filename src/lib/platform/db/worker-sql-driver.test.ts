@@ -2,7 +2,7 @@ import { MessageChannel, type MessagePort } from 'node:worker_threads';
 import { afterEach, describe, expect, it } from 'vitest';
 import { NodeSqliteExecutor } from '../../../../tests/support/node-sqlite-executor.ts';
 import { executeRequest } from './sql-executor.ts';
-import { isSqlRequestMessage, isSqlWorkerSetup } from './sql-protocol.ts';
+import { isSqlRequest, isSqlRequestMessage, isSqlWorkerSetup } from './sql-protocol.ts';
 import { WorkerSqlDriver, type SqlWorkerPort } from './worker-sql-driver.ts';
 
 const ports: MessagePort[] = [];
@@ -29,7 +29,10 @@ function connectedDriver(): WorkerSqlDriver {
 	const executor = new NodeSqliteExecutor();
 	worker.on('message', (data: unknown) => {
 		if (isSqlRequestMessage(data)) {
-			worker.postMessage({ id: data.id, response: executeRequest(executor, data.request) });
+			const response = isSqlRequest(data.request)
+				? executeRequest(executor, data.request)
+				: { ok: true, rows: [{ file: new Uint8Array([1, 2, 3]) }] };
+			worker.postMessage({ id: data.id, response });
 		}
 	});
 	return new WorkerSqlDriver(
@@ -80,6 +83,10 @@ describe('WorkerSqlDriver', () => {
 
 		expect(one).toEqual([{ n: 1 }]);
 		expect(two).toEqual([{ n: 2 }]);
+	});
+
+	it('reads the exported database file from the worker', async () => {
+		expect(await connectedDriver().exportFile()).toEqual(new Uint8Array([1, 2, 3]));
 	});
 
 	it('rejects when the worker reports a failure', async () => {
