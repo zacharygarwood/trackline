@@ -18,6 +18,9 @@ export class InvalidMass {
 export class Mass {
 	private constructor(readonly kilograms: number) {}
 
+	/** No weight, used for bodyweight exercises. */
+	static readonly zero: Mass = new Mass(0);
+
 	/**
 	 * A mass from an amount in kilograms.
 	 *
