@@ -68,7 +68,28 @@ export const messages = {
 		direction: 'Direction',
 		lose: 'Lose',
 		gain: 'Gain',
-		maintain: 'Maintain'
+		maintain: 'Maintain',
+		progressPhotos: 'Progress photos',
+		addPhoto: 'Add photo',
+		allPhotos: 'All photos',
+		noPhotos: 'No progress photos yet. Add one to see your changes over time.',
+		photoDate: 'Date',
+		choosePose: 'Pose',
+		front: 'Front',
+		side: 'Side',
+		back: 'Back',
+		notAnImage: 'That file is not a photo this device can open.',
+		enterDate: 'Choose a date no later than today.',
+		photoOf: (pose: string, date: string) => `${pose}, ${date}`,
+		compare: 'Compare',
+		compareWith: 'Compare with',
+		noOtherPhotos: (pose: string) => `No other ${pose.toLowerCase()} photos to compare with yet.`,
+		sideBySide: 'Side by side',
+		slider: 'Slider',
+		compareMode: 'View',
+		comparePosition: 'Slide between the photos',
+		comparison: (before: string, after: string) => `${before} compared with ${after}`,
+		deletePhoto: 'Delete photo'
 	},
 	settings: {
 		units: 'Units',
@@ -100,11 +121,13 @@ export const messages = {
 			readonly weighIns: number;
 			readonly workouts: number;
 			readonly foodEntries: number;
+			readonly photos: number;
 		}) =>
 			[
 				countOf(counts.weighIns, 'weigh-in', 'weigh-ins'),
 				countOf(counts.workouts, 'workout', 'workouts'),
-				countOf(counts.foodEntries, 'food entry', 'food entries')
+				countOf(counts.foodEntries, 'food entry', 'food entries'),
+				countOf(counts.photos, 'photo', 'photos')
 			].join(', ')
 	},
 	training: {

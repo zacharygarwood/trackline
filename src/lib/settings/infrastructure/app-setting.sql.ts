@@ -28,11 +28,20 @@ export function writeSetting(key: SettingKey, value: string): SqlStatement {
 	};
 }
 
+/** The columns of {@link COUNT_RECORDS}. */
+export const CountColumn = {
+	weighIns: 'weigh_ins',
+	workouts: 'workouts',
+	foodEntries: 'food_entries',
+	photos: 'photos'
+} as const;
+
 /** Counts the records a restore or deletion would remove. */
 export const COUNT_RECORDS: SqlStatement = {
 	name: 'count records',
 	sql: `SELECT (SELECT count(*) FROM weigh_in) AS weigh_ins,
 		(SELECT count(*) FROM workout WHERE finished_at IS NOT NULL) AS workouts,
-		(SELECT count(*) FROM food_log_entry) AS food_entries`,
+		(SELECT count(*) FROM food_log_entry) AS food_entries,
+		(SELECT count(*) FROM progress_photo) AS photos`,
 	params: []
 };

@@ -4,6 +4,7 @@ import {
 	FixedDataInventory,
 	InMemoryAppState
 } from '../../../../tests/fakes/in-memory-app-state.ts';
+import { InMemoryPhotoArchive } from '../../../../tests/fakes/in-memory-photo-archive.ts';
 import { InMemoryDatabaseFile } from '../../../../tests/fakes/in-memory-database-file.ts';
 import type { BackupFile } from '../application/backup-ports.ts';
 import { CountRecords } from '../application/count-records.ts';
@@ -24,23 +25,30 @@ describe('DataPanel', () => {
 		const clock = new FixedClock(Date.UTC(2026, 9, 27, 12), '2026-10-27');
 		const state = new InMemoryAppState();
 		const codec = new ZipBackupCodec();
-		const inventory = new FixedDataInventory({ weighIns: 3, workouts: 1, foodEntries: 0 });
+		const inventory = new FixedDataInventory({
+			weighIns: 3,
+			workouts: 1,
+			foodEntries: 0,
+			photos: 0
+		});
 		database = new InMemoryDatabaseFile(new Uint8Array([5]));
+		const photos = new InMemoryPhotoArchive();
 		saved = [];
 		panel = new DataPanel(
 			{
 				getBackupStatus: new GetBackupStatus(state, clock),
 				exportBackup: new ExportBackup({
 					database,
+					photos,
 					codec,
 					lastExport: state,
 					clock,
 					version: { appVersion: '1.0.0', schemaVersion: 2 }
 				}),
 				previewRestore: new PreviewRestore(codec, inventory, 2),
-				restoreBackup: new RestoreBackup(codec, database, 2),
+				restoreBackup: new RestoreBackup({ codec, database, photos, supportedSchemaVersion: 2 }),
 				countRecords: new CountRecords(inventory),
-				deleteAllData: new DeleteAllData(database)
+				deleteAllData: new DeleteAllData(database, photos)
 			},
 			(file) => saved.push(file)
 		);
@@ -68,7 +76,7 @@ describe('DataPanel', () => {
 
 		await panel.choose(backup.bytes);
 		expect(panel.pendingRestore?.summary).toBe(
-			'This replaces everything on this device (3 weigh-ins, 1 workout, 0 food entries) with the backup from Oct 27, 2026.'
+			'This replaces everything on this device (3 weigh-ins, 1 workout, 0 food entries, 0 photos) with the backup from Oct 27, 2026.'
 		);
 
 		expect(await panel.restore()).toBe(true);
@@ -83,7 +91,9 @@ describe('DataPanel', () => {
 	});
 
 	it('says exactly what deleting everything removes', async () => {
-		expect(await panel.deletionSummary()).toContain('(3 weigh-ins, 1 workout, 0 food entries)');
+		expect(await panel.deletionSummary()).toContain(
+			'(3 weigh-ins, 1 workout, 0 food entries, 0 photos)'
+		);
 
 		await panel.deleteAll();
 

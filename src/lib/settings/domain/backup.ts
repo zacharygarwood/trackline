@@ -18,10 +18,30 @@ export interface BackupManifest {
 	readonly createdAt: number;
 }
 
+/** One photo file, named as the photo store names it. */
+export interface BackupPhoto {
+	readonly name: string;
+	readonly bytes: Uint8Array;
+}
+
 /** Everything needed to restore the app on another device. */
 export interface Backup {
 	readonly manifest: BackupManifest;
 	readonly database: Uint8Array;
+	readonly photos: readonly BackupPhoto[];
+}
+
+const PHOTO_FILE_NAME = /^[\w-]+(\.[\w-]+)?$/;
+
+/**
+ * Whether a name from a backup is safe to use as a photo file name: letters,
+ * digits, dashes, and underscores with at most one extension, so it can never
+ * point outside the photo folder.
+ *
+ * @param name - A file name read from a backup.
+ */
+export function isPhotoFileName(name: string): boolean {
+	return PHOTO_FILE_NAME.test(name);
 }
 
 /** Raised when a file is not a backup this app can read. */

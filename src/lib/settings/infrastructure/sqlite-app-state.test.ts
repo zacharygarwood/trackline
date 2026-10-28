@@ -35,7 +35,8 @@ describe('SqliteDataInventory', () => {
 		expect(await new SqliteDataInventory(database).count()).toEqual({
 			weighIns: 2,
 			workouts: 0,
-			foodEntries: 0
+			foodEntries: 0,
+			photos: 0
 		});
 	});
 });

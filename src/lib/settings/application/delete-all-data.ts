@@ -1,11 +1,15 @@
-import type { DatabaseFile } from './backup-ports.ts';
+import type { DatabaseFile, PhotoArchive } from './backup-ports.ts';
 
-/** Erases every record on this device. The app must reload afterwards. */
+/** Erases every record and photo on this device. The app must reload afterwards. */
 export class DeleteAllData {
-	constructor(private readonly database: DatabaseFile) {}
+	constructor(
+		private readonly database: DatabaseFile,
+		private readonly photos: PhotoArchive
+	) {}
 
-	/** Deletes the database. */
+	/** Deletes the photos, then the database. */
 	async execute(): Promise<void> {
+		await this.photos.wipe();
 		await this.database.wipe();
 	}
 }

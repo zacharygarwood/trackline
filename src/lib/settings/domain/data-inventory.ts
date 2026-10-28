@@ -3,6 +3,7 @@ export interface DataCounts {
 	readonly weighIns: number;
 	readonly workouts: number;
 	readonly foodEntries: number;
+	readonly photos: number;
 }
 
 /** Counts the stored records. */

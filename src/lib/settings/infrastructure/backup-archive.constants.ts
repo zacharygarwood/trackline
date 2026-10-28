@@ -1,5 +1,7 @@
 /** Names of the files inside a backup zip. */
 export const BackupEntry = {
 	manifest: 'manifest.json',
-	database: 'buffalog.sqlite3'
+	database: 'buffalog.sqlite3',
+	/** The folder holding photo files, each under its photo store name. */
+	photoFolder: 'photos/'
 } as const;

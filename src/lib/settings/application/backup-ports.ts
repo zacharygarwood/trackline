@@ -1,5 +1,5 @@
 import type { Result } from '../../shared/result.ts';
-import type { Backup, UnreadableBackup } from '../domain/backup.ts';
+import type { Backup, BackupPhoto, UnreadableBackup } from '../domain/backup.ts';
 
 /** The on-device database file, which backups copy and restore. */
 export interface DatabaseFile {
@@ -8,6 +8,16 @@ export interface DatabaseFile {
 	/** Replaces the database with a backup's bytes. The app must reload afterwards. */
 	replaceFile(file: Uint8Array): Promise<void>;
 	/** Deletes the database. The app must reload afterwards. */
+	wipe(): Promise<void>;
+}
+
+/** The photo files stored next to the database, which backups copy and restore. */
+export interface PhotoArchive {
+	/** Every photo file. */
+	exportFiles(): Promise<readonly BackupPhoto[]>;
+	/** Replaces all photo files with a backup's. */
+	replaceFiles(files: readonly BackupPhoto[]): Promise<void>;
+	/** Deletes every photo file. */
 	wipe(): Promise<void>;
 }
 
