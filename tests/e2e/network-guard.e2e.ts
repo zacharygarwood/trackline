@@ -15,6 +15,7 @@ test('the app makes no requests outside its own origin', async ({ page, baseURL 
 
 	await page.goto('/');
 	await page.getByRole('link', { name: messages.landing.openApp }).click();
+	await page.getByRole('button', { name: messages.welcome.start }).click();
 	const navigation = page.getByRole('navigation', { name: messages.navigation.tabs });
 	for (const tab of [
 		messages.navigation.train,

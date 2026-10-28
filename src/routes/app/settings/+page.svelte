@@ -6,6 +6,8 @@
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
+	import DataSection from '#lib/settings/ui/DataSection.svelte';
+	import { DataPanel } from '#lib/settings/ui/data-panel.svelte.ts';
 	import { UnitsSetting } from '#lib/settings/ui/units-setting.svelte.ts';
 	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
 
@@ -16,18 +18,21 @@
 
 	let units: UnitsSetting | undefined = $state();
 	let goal: WeightGoalEditor | undefined = $state();
+	let data: DataPanel | undefined = $state();
 	let editingGoal = $state(false);
 
 	void getAppContext().then(async (app) => {
 		const nextUnits = new UnitsSetting(app.settings);
 		const nextGoal = new WeightGoalEditor(app.body);
-		await Promise.all([nextUnits.load(), nextGoal.load()]);
+		const nextData = new DataPanel(app.settings, app.saveFile);
+		await Promise.all([nextUnits.load(), nextGoal.load(), nextData.load()]);
 		units = nextUnits;
 		goal = nextGoal;
+		data = nextData;
 	});
 </script>
 
-{#if units !== undefined && goal !== undefined}
+{#if units !== undefined && goal !== undefined && data !== undefined}
 	{@const unitsSetting = units}
 	{@const goalEditor = goal}
 	<div class="settings">
@@ -45,6 +50,13 @@
 				{goalEditor.goal === undefined ? messages.body.setGoal : messages.body.changeGoal}
 			</Button>
 		</section>
+
+		<DataSection
+			panel={data}
+			onreplaced={() => {
+				location.reload();
+			}}
+		/>
 	</div>
 
 	{#if editingGoal}
@@ -61,7 +73,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-8);
-		padding-bottom: var(--space-6);
+		padding-bottom: var(--space-8);
 	}
 
 	section {

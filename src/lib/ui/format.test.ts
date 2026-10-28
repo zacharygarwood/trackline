@@ -3,7 +3,14 @@ import { expectErr, expectOk } from '../../../tests/support/result.ts';
 import { LocalDate } from '../shared/local-date.ts';
 import { MassUnit } from '../shared/mass-unit.constants.ts';
 import { Mass } from '../shared/mass.ts';
-import { formatDate, formatMass, InvalidMassEntry, massEntry, parseMassEntry } from './format.ts';
+import {
+	formatDate,
+	formatInstantDate,
+	formatMass,
+	InvalidMassEntry,
+	massEntry,
+	parseMassEntry
+} from './format.ts';
 
 const date = (text: string) => expectOk(LocalDate.parse(text));
 const kg = (amount: number) => expectOk(Mass.fromKg(amount));
@@ -42,5 +49,11 @@ describe('formatDate', () => {
 
 	it('shows older dates as a short date', () => {
 		expect(formatDate(date('2026-10-20'), today)).toBe('Tue, Oct 20');
+	});
+});
+
+describe('formatInstantDate', () => {
+	it('shows an instant as a medium date', () => {
+		expect(formatInstantDate(Date.UTC(2026, 9, 27, 12))).toBe('Oct 27, 2026');
 	});
 });

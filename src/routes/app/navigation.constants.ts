@@ -18,6 +18,13 @@ export const TAB_SECTIONS: readonly Section[] = [
 	{ route: AppRoute.stats, title: messages.navigation.stats, icon: 'stats' }
 ];
 
+/** The first-run screen, shown once before anything else. */
+export const WELCOME_SECTION: Section = {
+	route: AppRoute.welcome,
+	title: messages.navigation.welcome,
+	icon: 'today'
+};
+
 /** Settings, reached from the gear in the header rather than a tab. */
 export const SETTINGS_SECTION: Section = {
 	route: AppRoute.settings,

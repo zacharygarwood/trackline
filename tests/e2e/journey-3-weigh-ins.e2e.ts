@@ -1,5 +1,6 @@
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
+import { finishFirstRun, weighIn } from './helpers.ts';
 
 const WEIGH_INS = [
 	{ day: '2026-10-01', weight: '81' },
@@ -8,18 +9,10 @@ const WEIGH_INS = [
 ] as const;
 
 test('weigh in on three days and see the points and the 7-day average', async ({ page }) => {
+	await finishFirstRun(page);
 	for (const { day, weight } of WEIGH_INS) {
 		await page.clock.setFixedTime(new Date(`${day}T08:00:00`));
-		await page.goto('/app/body');
-		await page.getByRole('button', { name: messages.body.weighIn }).click();
-
-		const sheet = page.getByRole('dialog', { name: messages.body.weighIn });
-		for (const key of weight) {
-			const name = key === '.' ? messages.design.decimalSeparator : key;
-			await sheet.getByRole('button', { name, exact: true }).click();
-		}
-		await sheet.getByRole('button', { name: messages.body.save }).click();
-		await expect(sheet).toBeHidden();
+		await weighIn(page, weight);
 	}
 
 	const chart = page.getByRole('img', { name: /^Weight chart/ });
@@ -31,15 +24,11 @@ test('weigh in on three days and see the points and the 7-day average', async ({
 	await expect(page.getByRole('button', { name: /^Yesterday, 80\.5 kg/ })).toBeVisible();
 });
 
-test('the weigh-in sheet suggests the last weight, and switching to pounds converts it', async ({
+test('switching to pounds converts shown weights and the number pad suggestion', async ({
 	page
 }) => {
-	await page.clock.setFixedTime(new Date('2026-10-01T08:00:00'));
-	await page.goto('/app/body');
-	await page.getByRole('button', { name: messages.body.weighIn }).click();
-	const sheet = page.getByRole('dialog', { name: messages.body.weighIn });
-	for (const key of ['8', '0']) await sheet.getByRole('button', { name: key, exact: true }).click();
-	await sheet.getByRole('button', { name: messages.body.save }).click();
+	await finishFirstRun(page);
+	await weighIn(page, '80');
 
 	await page.getByRole('link', { name: messages.navigation.settings }).click();
 	await page.getByText(messages.units.lbLong).click();

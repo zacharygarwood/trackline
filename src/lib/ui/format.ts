@@ -3,10 +3,11 @@ import type { LocalDate } from '../shared/local-date.ts';
 import { MassUnit } from '../shared/mass-unit.constants.ts';
 import { Mass } from '../shared/mass.ts';
 import { err, ok, type Result } from '../shared/result.ts';
-import { DATE_FORMAT, WEIGHT_FORMAT } from './format.constants.ts';
+import { DATE_FORMAT, INSTANT_DATE_FORMAT, WEIGHT_FORMAT } from './format.constants.ts';
 
 const weightNumber = new Intl.NumberFormat(undefined, WEIGHT_FORMAT);
 const dateFormat = new Intl.DateTimeFormat(undefined, DATE_FORMAT);
+const instantDateFormat = new Intl.DateTimeFormat(undefined, INSTANT_DATE_FORMAT);
 const ENTRY_FRACTION_DIGITS = 1;
 const ONE_DAY_BACK = -1;
 
@@ -68,4 +69,13 @@ export function formatDate(date: LocalDate, today: LocalDate): string {
 	if (date.equals(today)) return messages.dates.today;
 	if (date.equals(today.addDays(ONE_DAY_BACK))) return messages.dates.yesterday;
 	return dateFormat.format(new Date(Date.UTC(date.year, date.month - 1, date.day)));
+}
+
+/**
+ * The calendar date of an instant in the device's time zone, for example "Oct 27, 2026".
+ *
+ * @param epochMilliseconds - The instant.
+ */
+export function formatInstantDate(epochMilliseconds: number): string {
+	return instantDateFormat.format(epochMilliseconds);
 }

@@ -1,13 +1,14 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { setAppContext } from '#lib/app/app-context.ts';
-	import { startApp } from '#lib/app/container.ts';
+	import { startApp, type App } from '#lib/app/container.ts';
 	import Icon from '#lib/design/Icon.svelte';
 	import TabBar from '#lib/design/TabBar.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import type { LayoutProps } from './$types';
-	import { SETTINGS_SECTION, TAB_SECTIONS } from './navigation.constants.ts';
+	import { SETTINGS_SECTION, TAB_SECTIONS, WELCOME_SECTION } from './navigation.constants.ts';
 
 	const { children }: LayoutProps = $props();
 
@@ -19,16 +20,28 @@
 		icon: section.icon
 	}));
 	const settingsHref = resolve(SETTINGS_SECTION.route);
+	const welcomeHref = resolve(WELCOME_SECTION.route);
+	const onWelcome = $derived(page.url.pathname === welcomeHref);
 
 	const title = $derived(
-		[...TAB_SECTIONS, SETTINGS_SECTION].find(
+		[...TAB_SECTIONS, SETTINGS_SECTION, WELCOME_SECTION].find(
 			(section) => resolve(section.route) === page.url.pathname
 		)?.title
 	);
 
-	setAppContext(startApp()).catch(() => {
-		storageFailed = true;
-	});
+	/** Sends a new user to the first-run screen before anything else. */
+	async function welcomeNewUser(app: App): Promise<void> {
+		const setUp = await app.settings.getSetupStatus.execute();
+		if (!setUp && page.url.pathname !== welcomeHref) {
+			await goto(resolve(WELCOME_SECTION.route), { replaceState: true });
+		}
+	}
+
+	setAppContext(startApp())
+		.then(welcomeNewUser)
+		.catch(() => {
+			storageFailed = true;
+		});
 </script>
 
 <svelte:head>
@@ -38,9 +51,11 @@
 <div class="shell">
 	<header>
 		<h1>{title}</h1>
-		<a href={settingsHref} aria-label={messages.navigation.settings}>
-			<Icon name="settings" />
-		</a>
+		{#if !onWelcome}
+			<a href={settingsHref} aria-label={messages.navigation.settings}>
+				<Icon name="settings" />
+			</a>
+		{/if}
 	</header>
 
 	{#if storageFailed}
@@ -51,9 +66,11 @@
 		{@render children()}
 	</main>
 
-	<div class="tab-bar">
-		<TabBar {tabs} currentHref={page.url.pathname} label={messages.navigation.tabs} />
-	</div>
+	{#if !onWelcome}
+		<div class="tab-bar">
+			<TabBar {tabs} currentHref={page.url.pathname} label={messages.navigation.tabs} />
+		</div>
+	{/if}
 </div>
 
 <style>

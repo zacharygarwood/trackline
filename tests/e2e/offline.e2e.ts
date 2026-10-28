@@ -1,8 +1,9 @@
 import { expect, test } from './fixtures.ts';
+import { finishFirstRun } from './helpers.ts';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 
 test('after one visit, the app opens and navigates with no network', async ({ page, context }) => {
-	await page.goto('/app');
+	await finishFirstRun(page);
 	await page.evaluate(async () => {
 		await navigator.serviceWorker.ready;
 	});

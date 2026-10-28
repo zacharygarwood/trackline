@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FixedClock } from '../../../tests/fakes/fixed-clock.ts';
+import { InMemoryDatabaseFile } from '../../../tests/fakes/in-memory-database-file.ts';
 import { migratedDatabase } from '../../../tests/support/migrated-database.ts';
 import { expectOk } from '../../../tests/support/result.ts';
 import { MassUnit } from '../shared/mass-unit.constants.ts';
@@ -9,7 +10,11 @@ import { wireApp } from './container.ts';
 describe('wireApp', () => {
 	it('connects use cases to the real repositories', async () => {
 		const clock = new FixedClock(Date.UTC(2026, 9, 27));
-		const app = wireApp(await migratedDatabase(), clock);
+		const app = wireApp({
+			database: await migratedDatabase(),
+			databaseFile: new InMemoryDatabaseFile(),
+			clock
+		});
 
 		expectOk(
 			await app.body.recordWeighIn.execute({
@@ -21,5 +26,6 @@ describe('wireApp', () => {
 
 		expect(await app.body.listWeighIns.execute()).toHaveLength(1);
 		expect(await app.settings.getMassUnit.execute()).toBe(MassUnit.lb);
+		expect(await app.settings.countRecords.execute()).toEqual({ weighIns: 1 });
 	});
 });

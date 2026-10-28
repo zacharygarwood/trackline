@@ -25,7 +25,8 @@ export const messages = {
 		eat: 'Eat',
 		body: 'Body',
 		stats: 'Stats',
-		settings: 'Settings'
+		settings: 'Settings',
+		welcome: 'Welcome'
 	},
 	placeholder: {
 		comingSoon: 'Nothing here yet. This section is being built.'
@@ -67,7 +68,40 @@ export const messages = {
 		maintain: 'Maintain'
 	},
 	settings: {
-		units: 'Units'
+		units: 'Units',
+		backup: 'Backup',
+		backupExplainer:
+			'Your data lives only on this device. Export a backup now and then, and keep it somewhere safe.',
+		exportBackup: 'Export backup',
+		restoreBackup: 'Restore from backup',
+		lastExport: (date: string) => `Last backup: ${date}.`,
+		neverExported: 'No backup yet.',
+		backupOverdue: 'It has been a while. Consider exporting a fresh backup.',
+		restoreTitle: 'Restore backup',
+		restoreSummary: (date: string, current: string) =>
+			`This replaces everything on this device (${current}) with the backup from ${date}.`,
+		restoreConfirm: 'Replace my data',
+		cancel: 'Cancel',
+		notABackup: 'That file is not a backup from this app.',
+		newerFormat:
+			'That backup was made by a newer version of the app. Update the app, then try again.',
+		dangerZone: 'Delete data',
+		deleteAll: 'Delete all data',
+		deleteTitle: 'Delete all data',
+		deleteSummary: (current: string) =>
+			`This permanently deletes everything on this device (${current}). It cannot be undone. Export a backup first if you might want it back.`,
+		deleteConfirmWord: 'delete',
+		deletePrompt: 'Type delete to confirm',
+		deleteConfirm: 'Delete everything',
+		recordCount: (weighIns: number) =>
+			`${String(weighIns)} ${weighIns === 1 ? 'weigh-in' : 'weigh-ins'}`
+	},
+	welcome: {
+		title: 'Welcome',
+		privacy:
+			'Everything you log stays on this device. There is no account and nothing is uploaded. Because of that, your backups are up to you: export one from Settings now and then.',
+		optional: 'You can change all of this later in Settings.',
+		start: 'Get started'
 	},
 	design: {
 		close: 'Close',

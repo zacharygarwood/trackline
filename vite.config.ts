@@ -53,6 +53,7 @@ export default defineConfig({
 			}
 		})
 	],
+	define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0') },
 	worker: { format: 'es' },
 	optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },
 	test: {
@@ -63,7 +64,8 @@ export default defineConfig({
 			exclude: [
 				'src/lib/**/*.test.ts',
 				'src/lib/**/*.constants.ts',
-				'src/lib/platform/db/{worker,open-database,wasm-sql-executor}.ts'
+				'src/lib/platform/db/{worker,open-database,wasm-sql-executor}.ts',
+				'src/lib/platform/backup/download-file.ts'
 			],
 			thresholds: {
 				'src/lib/**/{domain,application}/**': { lines: 95 },
