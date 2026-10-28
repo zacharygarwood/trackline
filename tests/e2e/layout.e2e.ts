@@ -3,6 +3,9 @@ import { expect, test } from './fixtures.ts';
 import { finishFirstRun } from './helpers.ts';
 
 const SCREENS = [
+	'/',
+	'/privacy',
+	'/faq',
 	'/app',
 	'/app/train',
 	'/app/eat',

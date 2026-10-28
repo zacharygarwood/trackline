@@ -24,4 +24,9 @@ export class NodeSqliteExecutor implements SqlExecutor {
 			this.database.prepare(statement.sql).run(...statement.params);
 		}
 	}
+
+	/** The whole database as a SQLite file, as a backup stores it. */
+	serialize(): Uint8Array {
+		return this.database.serialize();
+	}
 }

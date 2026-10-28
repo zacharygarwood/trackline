@@ -2,6 +2,7 @@
 	"name": "buffalog",
 	"private": true,
 	"version": "0.0.1",
+	"license": "GPL-3.0-only",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -21,9 +22,11 @@
 		"test": "vitest run --coverage",
 		"test:watch": "vitest",
 		"test:e2e": "playwright test",
-		"test:mutation": "stryker run"
+		"test:mutation": "stryker run",
+		"screenshots": "playwright test -c playwright.screenshots.config.ts"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.14.0",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.60.0",
 		"@stryker-mutator/core": "^10.1.1",
