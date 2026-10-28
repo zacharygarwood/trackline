@@ -74,7 +74,7 @@ test('log a workout, repeat it from a template, keep the streak with a rest day,
 		.getByRole('button', { name: messages.training.markRestDay(messages.dates.today) })
 		.click();
 
-	await expect(page.getByText(messages.training.streak(2, 2))).toBeVisible();
+	await expect(page.getByLabel(messages.training.streak(2, 2))).toBeVisible();
 	await expect(
 		page.getByRole('button', { name: messages.training.markRestDay(messages.dates.today) })
 	).toHaveAttribute('aria-pressed', 'true');

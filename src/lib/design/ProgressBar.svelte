@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Tone } from './tone.constants.ts';
+
 	/** Props for a thin progress bar toward a target. */
 	interface Props {
 		/** The amount so far. */
@@ -7,9 +9,10 @@
 		max: number;
 		/** What the bar shows, in words, for screen readers. */
 		label: string;
+		tone?: Tone;
 	}
 
-	const { value, max, label }: Props = $props();
+	const { value, max, label, tone = Tone.accent }: Props = $props();
 
 	const FULL = 100;
 	const percent = $derived(max <= 0 ? 0 : Math.min(FULL, (value / max) * FULL));
@@ -28,7 +31,7 @@
 	aria-valuemax={max}
 >
 	<rect class="track" x="0" y="0" width="100" height="4" rx="2" />
-	<rect class="fill" x="0" y="0" width={percent} height="4" rx="2" />
+	<rect class="fill {tone}" x="0" y="0" width={percent} height="4" rx="2" />
 </svg>
 
 <style>
@@ -42,8 +45,24 @@
 		fill: var(--color-surface);
 	}
 
-	.fill {
+	.accent {
 		fill: var(--color-accent);
+	}
+
+	.rest {
+		fill: var(--color-rest);
+	}
+
+	.protein {
+		fill: var(--color-protein);
+	}
+
+	.carbs {
+		fill: var(--color-carbs);
+	}
+
+	.fat {
+		fill: var(--color-fat);
 	}
 
 	.over .fill {

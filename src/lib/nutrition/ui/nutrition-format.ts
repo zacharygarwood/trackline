@@ -72,6 +72,15 @@ export const MACRO_UNITS: Readonly<Record<keyof Macros, string>> = {
 };
 
 /**
+ * Calories as a bare whole number, for example "1,389".
+ *
+ * @param calories - Energy in kcal.
+ */
+export function formatCalorieNumber(calories: number): string {
+	return whole.format(calories);
+}
+
+/**
  * One macro amount for display: calories as kcal, the others in grams.
  *
  * @param key - Which macro.

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getAppContext } from '#lib/app/app-context.ts';
+	import Icon from '#lib/design/Icon.svelte';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { StatsRange } from '#lib/insights/application/stats-range.constants.ts';
@@ -40,12 +41,12 @@
 	{@const ready = screen}
 	<div class="stats">
 		<dl class="streaks">
-			<div>
-				<dt>{messages.stats.currentStreak}</dt>
+			<div class="current">
+				<dt><Icon name="flame" />{messages.stats.currentStreak}</dt>
 				<dd>{messages.stats.days(ready.streak.current)}</dd>
 			</div>
 			<div>
-				<dt>{messages.stats.longestStreak}</dt>
+				<dt><Icon name="flame" />{messages.stats.longestStreak}</dt>
 				<dd>{messages.stats.days(ready.streak.longest)}</dd>
 			</div>
 		</dl>
@@ -134,13 +135,22 @@
 
 	.streaks div {
 		padding: var(--space-4);
-		border-radius: var(--radius-medium);
-		background: var(--color-surface);
+		border-radius: var(--radius-card);
+		background: var(--color-card);
+		box-shadow: var(--shadow-card);
+	}
+
+	.streaks .current {
+		background: var(--color-accent);
+		color: var(--color-on-accent);
 	}
 
 	dt {
-		color: var(--color-text-muted);
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
 		font-size: var(--font-size-small);
+		--icon-size: 18px;
 	}
 
 	dd {

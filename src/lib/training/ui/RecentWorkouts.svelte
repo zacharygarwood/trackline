@@ -21,7 +21,7 @@
 <section>
 	<h2>{messages.training.recent}</h2>
 	{#if workouts.length === 0}
-		<EmptyState message={messages.training.noWorkouts} />
+		<EmptyState message={messages.training.noWorkouts} icon="train" />
 	{:else}
 		<ul>
 			{#each workouts as workout (workout.id)}

@@ -3,13 +3,16 @@
 	import { BodyScreen } from '#lib/body/ui/body-screen.svelte.ts';
 	import WeighInSheet from '#lib/body/ui/WeighInSheet.svelte';
 	import Button from '#lib/design/Button.svelte';
+	import Card from '#lib/design/Card.svelte';
+	import { Tone } from '#lib/design/tone.constants.ts';
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import LogFoodSheet from '#lib/nutrition/ui/LogFoodSheet.svelte';
 	import MacroProgress from '#lib/nutrition/ui/MacroProgress.svelte';
 	import { NutritionDay } from '#lib/nutrition/ui/nutrition-day.svelte.ts';
-	import { first } from '#lib/shared/collections.ts';
+	import type { TrainingDay } from '#lib/training/application/get-training-days.ts';
 	import { TrainOverview } from '#lib/training/ui/train-overview.svelte.ts';
+	import WeekView from '#lib/training/ui/WeekView.svelte';
 	import { formatMass } from '#lib/ui/format.ts';
 
 	let body: BodyScreen | undefined = $state();
@@ -43,53 +46,39 @@
 	{@const todayWeighIn = bodyScreen.weighIns.find((weighIn) =>
 		weighIn.date.equals(bodyScreen.today)
 	)}
-	{@const todayTraining = first(overview.calendar?.days ?? [])}
 	<div class="today">
 		{#if todayWeighIn === undefined}
-			<Button onclick={() => (weighing = true)}>{messages.body.weighIn}</Button>
-			<Button variant={ButtonVariant.secondary} onclick={() => (logging = true)}
-				>{messages.nutrition.logFood}</Button
-			>
+			<div class="actions">
+				<Button onclick={() => (weighing = true)}>{messages.body.weighIn}</Button>
+				<Button variant={ButtonVariant.secondary} onclick={() => (logging = true)}
+					>{messages.nutrition.logFood}</Button
+				>
+			</div>
 		{:else}
 			<Button onclick={() => (logging = true)}>{messages.nutrition.logFood}</Button>
 		{/if}
 
-		<section>
-			<h2>{messages.today.food}</h2>
+		<Card title={messages.today.food} icon="eat">
 			<MacroProgress summary={day.day.summary} />
-		</section>
+		</Card>
 
-		<section>
-			<h2>{messages.today.body}</h2>
-			<p>
-				{todayWeighIn === undefined
-					? messages.today.notWeighedIn
-					: messages.today.weighedIn(formatMass(todayWeighIn.weight, bodyScreen.unit))}
-			</p>
-		</section>
+		<Card title={messages.today.body} icon="body" tone={Tone.fat}>
+			{#if todayWeighIn === undefined}
+				<p class="muted">{messages.today.notWeighedIn}</p>
+			{:else}
+				<p class="stat">{formatMass(todayWeighIn.weight, bodyScreen.unit)}</p>
+				<p class="muted">{messages.today.weighedInToday}</p>
+			{/if}
+		</Card>
 
-		{#if todayTraining !== undefined}
-			<section>
-				<h2>{messages.today.training}</h2>
-				{#if todayTraining.trained}
-					<p>{messages.today.workoutDone}</p>
-				{:else}
-					<div class="row">
-						<p>{todayTraining.rested ? messages.today.restDayMarked : messages.today.noTraining}</p>
-						<button
-							type="button"
-							class="rest"
-							class:rested={todayTraining.rested}
-							aria-pressed={todayTraining.rested}
-							aria-label={messages.training.markRestDay(messages.dates.today)}
-							onclick={() => overview.toggleRestDay(todayTraining.date, todayTraining.rested)}
-						>
-							{messages.training.restDay}
-						</button>
-					</div>
-				{/if}
-				<p class="streak">{overview.streakText}</p>
-			</section>
+		{#if overview.calendar !== undefined}
+			<WeekView
+				days={overview.calendar.days}
+				streak={overview.calendar.streak}
+				today={overview.today}
+				ontoggle={(training: TrainingDay) =>
+					void overview.toggleRestDay(training.date, training.rested)}
+			/>
 		{/if}
 	</div>
 
@@ -117,41 +106,24 @@
 	.today {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-6);
+		gap: var(--space-4);
 		padding-bottom: var(--space-8);
 	}
 
-	h2 {
-		margin-bottom: var(--space-2);
+	.actions {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-3);
+	}
+
+	.stat {
+		font-size: var(--font-size-stat);
+		font-weight: var(--font-weight-semibold);
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+	}
+
+	.muted {
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-		font-weight: var(--font-weight-regular);
-	}
-
-	.row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.rest {
-		min-height: var(--tap-target);
-		padding: 0 var(--space-3);
-		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-round);
-		background: transparent;
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
-
-	.rest.rested {
-		background: var(--color-surface);
-		color: var(--color-text);
-	}
-
-	.streak {
-		margin-top: var(--space-2);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 	}
 </style>

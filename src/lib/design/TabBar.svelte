@@ -28,7 +28,7 @@
 		{#each tabs as tab (tab.href)}
 			<li>
 				<a href={tab.href} aria-current={tab.href === currentHref ? ARIA_CURRENT_PAGE : undefined}>
-					<Icon name={tab.icon} />
+					<span class="pill"><Icon name={tab.icon} /></span>
 					<span>{tab.label}</span>
 				</a>
 			</li>
@@ -39,7 +39,7 @@
 <style>
 	nav {
 		border-top: var(--border-hairline) solid var(--color-divider);
-		background: var(--color-background);
+		background: var(--color-card);
 		padding-bottom: env(safe-area-inset-bottom);
 	}
 
@@ -67,8 +67,21 @@
 		user-select: none;
 	}
 
+	.pill {
+		display: grid;
+		place-items: center;
+		width: var(--space-12);
+		height: var(--space-8);
+		border-radius: var(--radius-round);
+		transition: background var(--duration-quick);
+	}
+
 	a[aria-current='page'] {
 		color: var(--color-accent);
 		font-weight: var(--font-weight-semibold);
+	}
+
+	a[aria-current='page'] .pill {
+		background: var(--color-accent-soft);
 	}
 </style>

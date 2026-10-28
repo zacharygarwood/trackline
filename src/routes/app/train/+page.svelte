@@ -70,7 +70,7 @@
 			{#if ready.calendar !== undefined}
 				<WeekView
 					days={ready.calendar.days}
-					streak={ready.streakText}
+					streak={ready.calendar.streak}
 					today={ready.today}
 					ontoggle={(day: TrainingDay) => void ready.toggleRestDay(day.date, day.rested)}
 				/>

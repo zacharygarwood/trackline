@@ -226,6 +226,9 @@ export const messages = {
 		streak: (current: number, longest: number) =>
 			`Streak: ${countOf(current, 'day', 'days')}. Best: ${countOf(longest, 'day', 'days')}.`,
 		restDay: 'Rest day',
+		dayTrained: (date: string) => `${date}: workout`,
+		streakNow: (days: number) => countOf(days, 'day', 'days'),
+		best: (days: number) => `Best ${String(days)}`,
 		markRestDay: (date: string) => `Mark ${date} as a rest day`,
 		trained: 'Workout',
 		nothingLogged: 'Nothing logged',
@@ -302,6 +305,8 @@ export const messages = {
 		amountWithUnit: (amount: string, unit: string) => `${amount} ${unit}`,
 		entryDetail: (amount: string, calories: string) => `${amount} · ${calories}`,
 		kcal: (calories: string) => `${calories} kcal`,
+		kcalLeft: 'kcal left',
+		kcalOver: 'kcal over',
 		grams: (grams: string) => `${grams} g`,
 		macroLine: (amounts: {
 			readonly calories: string;
@@ -370,6 +375,7 @@ export const messages = {
 			`${summary.name}: ${countOf(summary.sessions, 'session', 'sessions')}. Heaviest set ${summary.heaviest}, best estimated one-rep max ${summary.best}.`
 	},
 	today: {
+		weighedInToday: 'Weighed in today',
 		weighedIn: (weight: string) => `Weighed in: ${weight}`,
 		notWeighedIn: 'Not weighed in yet.',
 		workoutDone: 'Workout done.',

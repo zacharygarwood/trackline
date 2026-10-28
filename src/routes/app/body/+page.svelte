@@ -53,7 +53,7 @@
 			}}>{messages.body.weighIn}</Button
 		>
 		{#if ready.weighIns.length === 0}
-			<EmptyState message={messages.body.empty} />
+			<EmptyState message={messages.body.empty} icon="body" />
 		{:else}
 			<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
 		{/if}

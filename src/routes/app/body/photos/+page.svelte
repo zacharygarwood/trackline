@@ -28,7 +28,7 @@
 	<div class="photos">
 		<AddPhotoButton gallery={ready} />
 		{#if ready.photos.length === 0}
-			<EmptyState message={messages.body.noPhotos} />
+			<EmptyState message={messages.body.noPhotos} icon="camera" />
 		{:else}
 			<PhotoGrid
 				days={ready.days}

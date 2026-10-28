@@ -171,7 +171,8 @@
 	}
 
 	h1 {
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-large-title);
+		letter-spacing: -0.01em;
 	}
 
 	header a {

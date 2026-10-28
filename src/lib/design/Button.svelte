@@ -30,13 +30,15 @@
 		justify-content: center;
 		gap: var(--space-2);
 		min-width: var(--tap-target);
-		min-height: var(--tap-target);
+		min-height: var(--button-height);
 		padding: var(--space-3) var(--space-6);
 		border: none;
 		border-radius: var(--radius-round);
 		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
-		transition: opacity var(--duration-quick);
+		transition:
+			opacity var(--duration-quick),
+			transform var(--duration-quick);
 	}
 
 	.button:disabled {
@@ -44,14 +46,19 @@
 		cursor: default;
 	}
 
+	.button:active:not(:disabled) {
+		transform: scale(0.97);
+	}
+
 	.primary {
 		background: var(--color-accent);
 		color: var(--color-on-accent);
+		box-shadow: var(--shadow-button);
 	}
 
 	.secondary {
-		background: var(--color-surface);
-		color: var(--color-text);
+		background: var(--color-accent-soft);
+		color: var(--color-on-accent-soft);
 	}
 
 	.quiet {

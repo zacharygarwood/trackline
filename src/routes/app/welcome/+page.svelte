@@ -5,6 +5,7 @@
 	import { GoalDirection } from '#lib/body/domain/goal-direction.constants.ts';
 	import { DIRECTION_LABELS, WeightGoalEditor } from '#lib/body/ui/weight-goal-editor.svelte.ts';
 	import Button from '#lib/design/Button.svelte';
+	import Illustration from '#lib/design/Illustration.svelte';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import UnitField from '#lib/design/UnitField.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
@@ -61,6 +62,7 @@
 {#if ready !== undefined}
 	{@const screen = ready}
 	<div class="welcome">
+		<div class="hero"><Illustration icon="today" /></div>
 		<SegmentedControl
 			label={messages.settings.units}
 			options={unitOptions}
@@ -101,6 +103,11 @@
 		flex-direction: column;
 		gap: var(--space-6);
 		padding-bottom: var(--space-8);
+	}
+
+	.hero {
+		display: flex;
+		justify-content: center;
 	}
 
 	section {
