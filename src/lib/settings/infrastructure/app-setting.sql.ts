@@ -4,7 +4,9 @@ import type { SqlStatement } from '../../platform/db/sql.ts';
 export const SettingKey = {
 	massUnit: 'mass_unit',
 	lastExportAt: 'last_export_at',
-	setupComplete: 'setup_complete'
+	setupComplete: 'setup_complete',
+	weekStart: 'week_start',
+	installHintDismissed: 'install_hint_dismissed'
 } as const;
 
 /** One of the {@link SettingKey} values. */

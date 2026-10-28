@@ -9,10 +9,13 @@ import { GetSetupStatus } from '../settings/application/get-setup-status.ts';
 import { PreviewRestore } from '../settings/application/preview-restore.ts';
 import { RestoreBackup } from '../settings/application/restore-backup.ts';
 import { SetMassUnit } from '../settings/application/set-mass-unit.ts';
+import { GetWeekStart } from '../settings/application/get-week-start.ts';
+import { SetWeekStart } from '../settings/application/set-week-start.ts';
 import { FolderPhotoArchive } from '../settings/infrastructure/folder-photo-archive.ts';
 import { SqliteAppState } from '../settings/infrastructure/sqlite-app-state.ts';
 import { SqliteDataInventory } from '../settings/infrastructure/sqlite-data-inventory.ts';
 import { SqliteMassUnitPreference } from '../settings/infrastructure/sqlite-mass-unit-preference.ts';
+import { SqliteWeekStartPreference } from '../settings/infrastructure/sqlite-week-start-preference.ts';
 import { ZipBackupCodec } from '../settings/infrastructure/zip-backup-codec.ts';
 import { last } from '../shared/collections.ts';
 import type { Infrastructure } from './infrastructure.ts';
@@ -55,9 +58,12 @@ function wireBackup({ database, databaseFile, photoFolder, clock }: Infrastructu
 export function wireSettings(infrastructure: Infrastructure) {
 	const massUnit = new SqliteMassUnitPreference(infrastructure.database);
 	const state = new SqliteAppState(infrastructure.database);
+	const weekStart = new SqliteWeekStartPreference(infrastructure.database);
 	return {
 		getMassUnit: new GetMassUnit(massUnit),
 		setMassUnit: new SetMassUnit(massUnit),
+		getWeekStart: new GetWeekStart(weekStart),
+		setWeekStart: new SetWeekStart(weekStart),
 		getSetupStatus: new GetSetupStatus(state),
 		completeSetup: new CompleteSetup(state),
 		...wireBackup(infrastructure)

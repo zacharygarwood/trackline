@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Heatmap from '../../design/Heatmap.svelte';
 	import type { LocalDate } from '../../shared/local-date.ts';
+	import type { WeekStart } from '../../shared/week-start.constants.ts';
 	import type { ActivityHeatmap } from './activity-heatmaps.ts';
 
 	/** Props for one titled 52-week heatmap with its legend. */
@@ -8,16 +9,18 @@
 		heatmap: ActivityHeatmap;
 		/** The last day drawn. */
 		today: LocalDate;
+		/** The day at the top of each column. */
+		weekStart: WeekStart;
 	}
 
-	const { heatmap, today }: Props = $props();
+	const { heatmap, today, weekStart }: Props = $props();
 
 	const WEEKS = 52;
 </script>
 
 <section>
 	<h3>{heatmap.title}</h3>
-	<Heatmap {today} weeks={WEEKS} shadeOf={heatmap.shadeOf} summary={heatmap.summary} />
+	<Heatmap {today} weeks={WEEKS} {weekStart} shadeOf={heatmap.shadeOf} summary={heatmap.summary} />
 	{#if heatmap.legend.length > 0}
 		<p class="legend">
 			{#each heatmap.legend as entry (entry.label)}

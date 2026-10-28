@@ -12,7 +12,11 @@
 
 	void getAppContext().then(async (app) => {
 		const next = new StatsScreen(
-			{ ...app.insights, getMassUnit: app.settings.getMassUnit },
+			{
+				...app.insights,
+				getMassUnit: app.settings.getMassUnit,
+				getWeekStart: app.settings.getWeekStart
+			},
 			app.clock
 		);
 		await next.load();
@@ -49,7 +53,7 @@
 		<section class="activity">
 			<h2>{messages.stats.activity}</h2>
 			{#each ready.heatmaps as heatmap (heatmap.title)}
-				<ActivityHeatmapView {heatmap} today={ready.today} />
+				<ActivityHeatmapView {heatmap} today={ready.today} weekStart={ready.weekStart} />
 			{/each}
 		</section>
 

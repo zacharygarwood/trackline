@@ -4,6 +4,9 @@ import { FixedClock } from '../../../../tests/fakes/fixed-clock.ts';
 import { InMemoryMassUnitPreference } from '../../../../tests/fakes/in-memory-mass-unit-preference.ts';
 import { StubInsightsQueries } from '../../../../tests/fakes/stub-insights-queries.ts';
 import { GetMassUnit } from '../../settings/application/get-mass-unit.ts';
+import { GetWeekStart } from '../../settings/application/get-week-start.ts';
+import { WeekStart } from '../../shared/week-start.constants.ts';
+import { InMemoryWeekStartPreference } from '../../../../tests/fakes/in-memory-week-start-preference.ts';
 import { MassUnit } from '../../shared/mass-unit.constants.ts';
 import { GetActivity } from '../application/get-activity.ts';
 import { GetExerciseProgress } from '../application/get-exercise-progress.ts';
@@ -17,6 +20,7 @@ describe('StatsScreen', () => {
 	const squat = { id: anExerciseId(), name: 'Squat' };
 	let queries: StubInsightsQueries;
 	let units: InMemoryMassUnitPreference;
+	let weeks: InMemoryWeekStartPreference;
 
 	const screenFor = () => {
 		const clock = new FixedClock(0, '2026-10-28');
@@ -26,7 +30,8 @@ describe('StatsScreen', () => {
 				getTrends: new GetTrends({ weight: queries, nutrition: queries, clock }),
 				listTrackedExercises: new ListTrackedExercises(queries),
 				getExerciseProgress: new GetExerciseProgress(queries, clock),
-				getMassUnit: new GetMassUnit(units)
+				getMassUnit: new GetMassUnit(units),
+				getWeekStart: new GetWeekStart(weeks)
 			},
 			clock
 		);
@@ -35,18 +40,21 @@ describe('StatsScreen', () => {
 	beforeEach(() => {
 		queries = new StubInsightsQueries();
 		units = new InMemoryMassUnitPreference();
+		weeks = new InMemoryWeekStartPreference();
 	});
 
 	it('loads activity, the last four weeks of trends, and the most recent exercise', async () => {
 		queries.exercises = [bench, squat];
 		queries.streak = { current: 3, longest: 9 };
 		await units.write(MassUnit.lb);
+		await weeks.write(WeekStart.sunday);
 		const screen = screenFor();
 
 		await screen.load();
 
 		expect(screen.streak).toEqual({ current: 3, longest: 9 });
 		expect(screen.unit).toBe(MassUnit.lb);
+		expect(screen.weekStart).toBe(WeekStart.sunday);
 		expect(screen.exercise).toEqual(bench);
 		expect(queries.calls).toEqual(
 			expect.arrayContaining([

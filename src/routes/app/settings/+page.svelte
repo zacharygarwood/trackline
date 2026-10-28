@@ -8,17 +8,26 @@
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import DailyGoalsForm from '#lib/nutrition/ui/DailyGoalsForm.svelte';
 	import { DailyGoalsEditor } from '#lib/nutrition/ui/daily-goals-editor.svelte.ts';
+	import AboutSection from '#lib/settings/ui/AboutSection.svelte';
 	import DataSection from '#lib/settings/ui/DataSection.svelte';
 	import { DataPanel } from '#lib/settings/ui/data-panel.svelte.ts';
 	import { UnitsSetting } from '#lib/settings/ui/units-setting.svelte.ts';
+	import { WeekStartSetting } from '#lib/settings/ui/week-start-setting.svelte.ts';
 	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
+	import { WeekStart } from '#lib/shared/week-start.constants.ts';
 
 	const unitOptions = [
 		{ value: MassUnit.kg, label: messages.units.kgLong },
 		{ value: MassUnit.lb, label: messages.units.lbLong }
 	];
 
+	const weekStartOptions = [
+		{ value: WeekStart.monday, label: messages.settings.monday },
+		{ value: WeekStart.sunday, label: messages.settings.sunday }
+	];
+
 	let units: UnitsSetting | undefined = $state();
+	let weekStart: WeekStartSetting | undefined = $state();
 	let goal: WeightGoalEditor | undefined = $state();
 	let dailyGoals: DailyGoalsEditor | undefined = $state();
 	let data: DataPanel | undefined = $state();
@@ -26,10 +35,18 @@
 
 	void getAppContext().then(async (app) => {
 		const nextUnits = new UnitsSetting(app.settings);
+		const nextWeekStart = new WeekStartSetting(app.settings);
 		const nextGoal = new WeightGoalEditor(app.body);
 		const nextData = new DataPanel(app.settings, app.saveFile);
 		const nextDailyGoals = new DailyGoalsEditor(app.nutrition, app.clock);
-		await Promise.all([nextUnits.load(), nextGoal.load(), nextData.load(), nextDailyGoals.load()]);
+		await Promise.all([
+			nextUnits.load(),
+			nextWeekStart.load(),
+			nextGoal.load(),
+			nextData.load(),
+			nextDailyGoals.load()
+		]);
+		weekStart = nextWeekStart;
 		dailyGoals = nextDailyGoals;
 		units = nextUnits;
 		goal = nextGoal;
@@ -37,15 +54,23 @@
 	});
 </script>
 
-{#if units !== undefined && goal !== undefined && data !== undefined && dailyGoals !== undefined}
+{#if units !== undefined && weekStart !== undefined && goal !== undefined && data !== undefined && dailyGoals !== undefined}
 	{@const unitsSetting = units}
 	{@const goalEditor = goal}
+	{@const weekStartSetting = weekStart}
 	<div class="settings">
 		<SegmentedControl
 			label={messages.settings.units}
 			options={unitOptions}
 			value={unitsSetting.unit}
 			onchange={(unit: MassUnit) => void unitsSetting.choose(unit)}
+		/>
+
+		<SegmentedControl
+			label={messages.settings.weekStart}
+			options={weekStartOptions}
+			value={weekStartSetting.weekStart}
+			onchange={(day: WeekStart) => void weekStartSetting.choose(day)}
 		/>
 
 		<section>
@@ -64,6 +89,8 @@
 				location.reload();
 			}}
 		/>
+
+		<AboutSection version={__APP_VERSION__} />
 	</div>
 
 	{#if editingGoal}

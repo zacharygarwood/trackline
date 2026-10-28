@@ -2,6 +2,7 @@ import type { Clock } from '../../shared/clock.ts';
 import { first } from '../../shared/collections.ts';
 import type { LocalDate } from '../../shared/local-date.ts';
 import { MassUnit } from '../../shared/mass-unit.constants.ts';
+import { WeekStart } from '../../shared/week-start.constants.ts';
 import type { GetActivity } from '../application/get-activity.ts';
 import type { GetExerciseProgress } from '../application/get-exercise-progress.ts';
 import type { GetTrends, Trends } from '../application/get-trends.ts';
@@ -22,6 +23,11 @@ export interface MassUnitSource {
 	execute(): Promise<MassUnit>;
 }
 
+/** Reads the day the user's weeks begin on; supplied by the settings context. */
+export interface WeekStartSource {
+	execute(): Promise<WeekStart>;
+}
+
 /** The use cases the Stats screen calls. */
 export interface StatsScreenUseCases {
 	readonly getActivity: GetActivity;
@@ -29,6 +35,7 @@ export interface StatsScreenUseCases {
 	readonly listTrackedExercises: ListTrackedExercises;
 	readonly getExerciseProgress: GetExerciseProgress;
 	readonly getMassUnit: MassUnitSource;
+	readonly getWeekStart: WeekStartSource;
 }
 
 const NO_ACTIVITY: ActivityDays = { trained: [], rested: [], foodLogged: [], proteinGoalMet: [] };
@@ -37,6 +44,7 @@ const NO_ACTIVITY: ActivityDays = { trained: [], rested: [], foodLogged: [], pro
 export class StatsScreen {
 	range: StatsRange = $state(StatsRange.fourWeeks);
 	unit: MassUnit = $state(MassUnit.kg);
+	weekStart: WeekStart = $state(WeekStart.monday);
 	streak: StreakSummary = $state({ current: 0, longest: 0 });
 	exercises: readonly TrackedExercise[] = $state([]);
 	exercise: TrackedExercise | undefined = $state();
@@ -66,11 +74,13 @@ export class StatsScreen {
 
 	/** Loads everything the screen shows for the current range. */
 	async load(): Promise<void> {
-		const [activity, unit, exercises] = await Promise.all([
+		const [activity, unit, weekStart, exercises] = await Promise.all([
 			this.useCases.getActivity.execute(),
 			this.useCases.getMassUnit.execute(),
+			this.useCases.getWeekStart.execute(),
 			this.useCases.listTrackedExercises.execute()
 		]);
+		this.weekStart = weekStart;
 		this.activity = activity.days;
 		this.streak = activity.streak;
 		this.unit = unit;

@@ -15,11 +15,86 @@ export const messages = {
 	app: {
 		name: APP_NAME,
 		tagline: 'A small, private tracker for workouts, food, and body weight.',
+		updateReady: 'A new version is ready.',
+		reload: 'Reload',
+		installHint: `Install ${APP_NAME}: tap Share, then Add to Home Screen.`,
+		dismiss: 'Got it',
 		storageUnavailable:
 			'Your data could not be opened on this device. Try reloading, or use a browser that supports offline storage.'
 	},
 	landing: {
-		openApp: 'Open the app'
+		openApp: 'Open the app',
+		todayScreenshot: 'The Today screen: food goals, today’s weigh-in, and the training streak.',
+		statsScreenshot: 'The Stats screen: streaks and heatmaps of the last 52 weeks.',
+		promise: 'Everything you log stays on your device. No account, no tracking, no cloud.',
+		installTitle: 'Install it like an app',
+		installIphone: 'iPhone: open it in Safari, tap Share, then Add to Home Screen.',
+		installAndroid: 'Android: open it in Chrome, open the menu, then tap Install app.',
+		freeTitle: 'Free and open source',
+		free: `${APP_NAME} is free, with no ads and no paid tier. If it helps you, you can support it on Ko-fi.`,
+		source: 'Source on GitHub',
+		donate: 'Support on Ko-fi'
+	},
+	site: {
+		home: APP_NAME,
+		footer: 'Site',
+		privacy: 'Privacy',
+		faq: 'FAQ',
+		source: 'Source',
+		donate: 'Donate',
+		copyright: '© 2026 Zach Garwood'
+	},
+	privacy: {
+		title: 'Privacy',
+		summary: `${APP_NAME} keeps everything you log on your device. Nothing is sent anywhere.`,
+		paragraphs: [
+			'There is no account and no server. Workouts, food, weigh-ins, and progress photos are stored in your browser’s private storage for this site, on this device only.',
+			'The app makes no network requests except to download updates of itself from this site. It has no analytics, crash reporting, ads, cookies, or third-party scripts, fonts, or images. Anyone can check this: the source is public, and an automated test fails if the app contacts any other site.',
+			'Progress photos are redrawn when you add them, which removes their hidden details such as the location they were taken and the camera used.',
+			'Backups are files you export yourself. The app never uploads them; where you keep them is up to you.',
+			'The links to the source code and to Ko-fi are ordinary links. Nothing from those sites is loaded unless you tap them.',
+			'Deleting all data in Settings removes everything from this device. Because nothing is stored anywhere else, there is nothing else to delete.'
+		]
+	},
+	faq: {
+		title: 'Frequently asked questions',
+		entries: [
+			{
+				question: 'Where is my data stored?',
+				answer:
+					'Only on your device, in the browser’s private storage for this site. There is no account and no copy anywhere else.'
+			},
+			{
+				question: 'What if I lose my phone or clear my browser data?',
+				answer:
+					'Then the data is gone, because it only ever lived there. Export a backup from Settings now and then and keep it somewhere safe. The app reminds you gently when the last backup is a month old.'
+			},
+			{
+				question: 'How do I move to a new phone?',
+				answer:
+					'Export a backup on the old phone, move the file to the new one, open the app there, and restore it from Settings.'
+			},
+			{
+				question: 'Does it work offline?',
+				answer:
+					'Yes. After the first visit, everything works without a connection, including installing it to your home screen.'
+			},
+			{
+				question: 'Why is there no sync or account?',
+				answer:
+					'Keeping everything on your device is the whole point: nothing to sign up for, nothing to breach, nothing to sell. Backups cover moving between devices.'
+			},
+			{
+				question: 'Is it really free?',
+				answer:
+					'Yes. There are no ads and no paid tier. It is open source under the GNU GPL v3, and supported only by voluntary donations on Ko-fi.'
+			},
+			{
+				question: 'Can I host it myself?',
+				answer:
+					'Yes. It is a static site with no backend. The README in the source repository explains how to build it and serve it from any static host.'
+			}
+		]
 	},
 	navigation: {
 		tabs: 'Sections',
@@ -93,6 +168,15 @@ export const messages = {
 	},
 	settings: {
 		units: 'Units',
+		weekStart: 'First day of week',
+		monday: 'Monday',
+		sunday: 'Sunday',
+		about: 'About',
+		version: (version: string) => `Version ${version}`,
+		licensed: 'Free and open source under the',
+		licenseName: 'GNU General Public License v3',
+		sourceCode: 'Source code',
+		donate: 'Support on Ko-fi',
 		backup: 'Backup',
 		backupExplainer:
 			'Your data lives only on this device. Export a backup now and then, and keep it somewhere safe.',
