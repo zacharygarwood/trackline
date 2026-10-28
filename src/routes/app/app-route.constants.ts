@@ -4,6 +4,7 @@ export const AppRoute = {
 	train: '/app/train',
 	eat: '/app/eat',
 	body: '/app/body',
+	photos: '/app/body/photos',
 	stats: '/app/stats',
 	settings: '/app/settings',
 	welcome: '/app/welcome'

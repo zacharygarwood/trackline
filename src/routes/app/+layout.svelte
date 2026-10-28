@@ -7,8 +7,14 @@
 	import Icon from '#lib/design/Icon.svelte';
 	import TabBar from '#lib/design/TabBar.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
+	import { first } from '#lib/shared/collections.ts';
 	import type { LayoutProps } from './$types';
-	import { SETTINGS_SECTION, TAB_SECTIONS, WELCOME_SECTION } from './navigation.constants.ts';
+	import {
+		PHOTOS_SECTION,
+		SETTINGS_SECTION,
+		TAB_SECTIONS,
+		WELCOME_SECTION
+	} from './navigation.constants.ts';
 
 	const { children }: LayoutProps = $props();
 
@@ -23,11 +29,23 @@
 	const welcomeHref = resolve(WELCOME_SECTION.route);
 	const onWelcome = $derived(page.url.pathname === welcomeHref);
 
+	const currentHref = $derived(currentTab(page.url.pathname));
+
 	const title = $derived(
-		[...TAB_SECTIONS, SETTINGS_SECTION, WELCOME_SECTION].find(
+		[...TAB_SECTIONS, PHOTOS_SECTION, SETTINGS_SECTION, WELCOME_SECTION].find(
 			(section) => resolve(section.route) === page.url.pathname
 		)?.title
 	);
+
+	/** The tab a path belongs to: the longest tab path it starts with, so the gallery marks Body. */
+	function currentTab(pathname: string): string | undefined {
+		return first(
+			tabs
+				.map((tab) => tab.href)
+				.filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+				.toSorted((a, b) => b.length - a.length)
+		);
+	}
 
 	/** Sends a new user to the first-run screen before anything else. */
 	async function welcomeNewUser(app: App): Promise<void> {
@@ -68,7 +86,7 @@
 
 	{#if !onWelcome}
 		<div class="tab-bar">
-			<TabBar {tabs} currentHref={page.url.pathname} label={messages.navigation.tabs} />
+			<TabBar {tabs} {currentHref} label={messages.navigation.tabs} />
 		</div>
 	{/if}
 </div>

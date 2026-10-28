@@ -4,6 +4,14 @@ import { GetWeightGoal } from '../body/application/get-weight-goal.ts';
 import { ListWeighIns } from '../body/application/list-weigh-ins.ts';
 import { RecordWeighIn } from '../body/application/record-weigh-in.ts';
 import { SetWeightGoal } from '../body/application/set-weight-goal.ts';
+import { AddProgressPhoto } from '../body/application/add-progress-photo.ts';
+import { DeleteProgressPhoto } from '../body/application/delete-progress-photo.ts';
+import { GetPhotoImage } from '../body/application/get-photo-image.ts';
+import { ListProgressPhotos } from '../body/application/list-progress-photos.ts';
+import type { ImageProcessor } from '../body/application/photo-ports.ts';
+import { CanvasImageProcessor } from '../body/infrastructure/canvas-image-processor.ts';
+import { FolderPhotoStore } from '../body/infrastructure/folder-photo-store.ts';
+import { SqliteProgressPhotoRepository } from '../body/infrastructure/sqlite-progress-photo-repository.ts';
 import { SqliteWeighInRepository } from '../body/infrastructure/sqlite-weigh-in-repository.ts';
 import { SqliteWeightGoalRepository } from '../body/infrastructure/sqlite-weight-goal-repository.ts';
 import { GetActivity } from '../insights/application/get-activity.ts';
@@ -35,6 +43,8 @@ import { bundledMigrations } from '../platform/db/bundled-migrations.ts';
 import { migrate } from '../platform/db/migrate.ts';
 import { openDatabase } from '../platform/db/open-database.ts';
 import type { SqlDriver } from '../platform/db/sql-driver.ts';
+import { openPhotoFolder } from '../platform/photos/open-photo-folder.ts';
+import type { PhotoFolder } from '../platform/photos/photo-folder.ts';
 import { requestPersistentStorage } from '../platform/pwa/persistent-storage.ts';
 import { SystemClock } from '../platform/system/system-clock.ts';
 import { UuidV7IdGenerator } from '../platform/system/uuid-v7-id-generator.ts';
@@ -49,6 +59,7 @@ import { GetSetupStatus } from '../settings/application/get-setup-status.ts';
 import { PreviewRestore } from '../settings/application/preview-restore.ts';
 import { RestoreBackup } from '../settings/application/restore-backup.ts';
 import { SetMassUnit } from '../settings/application/set-mass-unit.ts';
+import { FolderPhotoArchive } from '../settings/infrastructure/folder-photo-archive.ts';
 import { SqliteAppState } from '../settings/infrastructure/sqlite-app-state.ts';
 import { SqliteDataInventory } from '../settings/infrastructure/sqlite-data-inventory.ts';
 import { SqliteMassUnitPreference } from '../settings/infrastructure/sqlite-mass-unit-preference.ts';
@@ -97,17 +108,27 @@ export interface App {
 export interface Infrastructure {
 	readonly database: SqlDriver;
 	readonly databaseFile: DatabaseFile;
+	/** The folder of photo files next to the database. */
+	readonly photoFolder: PhotoFolder;
+	readonly images: ImageProcessor;
 	readonly clock: Clock;
 }
 
 /** The newest schema version this build understands. */
 const SCHEMA_VERSION = last(bundledMigrations)?.version ?? 0;
 
-function wireBody({ database, clock }: Infrastructure) {
+function wireBody({ database, photoFolder, images, clock }: Infrastructure) {
 	const weighIns = new SqliteWeighInRepository(database);
 	const weightGoal = new SqliteWeightGoalRepository(database);
+	const photos = new SqliteProgressPhotoRepository(database);
+	const store = new FolderPhotoStore(photoFolder);
+	const ids = new UuidV7IdGenerator(clock);
 	return {
-		recordWeighIn: new RecordWeighIn(weighIns, new UuidV7IdGenerator(clock)),
+		addProgressPhoto: new AddProgressPhoto({ processor: images, store, photos, ids }),
+		listProgressPhotos: new ListProgressPhotos(photos),
+		deleteProgressPhoto: new DeleteProgressPhoto(photos, store),
+		getPhotoImage: new GetPhotoImage(store),
+		recordWeighIn: new RecordWeighIn(weighIns, ids),
 		deleteWeighIn: new DeleteWeighIn(weighIns),
 		listWeighIns: new ListWeighIns(weighIns),
 		getWeightGoal: new GetWeightGoal(weightGoal),
@@ -180,29 +201,42 @@ function wireInsights({ database, clock }: Infrastructure) {
 	};
 }
 
-function wireSettings({ database, databaseFile, clock }: Infrastructure) {
-	const massUnit = new SqliteMassUnitPreference(database);
+function wireBackup({ database, databaseFile, photoFolder, clock }: Infrastructure) {
 	const state = new SqliteAppState(database);
 	const inventory = new SqliteDataInventory(database);
 	const codec = new ZipBackupCodec();
-	const version = { appVersion: __APP_VERSION__, schemaVersion: SCHEMA_VERSION };
+	const photos = new FolderPhotoArchive(photoFolder);
+	return {
+		getBackupStatus: new GetBackupStatus(state, clock),
+		countRecords: new CountRecords(inventory),
+		exportBackup: new ExportBackup({
+			database: databaseFile,
+			photos,
+			codec,
+			lastExport: state,
+			clock,
+			version: { appVersion: __APP_VERSION__, schemaVersion: SCHEMA_VERSION }
+		}),
+		previewRestore: new PreviewRestore(codec, inventory, SCHEMA_VERSION),
+		restoreBackup: new RestoreBackup({
+			codec,
+			database: databaseFile,
+			photos,
+			supportedSchemaVersion: SCHEMA_VERSION
+		}),
+		deleteAllData: new DeleteAllData(databaseFile, photos)
+	};
+}
+
+function wireSettings(infrastructure: Infrastructure) {
+	const massUnit = new SqliteMassUnitPreference(infrastructure.database);
+	const state = new SqliteAppState(infrastructure.database);
 	return {
 		getMassUnit: new GetMassUnit(massUnit),
 		setMassUnit: new SetMassUnit(massUnit),
 		getSetupStatus: new GetSetupStatus(state),
 		completeSetup: new CompleteSetup(state),
-		getBackupStatus: new GetBackupStatus(state, clock),
-		countRecords: new CountRecords(inventory),
-		exportBackup: new ExportBackup({
-			database: databaseFile,
-			codec,
-			lastExport: state,
-			clock,
-			version
-		}),
-		previewRestore: new PreviewRestore(codec, inventory, SCHEMA_VERSION),
-		restoreBackup: new RestoreBackup(codec, databaseFile, SCHEMA_VERSION),
-		deleteAllData: new DeleteAllData(databaseFile)
+		...wireBackup(infrastructure)
 	};
 }
 
@@ -210,7 +244,7 @@ function wireSettings({ database, databaseFile, clock }: Infrastructure) {
  * Wires infrastructure to use cases. This is the composition root, the only
  * module that knows which implementation backs each port.
  *
- * @param infrastructure - The database, its file, and the clock.
+ * @param infrastructure - The database, its file, the photo folder, image processing, and the clock.
  */
 export function wireApp(infrastructure: Infrastructure): App {
 	return {
@@ -234,5 +268,11 @@ export async function startApp(): Promise<App> {
 	const database = openDatabase();
 	await migrate(database, bundledMigrations);
 	void requestPersistentStorage(navigator.storage);
-	return wireApp({ database, databaseFile: database, clock: new SystemClock() });
+	return wireApp({
+		database,
+		databaseFile: database,
+		photoFolder: openPhotoFolder(),
+		images: new CanvasImageProcessor(),
+		clock: new SystemClock()
+	});
 }

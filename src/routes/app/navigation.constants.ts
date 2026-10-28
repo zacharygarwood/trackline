@@ -18,6 +18,13 @@ export const TAB_SECTIONS: readonly Section[] = [
 	{ route: AppRoute.stats, title: messages.navigation.stats, icon: 'stats' }
 ];
 
+/** The progress photo gallery, reached from the Body tab. */
+export const PHOTOS_SECTION: Section = {
+	route: AppRoute.photos,
+	title: messages.body.progressPhotos,
+	icon: 'body'
+};
+
 /** The first-run screen, shown once before anything else. */
 export const WELCOME_SECTION: Section = {
 	route: AppRoute.welcome,

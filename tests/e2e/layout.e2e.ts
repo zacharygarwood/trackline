@@ -7,6 +7,7 @@ const SCREENS = [
 	'/app/train',
 	'/app/eat',
 	'/app/body',
+	'/app/body/photos',
 	'/app/stats',
 	'/app/settings',
 	'/app/welcome'
