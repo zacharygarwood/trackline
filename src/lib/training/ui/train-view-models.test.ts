@@ -127,3 +127,20 @@ describe('TrainOverview', () => {
 		expect(overview.streakText).toBe('Streak: 0 days. Best: 0 days.');
 	});
 });
+
+describe('WorkoutSession ordering', () => {
+	it('saves a set checked off just before finishing', async () => {
+		const { session } = screens();
+		await session.start();
+		await session.addExercise('Squat');
+		const squat = first(session.workout?.exercises ?? []);
+		if (squat === undefined) throw new Error('expected an exercise');
+		const location = { exerciseId: squat.exerciseId, position: 0 };
+
+		const checked = session.toggleCompleted(location);
+		const finished = await session.finish();
+		await checked;
+
+		expect(finished === undefined ? undefined : setsOf(finished, squat.exerciseId)).toHaveLength(1);
+	});
+});

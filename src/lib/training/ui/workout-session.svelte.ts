@@ -24,6 +24,12 @@ import { setsOf, type ActiveWorkout, type FinishedWorkout } from '../domain/work
 import type { WorkoutSet } from '../domain/workout-set.ts';
 import { lastTimeHint } from './workout-format.ts';
 
+/** The message for an exercise that couldn't be added. */
+const addExerciseProblem = (error: unknown) =>
+	error instanceof InvalidName
+		? messages.training.enterName
+		: messages.training.exerciseAlreadyAdded;
+
 /** Decimals kept when showing a weight converted between units. */
 const WEIGHT_DECIMALS = 2;
 
@@ -104,22 +110,23 @@ export class WorkoutSession {
 	 *
 	 * @returns A message to show if the name was rejected.
 	 */
-	async addExercise(name: string): Promise<string | undefined> {
-		const result = await this.useCases.addExerciseToWorkout.execute({ name });
-		if (!result.ok) {
-			return result.error instanceof InvalidName
-				? messages.training.enterName
-				: messages.training.exerciseAlreadyAdded;
-		}
-		this.workout = result.value;
-		this.library = await this.useCases.listExercises.execute();
-		await this.loadHints();
-		return undefined;
+	addExercise(name: string): Promise<string | undefined> {
+		return this.inOrder(async () => {
+			const result = await this.useCases.addExerciseToWorkout.execute({ name });
+			if (result.ok) {
+				this.workout = result.value;
+				this.library = await this.useCases.listExercises.execute();
+				await this.loadHints();
+			}
+			return result.ok ? undefined : addExerciseProblem(result.error);
+		});
 	}
 
 	/** Adds a set to an exercise, pre-filled from the previous one. */
-	async addSet(exerciseId: ExerciseId): Promise<void> {
-		this.show(await this.useCases.addSet.execute({ exerciseId }));
+	addSet(exerciseId: ExerciseId): Promise<void> {
+		return this.inOrder(async () => {
+			this.show(await this.useCases.addSet.execute({ exerciseId }));
+		});
 	}
 
 	/** Changes a set's reps, keeping its weight and check mark. */
@@ -132,7 +139,7 @@ export class WorkoutSession {
 		const mass = Mass.of(weight, this.unit);
 		return mass.ok
 			? this.changeSet(location, (set) => ({ ...set, weight: mass.value }))
-			: this.queue;
+			: this.inOrder(() => Promise.resolve());
 	}
 
 	/** Checks a set off, or unchecks it. */
@@ -141,50 +148,69 @@ export class WorkoutSession {
 	}
 
 	/** Removes a set. */
-	async removeSet(location: SetLocation): Promise<void> {
-		this.show(await this.useCases.removeSet.execute({ location }));
+	removeSet(location: SetLocation): Promise<void> {
+		return this.inOrder(async () => {
+			this.show(await this.useCases.removeSet.execute({ location }));
+		});
 	}
 
 	/** Removes an exercise and its sets. */
-	async removeExercise(exerciseId: ExerciseId): Promise<void> {
-		this.show(await this.useCases.removeExerciseFromWorkout.execute({ exerciseId }));
+	removeExercise(exerciseId: ExerciseId): Promise<void> {
+		return this.inOrder(async () => {
+			this.show(await this.useCases.removeExerciseFromWorkout.execute({ exerciseId }));
+		});
 	}
 
 	/** Saves the workout note. */
-	async setNote(note: string): Promise<void> {
-		this.show(await this.useCases.setWorkoutNote.execute({ note }));
+	setNote(note: string): Promise<void> {
+		return this.inOrder(async () => {
+			this.show(await this.useCases.setWorkoutNote.execute({ note }));
+		});
 	}
 
 	/**
-	 * Finishes the workout.
+	 * Finishes the workout, after every pending edit is saved.
 	 *
 	 * @returns The finished workout, or undefined if nothing was completed and it was discarded.
 	 */
-	async finish(): Promise<FinishedWorkout | undefined> {
-		const result = await this.useCases.finishWorkout.execute();
-		this.workout = undefined;
-		return result.ok ? result.value : undefined;
+	finish(): Promise<FinishedWorkout | undefined> {
+		return this.inOrder(async () => {
+			const result = await this.useCases.finishWorkout.execute();
+			this.workout = undefined;
+			return result.ok ? result.value : undefined;
+		});
 	}
 
 	/** Throws the workout away. */
-	async discard(): Promise<void> {
-		await this.useCases.discardWorkout.execute();
-		this.workout = undefined;
+	discard(): Promise<void> {
+		return this.inOrder(async () => {
+			await this.useCases.discardWorkout.execute();
+			this.workout = undefined;
+		});
 	}
 
-	/**
-	 * Applies a change to the latest version of a set. Changes run one at a
-	 * time, so quick successive edits never overwrite each other.
-	 */
+	/** Applies a change to the latest saved version of a set. */
 	private changeSet(location: SetLocation, change: (set: WorkoutSet) => WorkoutSet): Promise<void> {
-		this.queue = this.queue.then(async () => {
+		return this.inOrder(async () => {
 			const sets =
 				this.workout === undefined ? [] : (setsOf(this.workout, location.exerciseId) ?? []);
 			const current = elementAt(sets, location.position);
 			if (current === undefined) return;
 			this.show(await this.useCases.updateSet.execute({ location, ...change(current) }));
 		});
-		return this.queue;
+	}
+
+	/**
+	 * Runs workout changes one at a time, in the order the user made them, so
+	 * quick edits never overwrite each other and finishing never misses an edit.
+	 */
+	private inOrder<T>(task: () => Promise<T>): Promise<T> {
+		const result = this.queue.then(task);
+		this.queue = result.then(
+			() => Promise.resolve(),
+			() => Promise.resolve()
+		);
+		return result;
 	}
 
 	private show(result: Result<ActiveWorkout, unknown>): void {
