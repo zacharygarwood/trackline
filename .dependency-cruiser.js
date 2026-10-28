@@ -45,10 +45,12 @@ export default {
 		},
 		{
 			name: 'only-composition-root-wires-infrastructure',
-			comment: 'Only src/lib/app/container.ts and other infrastructure may import infrastructure.',
+			comment:
+				'Only the composition root (src/lib/app/container.ts and wire-*.ts) and other infrastructure may import infrastructure.',
 			severity: 'error',
 			from: {
-				pathNot: '(^src/lib/app/container\\.ts$|/infrastructure/|^src/lib/platform/|\\.test\\.ts$)'
+				pathNot:
+					'(^src/lib/app/(container|infrastructure|wire-[a-z]+)\\.ts$|/infrastructure/|^src/lib/platform/|\\.test\\.ts$)'
 			},
 			to: { path: '(/infrastructure/|^src/lib/platform/(db|photos|backup)/)' }
 		},

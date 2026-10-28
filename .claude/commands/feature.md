@@ -9,7 +9,7 @@ Build the feature "$ARGUMENTS" inside-out. Check the build plan for its scope an
 2. Application: one use case per file with a narrow command type. Tests use in-memory fakes from `tests/fakes/` and an injected Clock and IdGenerator.
 3. Persistence: `*Row` type, `*Mapper` with round-trip tests, `Sqlite*Repository` with SQL in `*.sql.ts`, and a contract test suite shared with the fake.
 4. Migration, if the schema changes: use /migration.
-5. Wire it in `src/lib/app/container.ts`.
+5. Wire it in the context's `src/lib/app/wire-<context>.ts` (add it to `App` in `container.ts` for a new context).
 6. View model, then UI components using design tokens and `messages`.
 7. An end-to-end journey only if the plan lists this flow as critical.
 
