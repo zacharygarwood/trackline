@@ -1,7 +1,11 @@
 import type { SqlStatement } from '../../platform/db/sql.ts';
 
 /** Keys of the `app_setting` table. */
-export const SettingKey = { massUnit: 'mass_unit' } as const;
+export const SettingKey = {
+	massUnit: 'mass_unit',
+	lastExportAt: 'last_export_at',
+	setupComplete: 'setup_complete'
+} as const;
 
 /** One of the {@link SettingKey} values. */
 export type SettingKey = (typeof SettingKey)[keyof typeof SettingKey];
@@ -23,3 +27,10 @@ export function writeSetting(key: SettingKey, value: string): SqlStatement {
 		params: [key, value]
 	};
 }
+
+/** Counts the records a restore or deletion would remove. */
+export const COUNT_RECORDS: SqlStatement = {
+	name: 'count records',
+	sql: 'SELECT (SELECT count(*) FROM weigh_in) AS weigh_ins',
+	params: []
+};

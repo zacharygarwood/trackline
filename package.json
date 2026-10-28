@@ -90,6 +90,7 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
-		"@sqlite.org/sqlite-wasm": "3.54.1-build1"
+		"@sqlite.org/sqlite-wasm": "3.54.1-build1",
+		"fflate": "^0.8.3"
 	}
 }
