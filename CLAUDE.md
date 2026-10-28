@@ -1,7 +1,9 @@
 # Buffalog
 
 Working name; the final name is pending (see docs/adr/0001-stack.md). The product name lives only in
-`src/lib/i18n/messages.en.ts`, `static/manifest.webmanifest`, `package.json`, and this file, so a rename is cheap.
+`src/lib/i18n/messages.en.ts`, `static/manifest.webmanifest`, `package.json`, `README.md`, and this file, so a rename is cheap
+(then re-run `pnpm screenshots`). The repo URL (`src/lib/ui/external-url.constants.ts`) and the backup file name prefix
+also contain it. Never rename the database file in `database.constants.ts`: existing installs would lose their data.
 
 Privacy-first fitness tracker PWA. SvelteKit 3 + Svelte 5 (runes) + TypeScript (strict). SQLite (WASM, OPFS) in a Web Worker. No backend. All data stays on the device.
 
@@ -12,7 +14,8 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 - pnpm dev / pnpm build (includes the 250 KiB gzipped JS budget check) / pnpm preview
 - pnpm check: lint, arch, unit tests with coverage, build. Same steps as CI.
 - pnpm lint (ESLint, Prettier, svelte-check, tsc, Stylelint, Knip) / pnpm arch (dependency-cruiser)
-- pnpm test (fast suites) / pnpm test:e2e (Playwright, Chromium + WebKit) / pnpm test:mutation (Stryker)
+- pnpm test (fast suites) / pnpm test:e2e (Playwright, Chromium + WebKit, including the axe accessibility audit) / pnpm test:mutation (Stryker)
+- pnpm screenshots: regenerate the landing page screenshots from demo data (tests/screenshots/)
 
 ## Architecture (non-negotiable)
 
@@ -21,7 +24,7 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 - Layers per context: domain -> application -> infrastructure / ui. Dependencies point inward only.
 - Domain: pure TypeScript, no Svelte, no SQL, no browser APIs.
 - Domain models, \*Row database models, and \*Mapper converters are always separate types.
-- Repositories are interfaces in domain, implemented in infrastructure, wired only in src/lib/app/container.ts.
+- Repositories are interfaces in domain, implemented in infrastructure, wired only in the composition root: src/lib/app/container.ts and one wire-<context>.ts per context.
 - Insights uses SQL query services that return read models, not domain entities.
 - Every boundary is a consumer-owned interface. Pass only what the receiver needs: narrow commands in, readonly domain models out, value objects instead of primitives past the UI edge.
 

@@ -1,10 +1,39 @@
 # Buffalog
 
-A small, private tracker for workouts, food, and body weight. Buffalog is a working name.
+A small, private tracker for workouts, food, body weight, and progress photos. Buffalog is a working name.
 
-Buffalog is a Progressive Web App with no backend. Your data lives only on your device. After it loads, the app makes no network requests except to fetch updates of itself from its own origin. CI enforces this with a test that fails if any request leaves the app's origin.
+Buffalog is a Progressive Web App with no backend. Install it to your home screen and it works like an app, fully offline.
 
-This project is in early development. See `CLAUDE.md` for the architecture and `docs/adr/` for decisions.
+## The privacy promise
+
+- **Your data never leaves your device.** Workouts, food, weigh-ins, and photos are stored in your browser's private storage for this site, and nowhere else.
+- **No accounts, analytics, ads, or trackers.** No cookies, no crash reporting, no third-party scripts, fonts, or images.
+- **No network requests** except downloading updates of the app itself from its own origin. You don't have to take this on trust: an end-to-end test fails if any request leaves the app's origin, and a strict Content Security Policy blocks other origins in the browser.
+- **Photos lose their metadata.** Every photo is redrawn when you add it, so location and camera details are never stored.
+- **Backups are yours.** Export a backup file from Settings; the app never uploads it. Restore it to move to a new phone.
+
+## Using it
+
+Open the app in a browser, then install it:
+
+- **iPhone:** open it in Safari, tap Share, then Add to Home Screen.
+- **Android:** open it in Chrome, open the menu, then tap Install app.
+
+Because your data lives only on your device, export a backup from Settings now and then.
+
+## Self-hosting
+
+Buffalog builds to static files, so any static host that serves HTTPS works (the service worker and on-device storage need a secure origin; `localhost` counts).
+
+```sh
+pnpm install
+pnpm build                       # writes the site to build/
+BASE_PATH=/buffalog pnpm build   # when served from a subfolder, e.g. https://example.com/buffalog/
+```
+
+Serve the `build/` folder as is. Unknown paths should fall back to `build/404.html`. No headers or server configuration are needed: the security policy is a `<meta>` tag, and the database needs no cross-origin isolation.
+
+This repository deploys to GitHub Pages with `.github/workflows/deploy.yml` on every push to `main` that passes CI.
 
 ## Development
 
@@ -12,7 +41,18 @@ Requires Node 24+ and pnpm.
 
 ```sh
 pnpm install
-pnpm dev          # dev server
-pnpm check        # lint, architecture rules, unit tests, build
-pnpm test:e2e     # Playwright (run `pnpm exec playwright install chromium webkit` first)
+pnpm dev            # dev server
+pnpm check          # lint, architecture rules, unit tests, build (same as CI)
+pnpm test:e2e       # Playwright (run `pnpm exec playwright install chromium webkit` first)
+pnpm screenshots    # regenerate the landing page screenshots in static/screenshots/
 ```
+
+See `CLAUDE.md` for the architecture and `docs/adr/` for the decisions behind it.
+
+## License
+
+Buffalog is free software under the [GNU General Public License v3](LICENSE) (GPL-3.0-only). You may use, study, change, and share it; if you distribute a modified version, you must share its source under the same license.
+
+## Support
+
+Buffalog is free, with no ads and no paid tier. If it helps you, you can [support it on Ko-fi](https://ko-fi.com/algificsoftware).
