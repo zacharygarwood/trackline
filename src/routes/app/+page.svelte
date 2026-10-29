@@ -4,7 +4,6 @@
 	import WeighInSheet from '#lib/body/ui/WeighInSheet.svelte';
 	import Button from '#lib/design/Button.svelte';
 	import Card from '#lib/design/Card.svelte';
-	import { Tone } from '#lib/design/tone.constants.ts';
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import LogFoodSheet from '#lib/nutrition/ui/LogFoodSheet.svelte';
@@ -58,11 +57,11 @@
 			<Button onclick={() => (logging = true)}>{messages.nutrition.logFood}</Button>
 		{/if}
 
-		<Card title={messages.today.food} icon="eat">
+		<Card title={messages.today.food}>
 			<MacroProgress summary={day.day.summary} />
 		</Card>
 
-		<Card title={messages.today.body} icon="body" tone={Tone.fat}>
+		<Card title={messages.today.body}>
 			{#if todayWeighIn === undefined}
 				<p class="muted">{messages.today.notWeighedIn}</p>
 			{:else}
@@ -74,7 +73,6 @@
 		{#if overview.calendar !== undefined}
 			<WeekView
 				days={overview.calendar.days}
-				streak={overview.calendar.streak}
 				today={overview.today}
 				ontoggle={(training: TrainingDay) =>
 					void overview.toggleRestDay(training.date, training.rested)}
@@ -106,14 +104,14 @@
 	.today {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-4);
+		gap: var(--space-3);
 		padding-bottom: var(--space-8);
 	}
 
 	.actions {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: var(--space-3);
+		gap: var(--space-2);
 	}
 
 	.stat {

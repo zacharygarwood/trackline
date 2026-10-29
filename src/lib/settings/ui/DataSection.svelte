@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Button from '../../design/Button.svelte';
 	import { ButtonVariant } from '../../design/button.constants.ts';
+	import Card from '../../design/Card.svelte';
 	import Sheet from '../../design/Sheet.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { DataPanel } from './data-panel.svelte.ts';
@@ -49,8 +50,7 @@
 	}
 </script>
 
-<section>
-	<h2>{messages.settings.backup}</h2>
+<Card title={messages.settings.backup}>
 	<p>{messages.settings.backupExplainer}</p>
 	<p class="status">{panel.statusText}</p>
 	<Button onclick={() => panel.export()}>{messages.settings.exportBackup}</Button>
@@ -68,12 +68,13 @@
 	{#if panel.problem !== undefined}
 		<p role="alert">{panel.problem}</p>
 	{/if}
-</section>
+</Card>
 
-<section>
-	<h2>{messages.settings.dangerZone}</h2>
-	<Button variant={ButtonVariant.quiet} onclick={openDelete}>{messages.settings.deleteAll}</Button>
-</section>
+<Card title={messages.settings.dangerZone}>
+	<Button variant={ButtonVariant.secondary} onclick={openDelete}
+		>{messages.settings.deleteAll}</Button
+	>
+</Card>
 
 {#if restoreOpen && panel.pendingRestore !== undefined}
 	<Sheet bind:open={restoreOpen} title={messages.settings.restoreTitle}>
@@ -101,19 +102,6 @@
 {/if}
 
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: var(--space-3);
-	}
-
-	h2 {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-		font-weight: var(--font-weight-regular);
-	}
-
 	.status {
 		color: var(--color-text-muted);
 	}

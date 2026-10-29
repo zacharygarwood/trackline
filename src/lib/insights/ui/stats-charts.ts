@@ -1,10 +1,10 @@
 import type { ChartPoint } from '../../design/line-chart.ts';
 import { messages } from '../../i18n/messages.en.ts';
-import { elementAt, last } from '../../shared/collections.ts';
+import { elementAt, first, last } from '../../shared/collections.ts';
 import type { LocalDate } from '../../shared/local-date.ts';
 import type { MassUnit } from '../../shared/mass-unit.constants.ts';
 import { Mass } from '../../shared/mass.ts';
-import { formatMass } from '../../ui/format.ts';
+import { formatMass, unitLabel } from '../../ui/format.ts';
 import type {
 	ExerciseSession,
 	NutritionDay,
@@ -12,8 +12,19 @@ import type {
 } from '../application/insights-queries.ts';
 import { Nutrient } from './nutrient.constants.ts';
 
+/** The number a chart is about, shown large above it. */
+export interface StatsHeadline {
+	/** For example "79.6 kg". */
+	readonly value: string;
+	/** What the value is, for example "7-day average". */
+	readonly caption: string;
+	/** A second fact, such as the change over the range; undefined when there is none. */
+	readonly detail: string | undefined;
+}
+
 /** What a Stats line chart draws, already in display units. */
 export interface StatsChartData {
+	readonly headline: StatsHeadline;
 	readonly points: readonly ChartPoint[];
 	readonly trend: readonly ChartPoint[];
 	readonly goal: readonly ChartPoint[];
@@ -21,6 +32,20 @@ export interface StatsChartData {
 }
 
 const whole = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+const signedTenths = new Intl.NumberFormat(undefined, {
+	minimumFractionDigits: 1,
+	maximumFractionDigits: 1,
+	signDisplay: 'exceptZero'
+});
+
+/** How far a weight moved from the first value to the last, or undefined for a single value. */
+function changeOver(masses: readonly Mass[], unit: MassUnit): string | undefined {
+	const start = first(masses);
+	const end = last(masses);
+	if (start === undefined || end === undefined || start === end) return undefined;
+	const change = signedTenths.format(end.toUnit(unit) - start.toUnit(unit));
+	return messages.stats.changeInRange(messages.stats.mass(change, unitLabel(unit)));
+}
 
 const at = (date: LocalDate, y: number): ChartPoint => ({ x: date.toEpochDay(), y });
 
@@ -44,6 +69,14 @@ export function weightChartData(
 	const latest = last(trend);
 	if (latest === undefined) return undefined;
 	return {
+		headline: {
+			value: formatMass(latest.average, unit),
+			caption: messages.stats.movingAverage,
+			detail: changeOver(
+				trend.map((point) => point.average),
+				unit
+			)
+		},
 		points: trend.map((point) => at(point.date, point.weight.toUnit(unit))),
 		trend: trend.map((point) => at(point.date, point.average.toUnit(unit))),
 		goal: [],
@@ -97,12 +130,18 @@ export function nutritionChartData(
 	const { label, eaten, goal, format } = NUTRIENTS[nutrient];
 	const daily = days.map((day) => at(day.date, eaten(day)));
 	const latestGoal = goal(latest);
+	const average = format(mean(days.map(eaten)));
 	return {
+		headline: {
+			value: average,
+			caption: messages.stats.dailyAverage,
+			detail: latestGoal === undefined ? undefined : messages.stats.goalOf(format(latestGoal))
+		},
 		points: daily,
 		trend: daily,
 		goal: goalSteps(days, goal),
 		summary:
-			messages.stats.nutritionSummary(label, days.length, format(mean(days.map(eaten)))) +
+			messages.stats.nutritionSummary(label, days.length, average) +
 			(latestGoal === undefined ? '' : messages.stats.latestGoal(format(latestGoal)))
 	};
 }
@@ -120,8 +159,17 @@ export function exerciseChartData(
 	name: string,
 	unit: MassUnit
 ): StatsChartData | undefined {
-	if (last(sessions) === undefined) return undefined;
+	const latest = last(sessions);
+	if (latest === undefined) return undefined;
 	return {
+		headline: {
+			value: formatMass(latest.estimatedOneRepMax, unit),
+			caption: messages.stats.estimatedOneRepMax,
+			detail: changeOver(
+				sessions.map((session) => session.estimatedOneRepMax),
+				unit
+			)
+		},
 		points: sessions.map((session) => at(session.date, session.heaviest.toUnit(unit))),
 		trend: sessions.map((session) => at(session.date, session.estimatedOneRepMax.toUnit(unit))),
 		goal: [],

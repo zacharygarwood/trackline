@@ -5,34 +5,25 @@
 :root {
 	color-scheme: light dark;
 
-	--color-background: #fbf8f4;
+	--color-background: #f6f6f7;
 	--color-card: #fff;
-	--color-surface: #f3eee7;
-	--color-text: #1f1a16;
-	--color-text-muted: #6b645c;
-	--color-divider: #e9e2d9;
+	--color-surface: #ececee;
+	--color-text: #1b1b1d;
+	--color-text-muted: #5e6068;
+	--color-divider: #e2e2e5;
 	--color-accent: #b94a26;
-	--color-accent-soft: #f8e5dc;
-	--color-on-accent-soft: #a8421f;
 	--color-on-accent: #fff;
 	--color-rest: #2f6fb0;
-	--color-rest-soft: #e2edf8;
 	--color-on-rest: #fff;
-	--color-protein: #a63d6b;
-	--color-carbs: #b07a12;
-	--color-fat: #4e8155;
-	--color-backdrop: rgb(31 26 22 / 35%);
-	--color-heat-empty: #ebe4da;
+	--color-backdrop: rgb(27 27 29 / 35%);
+	--color-heat-empty: #e6e6e9;
 	--color-heat-muted: var(--color-rest);
-	--shadow-card: 0 1px 2px rgb(31 26 22 / 6%), 0 6px 20px rgb(31 26 22 / 6%);
-	--shadow-button: 0 2px 8px rgb(185 74 38 / 28%);
 
 	--font-family: system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
 	--font-size-small: 0.875rem;
 	--font-size-body: 1rem;
 	--font-size-title: 1.5rem;
-	--font-size-large-title: 1.875rem;
-	--font-size-stat: 2.25rem;
+	--font-size-stat: 1.75rem;
 	--font-size-display: 3rem;
 	--font-size-chart-label: 10px;
 	--font-weight-regular: 400;
@@ -50,18 +41,14 @@
 	--radius-small: 6px;
 	--radius-medium: 12px;
 	--radius-large: 20px;
-	--radius-card: 22px;
-	--radius-blob: 46% 54% 58% 42% / 52% 44% 56% 48%;
 	--radius-round: 999px;
 
 	--border-hairline: 1px;
 	--focus-ring-width: 2px;
 	--tap-target: 44px;
-	--button-height: 52px;
-	--tab-bar-height: 72px;
+	--button-height: 48px;
+	--tab-bar-height: 64px;
 	--icon-size: 24px;
-	--badge-size: 36px;
-	--illustration-size: 112px;
 	--number-key-height: 56px;
 	--content-max-width: 600px;
 
@@ -71,26 +58,18 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--color-background: #151311;
-		--color-card: #211e1b;
-		--color-surface: #2b2723;
-		--color-text: #f2ede7;
-		--color-text-muted: #aaa299;
-		--color-divider: #36312c;
+		--color-background: #121214;
+		--color-card: #1c1c1f;
+		--color-surface: #2a2a2e;
+		--color-text: #ececef;
+		--color-text-muted: #a2a3ab;
+		--color-divider: #2f2f33;
 		--color-accent: #e8784c;
-		--color-accent-soft: #3d241a;
-		--color-on-accent-soft: #e8784c;
 		--color-on-accent: #2a1309;
 		--color-rest: #7eb3ee;
-		--color-rest-soft: #1c2b3d;
 		--color-on-rest: #0d1a29;
-		--color-protein: #e78ab2;
-		--color-carbs: #e2b04a;
-		--color-fat: #8cc490;
 		--color-backdrop: rgb(0 0 0 / 55%);
-		--color-heat-empty: #2e2a26;
-		--shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
-		--shadow-button: none;
+		--color-heat-empty: #2a2a2e;
 	}
 }
 

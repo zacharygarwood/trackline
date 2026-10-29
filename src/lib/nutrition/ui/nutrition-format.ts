@@ -72,12 +72,15 @@ export const MACRO_UNITS: Readonly<Record<keyof Macros, string>> = {
 };
 
 /**
- * Calories as a bare whole number, for example "1,389".
+ * How much of a goal is eaten, for example "1,064 / 2,453 kcal" or "84.1 / 150 g".
  *
- * @param calories - Energy in kcal.
+ * @param key - Which macro.
+ * @param eaten - The amount eaten.
+ * @param target - The goal.
  */
-export function formatCalorieNumber(calories: number): string {
-	return whole.format(calories);
+export function formatMacroProgress(key: keyof Macros, eaten: number, target: number): string {
+	const amount = key === 'calories' ? whole.format(eaten) : oneDecimal.format(eaten);
+	return messages.nutrition.ofTarget(amount, formatMacro(key, target));
 }
 
 /**

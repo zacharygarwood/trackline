@@ -63,7 +63,7 @@
 		display: flex;
 		gap: var(--space-1);
 		padding: var(--space-1);
-		border-radius: var(--radius-round);
+		border-radius: var(--radius-medium);
 		background: var(--color-surface);
 	}
 
@@ -72,13 +72,13 @@
 		display: grid;
 		place-items: center;
 		min-height: var(--tap-target);
-		border-radius: var(--radius-round);
+		border-radius: var(--radius-small);
 		cursor: pointer;
 		user-select: none;
 	}
 
 	label.chosen {
-		background: var(--color-background);
+		background: var(--color-card);
 		font-weight: var(--font-weight-semibold);
 	}
 

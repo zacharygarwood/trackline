@@ -1,6 +1,6 @@
 # 0014. A warmer, more visual design
 
-- Status: accepted; supersedes the palette and "nothing decorative" parts of ADR 0004
+- Status: superseded by ADR 0015 (keeps only the clay accent and blue rest days)
 - Date: 2026-10-28
 
 ## Context

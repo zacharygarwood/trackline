@@ -70,7 +70,6 @@
 			{#if ready.calendar !== undefined}
 				<WeekView
 					days={ready.calendar.days}
-					streak={ready.calendar.streak}
 					today={ready.today}
 					ontoggle={(day: TrainingDay) => void ready.toggleRestDay(day.date, day.rested)}
 				/>
@@ -103,7 +102,7 @@
 	.overview {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-8);
+		gap: var(--space-3);
 		padding-bottom: var(--space-8);
 	}
 </style>

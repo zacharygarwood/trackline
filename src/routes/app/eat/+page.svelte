@@ -2,6 +2,7 @@
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import Button from '#lib/design/Button.svelte';
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
+	import Card from '#lib/design/Card.svelte';
 	import Icon from '#lib/design/Icon.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import type { FoodLogEntry } from '#lib/nutrition/domain/food-log-entry.ts';
@@ -41,7 +42,7 @@
 				aria-label={messages.nutrition.previousDay}
 				onclick={() => ready.moveBy(-ONE_DAY)}
 			>
-				<Icon name="minus" />
+				<Icon name="back" />
 			</button>
 			<span>{formatDate(ready.date, ready.today)}</span>
 			<button
@@ -50,17 +51,18 @@
 				disabled={!ready.date.isBefore(ready.today)}
 				onclick={() => ready.moveBy(ONE_DAY)}
 			>
-				<Icon name="plus" />
+				<Icon name="forward" />
 			</button>
 		</div>
-		<MacroProgress summary={ready.day.summary} />
+		<Card>
+			<MacroProgress summary={ready.day.summary} />
+		</Card>
 		{#each MEAL_SLOTS as slot (slot)}
 			{@const entries = ready.entriesIn(slot)}
-			<section aria-label={SLOT_LABELS[slot]}>
-				<header>
-					<h2>{SLOT_LABELS[slot]}</h2>
-					<span class="total">{entries.length === 0 ? '' : slotCalories(entries)}</span>
-				</header>
+			<Card title={SLOT_LABELS[slot]} flush>
+				{#snippet trailing()}
+					<span>{entries.length === 0 ? '' : slotCalories(entries)}</span>
+				{/snippet}
 				{#if entries.length === 0}
 					<p class="empty">{messages.nutrition.nothingLogged}</p>
 				{:else}
@@ -81,11 +83,13 @@
 							</li>
 						{/each}
 					</ul>
-					<Button variant={ButtonVariant.quiet} onclick={() => (savingSlot = slot)}>
-						{messages.nutrition.saveSlotAsMeal(SLOT_LABELS[slot])}
-					</Button>
+					<div class="save">
+						<Button variant={ButtonVariant.quiet} onclick={() => (savingSlot = slot)}>
+							{messages.nutrition.saveSlotAsMeal(SLOT_LABELS[slot])}
+						</Button>
+					</div>
 				{/if}
-			</section>
+			</Card>
 		{/each}
 	</div>
 
@@ -109,7 +113,7 @@
 	.eat {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-6);
+		gap: var(--space-3);
 		padding-bottom: var(--space-8);
 	}
 
@@ -124,10 +128,14 @@
 		place-items: center;
 		width: var(--tap-target);
 		height: var(--tap-target);
-		border: none;
-		border-radius: var(--radius-round);
-		background: var(--color-surface);
+		border: var(--border-hairline) solid var(--color-divider);
+		border-radius: var(--radius-medium);
+		background: var(--color-card);
 		cursor: pointer;
+	}
+
+	.day-switcher span {
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.day-switcher button:disabled {
@@ -135,16 +143,6 @@
 		cursor: default;
 	}
 
-	header {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	h2 {
-		font-size: var(--font-size-body);
-	}
-
-	.total,
 	.detail,
 	.empty {
 		color: var(--color-text-muted);
@@ -157,6 +155,14 @@
 		list-style: none;
 	}
 
+	.empty {
+		padding: 0 var(--space-4) var(--space-3);
+	}
+
+	.save {
+		padding: 0 var(--space-2) var(--space-2);
+	}
+
 	li + li {
 		border-top: var(--border-hairline) solid var(--color-divider);
 	}
@@ -167,7 +173,7 @@
 		align-items: flex-start;
 		width: 100%;
 		min-height: var(--tap-target);
-		padding: var(--space-2) 0;
+		padding: var(--space-2) var(--space-4);
 		border: none;
 		background: transparent;
 		text-align: left;

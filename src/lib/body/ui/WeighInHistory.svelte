@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Card from '../../design/Card.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { LocalDate } from '../../shared/local-date.ts';
 	import type { MassUnit } from '../../shared/mass-unit.constants.ts';
@@ -20,8 +21,7 @@
 	const { weighIns, unit, today, onselect }: Props = $props();
 </script>
 
-<section>
-	<h2>{messages.body.history}</h2>
+<Card title={messages.body.history} flush>
 	<ul>
 		{#each weighIns as weighIn (weighIn.id)}
 			{@const date = formatDate(weighIn.date, today)}
@@ -40,14 +40,9 @@
 			</li>
 		{/each}
 	</ul>
-</section>
+</Card>
 
 <style>
-	h2 {
-		margin-bottom: var(--space-2);
-		font-size: var(--font-size-body);
-	}
-
 	ul {
 		margin: 0;
 		padding: 0;
@@ -63,7 +58,7 @@
 		justify-content: space-between;
 		width: 100%;
 		min-height: var(--tap-target);
-		padding: var(--space-3) 0;
+		padding: var(--space-3) var(--space-4);
 		border: none;
 		background: transparent;
 		text-align: left;

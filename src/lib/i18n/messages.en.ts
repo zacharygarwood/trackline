@@ -169,6 +169,7 @@ export const messages = {
 		deletePhoto: 'Delete photo'
 	},
 	settings: {
+		preferences: 'Preferences',
 		units: 'Units',
 		weekStart: 'First day of week',
 		monday: 'Monday',
@@ -222,13 +223,13 @@ export const messages = {
 		noTemplates: 'No templates yet. Finish a workout and save it as a template.',
 		recent: 'Recent workouts',
 		noWorkouts: 'No workouts yet. Start one to log your first sets.',
-		thisWeek: 'This week',
+		lastSevenDays: 'Last 7 days',
+		weekSummary: (workouts: number, restDays: number) =>
+			`${countOf(workouts, 'workout', 'workouts')} · ${countOf(restDays, 'rest day', 'rest days')}`,
 		streak: (current: number, longest: number) =>
 			`Streak: ${countOf(current, 'day', 'days')}. Best: ${countOf(longest, 'day', 'days')}.`,
 		restDay: 'Rest day',
 		dayTrained: (date: string) => `${date}: workout`,
-		streakNow: (days: number) => countOf(days, 'day', 'days'),
-		best: (days: number) => `Best ${String(days)}`,
 		markRestDay: (date: string) => `Mark ${date} as a rest day`,
 		trained: 'Workout',
 		nothingLogged: 'Nothing logged',
@@ -305,8 +306,7 @@ export const messages = {
 		amountWithUnit: (amount: string, unit: string) => `${amount} ${unit}`,
 		entryDetail: (amount: string, calories: string) => `${amount} · ${calories}`,
 		kcal: (calories: string) => `${calories} kcal`,
-		kcalLeft: 'kcal left',
-		kcalOver: 'kcal over',
+		ofTarget: (eaten: string, target: string) => `${eaten} / ${target}`,
 		grams: (grams: string) => `${grams} g`,
 		macroLine: (amounts: {
 			readonly calories: string;
@@ -329,6 +329,7 @@ export const messages = {
 		checkGoals: 'Enter numbers of zero or more for every goal.'
 	},
 	stats: {
+		streaks: 'Streaks',
 		currentStreak: 'Current streak',
 		longestStreak: 'Longest streak',
 		days: (count: number) => countOf(count, 'day', 'days'),
@@ -355,6 +356,10 @@ export const messages = {
 		dailyTotal: 'Daily total',
 		goal: 'Goal',
 		movingAverage: '7-day average',
+		dailyAverage: 'Daily average',
+		goalOf: (goal: string) => `Goal ${goal}`,
+		mass: (amount: string, unit: string) => `${amount} ${unit}`,
+		changeInRange: (change: string) => `${change} in this range`,
 		noWeighIns: 'No weigh-ins in this range.',
 		noFood: 'No food logged in this range.',
 		nutritionSummary: (label: string, days: number, average: string) =>
@@ -381,7 +386,6 @@ export const messages = {
 		workoutDone: 'Workout done.',
 		restDayMarked: 'Rest day.',
 		noTraining: 'No workout yet today.',
-		training: 'Training',
 		food: 'Food',
 		body: 'Body'
 	},

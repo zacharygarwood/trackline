@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getAppContext } from '#lib/app/app-context.ts';
-	import Icon from '#lib/design/Icon.svelte';
+	import Card from '#lib/design/Card.svelte';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { StatsRange } from '#lib/insights/application/stats-range.constants.ts';
@@ -40,23 +40,24 @@
 {#if screen !== undefined}
 	{@const ready = screen}
 	<div class="stats">
-		<dl class="streaks">
-			<div class="current">
-				<dt><Icon name="flame" />{messages.stats.currentStreak}</dt>
-				<dd>{messages.stats.days(ready.streak.current)}</dd>
-			</div>
-			<div>
-				<dt><Icon name="flame" />{messages.stats.longestStreak}</dt>
-				<dd>{messages.stats.days(ready.streak.longest)}</dd>
-			</div>
-		</dl>
+		<Card title={messages.stats.streaks}>
+			<dl class="streaks">
+				<div>
+					<dt>{messages.stats.currentStreak}</dt>
+					<dd>{messages.stats.days(ready.streak.current)}</dd>
+				</div>
+				<div>
+					<dt>{messages.stats.longestStreak}</dt>
+					<dd>{messages.stats.days(ready.streak.longest)}</dd>
+				</div>
+			</dl>
+		</Card>
 
-		<section class="activity">
-			<h2>{messages.stats.activity}</h2>
+		<Card title={messages.stats.activity}>
 			{#each ready.heatmaps as heatmap (heatmap.title)}
 				<ActivityHeatmapView {heatmap} today={ready.today} weekStart={ready.weekStart} />
 			{/each}
-		</section>
+		</Card>
 
 		<SegmentedControl
 			label={messages.stats.range}
@@ -85,10 +86,9 @@
 		/>
 
 		{#if ready.exercise === undefined}
-			<section>
-				<h2>{messages.stats.exerciseProgress}</h2>
+			<Card title={messages.stats.exerciseProgress}>
 				<p class="note">{messages.stats.noExercises}</p>
-			</section>
+			</Card>
 		{:else}
 			{@const chosen = ready.exercise}
 			<StatsChart
@@ -122,7 +122,7 @@
 	.stats {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-8);
+		gap: var(--space-3);
 		padding-bottom: var(--space-8);
 	}
 
@@ -133,45 +133,19 @@
 		margin: 0;
 	}
 
-	.streaks div {
-		padding: var(--space-4);
-		border-radius: var(--radius-card);
-		background: var(--color-card);
-		box-shadow: var(--shadow-card);
-	}
-
-	.streaks .current {
-		background: var(--color-accent);
-		color: var(--color-on-accent);
-	}
-
 	dt {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1);
+		color: var(--color-text-muted);
 		font-size: var(--font-size-small);
-		--icon-size: 18px;
 	}
 
 	dd {
 		margin: 0;
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-stat);
 		font-weight: var(--font-weight-semibold);
 		font-variant-numeric: tabular-nums;
 	}
 
-	.activity {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
-	}
-
-	h2 {
-		font-size: var(--font-size-body);
-	}
-
 	.note {
-		margin-top: var(--space-2);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-small);
 	}

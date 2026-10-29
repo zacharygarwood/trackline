@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Card from '../../design/Card.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import ExternalLink from '../../design/ExternalLink.svelte';
 	import { ExternalUrl } from '../../ui/external-url.constants.ts';
@@ -12,8 +13,7 @@
 	const { version }: Props = $props();
 </script>
 
-<section>
-	<h2>{messages.settings.about}</h2>
+<Card title={messages.settings.about}>
 	<p>{messages.settings.version(version)}</p>
 	<p>
 		{messages.settings.licensed}
@@ -27,21 +27,9 @@
 			<ExternalLink href={ExternalUrl.donate}>{messages.settings.donate}</ExternalLink>
 		</li>
 	</ul>
-</section>
+</Card>
 
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-
-	h2 {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-		font-weight: var(--font-weight-regular);
-	}
-
 	ul {
 		display: flex;
 		flex-direction: column;

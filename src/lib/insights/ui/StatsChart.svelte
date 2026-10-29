@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Card from '../../design/Card.svelte';
 	import LineChart from '../../design/LineChart.svelte';
 	import type { LegendMark } from './legend-mark.constants.ts';
 	import type { StatsChartData } from './stats-charts.ts';
@@ -28,12 +29,18 @@
 	const formatAxis = (value: number) => whole.format(value);
 </script>
 
-<section>
-	<h2>{title}</h2>
+<Card {title}>
 	{@render controls?.()}
 	{#if data === undefined}
 		<p class="empty">{empty}</p>
 	{:else}
+		<p class="headline">
+			<span class="value">{data.headline.value}</span>
+			<span class="caption">{data.headline.caption}</span>
+			{#if data.headline.detail !== undefined}
+				<span class="caption">{data.headline.detail}</span>
+			{/if}
+		</p>
 		<figure>
 			<LineChart
 				points={data.points}
@@ -49,12 +56,25 @@
 			</figcaption>
 		</figure>
 	{/if}
-</section>
+</Card>
 
 <style>
-	h2 {
-		margin-bottom: var(--space-2);
-		font-size: var(--font-size-body);
+	.headline {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.value {
+		font-size: var(--font-size-stat);
+		font-weight: var(--font-weight-semibold);
+		font-variant-numeric: tabular-nums;
+		line-height: 1.2;
+	}
+
+	.caption {
+		color: var(--color-text-muted);
+		font-size: var(--font-size-small);
+		font-variant-numeric: tabular-nums;
 	}
 
 	figure {
@@ -74,7 +94,7 @@
 		margin-top: var(--space-2);
 	}
 
-	span::before {
+	figcaption span::before {
 		content: '';
 		display: inline-block;
 		width: var(--space-4);
@@ -83,11 +103,11 @@
 		border-top: var(--focus-ring-width) solid var(--color-accent);
 	}
 
-	.dashed::before {
+	figcaption .dashed::before {
 		border-top: var(--border-hairline) dashed var(--color-text-muted);
 	}
 
-	.dot::before {
+	figcaption .dot::before {
 		width: var(--space-2);
 		height: var(--space-2);
 		border: none;

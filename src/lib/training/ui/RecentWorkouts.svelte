@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Card from '../../design/Card.svelte';
 	import EmptyState from '../../design/EmptyState.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { LocalDate } from '../../shared/local-date.ts';
@@ -18,10 +19,9 @@
 	const { workouts, describe, today }: Props = $props();
 </script>
 
-<section>
-	<h2>{messages.training.recent}</h2>
+<Card title={messages.training.recent} flush>
 	{#if workouts.length === 0}
-		<EmptyState message={messages.training.noWorkouts} icon="train" />
+		<EmptyState message={messages.training.noWorkouts} />
 	{:else}
 		<ul>
 			{#each workouts as workout (workout.id)}
@@ -32,14 +32,9 @@
 			{/each}
 		</ul>
 	{/if}
-</section>
+</Card>
 
 <style>
-	h2 {
-		margin-bottom: var(--space-2);
-		font-size: var(--font-size-body);
-	}
-
 	ul {
 		margin: 0;
 		padding: 0;
@@ -49,7 +44,7 @@
 	li {
 		display: flex;
 		flex-direction: column;
-		padding: var(--space-3) 0;
+		padding: var(--space-3) var(--space-4);
 	}
 
 	li + li {

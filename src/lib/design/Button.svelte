@@ -33,12 +33,10 @@
 		min-height: var(--button-height);
 		padding: var(--space-3) var(--space-6);
 		border: none;
-		border-radius: var(--radius-round);
+		border-radius: var(--radius-medium);
 		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
-		transition:
-			opacity var(--duration-quick),
-			transform var(--duration-quick);
+		transition: opacity var(--duration-quick);
 	}
 
 	.button:disabled {
@@ -47,18 +45,18 @@
 	}
 
 	.button:active:not(:disabled) {
-		transform: scale(0.97);
+		opacity: 0.8;
 	}
 
 	.primary {
 		background: var(--color-accent);
 		color: var(--color-on-accent);
-		box-shadow: var(--shadow-button);
 	}
 
 	.secondary {
-		background: var(--color-accent-soft);
-		color: var(--color-on-accent-soft);
+		border: var(--border-hairline) solid var(--color-divider);
+		background: var(--color-card);
+		color: var(--color-text);
 	}
 
 	.quiet {

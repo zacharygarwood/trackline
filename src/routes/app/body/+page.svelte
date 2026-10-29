@@ -11,10 +11,12 @@
 	import WeightChart from '#lib/body/ui/WeightChart.svelte';
 	import type { WeighIn } from '#lib/body/domain/weigh-in.ts';
 	import Button from '#lib/design/Button.svelte';
+	import Card from '#lib/design/Card.svelte';
 	import EmptyState from '#lib/design/EmptyState.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
+	import { first } from '#lib/shared/collections.ts';
 	import type { LocalDate } from '#lib/shared/local-date.ts';
-	import { formatDate } from '#lib/ui/format.ts';
+	import { formatDate, formatMass } from '#lib/ui/format.ts';
 	import { AppRoute } from '../app-route.constants.ts';
 
 	/** The weigh-in being entered: a new one for today, or an existing one being edited. */
@@ -46,17 +48,25 @@
 
 {#if screen !== undefined}
 	{@const ready = screen}
+	{@const latest = first(ready.weighIns)}
 	<div class="body">
 		<Button
 			onclick={() => {
 				weighInToday(ready.today);
 			}}>{messages.body.weighIn}</Button
 		>
-		{#if ready.weighIns.length === 0}
-			<EmptyState message={messages.body.empty} icon="body" />
-		{:else}
-			<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
-		{/if}
+		<Card title={messages.stats.weight}>
+			{#snippet trailing()}
+				{#if latest !== undefined}
+					<span class="latest">{formatMass(latest.weight, ready.unit)}</span>
+				{/if}
+			{/snippet}
+			{#if latest === undefined}
+				<EmptyState message={messages.body.empty} />
+			{:else}
+				<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
+			{/if}
+		</Card>
 		{#if gallery !== undefined}
 			<LatestPhotos {gallery} onopen={() => goto(resolve(AppRoute.photos))}>
 				{#snippet allPhotos()}
@@ -99,7 +109,13 @@
 	.body {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-6);
-		padding-bottom: var(--space-6);
+		gap: var(--space-3);
+		padding-bottom: var(--space-8);
+	}
+
+	.latest {
+		color: var(--color-text);
+		font-size: var(--font-size-body);
+		font-weight: var(--font-weight-semibold);
 	}
 </style>

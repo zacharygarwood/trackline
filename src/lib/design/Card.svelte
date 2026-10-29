@@ -1,31 +1,25 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import IconBadge from './IconBadge.svelte';
-	import type { IconName } from './icon.constants.ts';
-	import { Tone } from './tone.constants.ts';
 
-	/** Props for a raised card that groups one part of a screen. */
+	/** Props for a flat, bordered group that holds one part of a screen. */
 	interface Props {
-		/** The card's heading. */
+		/** The group's heading. */
 		title?: string;
-		/** An icon shown in a colored badge before the title. */
-		icon?: IconName;
-		tone?: Tone;
-		/** Shown at the end of the heading row, such as a link or a small action. */
+		/** Shown at the end of the heading row, such as a total or a link. */
 		trailing?: Snippet;
+		/** Lets rows run edge to edge; rows then pad themselves. */
+		flush?: boolean;
 		children: Snippet;
 	}
 
-	const { title, icon, tone = Tone.accent, trailing, children }: Props = $props();
+	const { title, trailing, flush = false, children }: Props = $props();
+	const headingId = $props.id();
 </script>
 
-<section class="card">
+<section class="card" class:flush aria-labelledby={title === undefined ? undefined : headingId}>
 	{#if title !== undefined}
 		<header>
-			{#if icon !== undefined}
-				<IconBadge {icon} {tone} />
-			{/if}
-			<h2>{title}</h2>
+			<h2 id={headingId}>{title}</h2>
 			{@render trailing?.()}
 		</header>
 	{/if}
@@ -36,21 +30,35 @@
 	.card {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-4);
+		gap: var(--space-3);
 		padding: var(--space-4);
-		border-radius: var(--radius-card);
+		border: var(--border-hairline) solid var(--color-divider);
+		border-radius: var(--radius-medium);
 		background: var(--color-card);
-		box-shadow: var(--shadow-card);
+	}
+
+	.flush {
+		gap: 0;
+		padding: 0;
 	}
 
 	header {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
+		justify-content: space-between;
 		gap: var(--space-3);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-small);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.flush header {
+		padding: var(--space-3) var(--space-4) var(--space-1);
 	}
 
 	h2 {
-		flex: 1;
-		font-size: var(--font-size-body);
+		color: var(--color-text);
+		font-size: var(--font-size-small);
+		font-weight: var(--font-weight-semibold);
 	}
 </style>

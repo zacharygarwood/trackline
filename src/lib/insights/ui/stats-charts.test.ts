@@ -47,6 +47,39 @@ describe('weightChartData', () => {
 			'Weight chart with 2 weigh-ins. Latest 79.0 kg, 7-day average 79.5 kg.'
 		);
 	});
+
+	it('leads with the latest 7-day average and how far it moved over the range', () => {
+		const data = weightChartData(
+			[
+				{ date: date('2026-10-01'), weight: kg(81), average: kg(81) },
+				{ date: date('2026-10-20'), weight: kg(79), average: kg(79.6) }
+			],
+			MassUnit.kg
+		);
+
+		expect(data?.headline).toEqual({
+			value: '79.6 kg',
+			caption: '7-day average',
+			detail: '-1.4 kg in this range'
+		});
+	});
+
+	it('shows a gain with a plus sign and leaves out the change for a single weigh-in', () => {
+		const gained = weightChartData(
+			[
+				{ date: date('2026-10-01'), weight: kg(80), average: kg(80) },
+				{ date: date('2026-10-02'), weight: kg(81), average: kg(80.5) }
+			],
+			MassUnit.kg
+		);
+		const single = weightChartData(
+			[{ date: date('2026-10-01'), weight: kg(80), average: kg(80) }],
+			MassUnit.kg
+		);
+
+		expect(gained?.headline.detail).toBe('+0.5 kg in this range');
+		expect(single?.headline.detail).toBeUndefined();
+	});
 });
 
 describe('nutritionChartData', () => {
@@ -70,6 +103,11 @@ describe('nutritionChartData', () => {
 		expect(data?.summary).toBe(
 			'Calories on 4 logged days, averaging 2,125 kcal. Latest goal 2,400 kcal.'
 		);
+		expect(data?.headline).toEqual({
+			value: '2,125 kcal',
+			caption: 'Daily average',
+			detail: 'Goal 2,400 kcal'
+		});
 	});
 
 	it('draws protein in grams and leaves out the goal before any was set', () => {
@@ -78,6 +116,11 @@ describe('nutritionChartData', () => {
 		expect(data?.trend.map((point) => point.y)).toEqual([92.4]);
 		expect(data?.goal).toEqual([]);
 		expect(data?.summary).toBe('Protein on 1 logged day, averaging 92 g.');
+		expect(data?.headline).toEqual({
+			value: '92 g',
+			caption: 'Daily average',
+			detail: undefined
+		});
 	});
 });
 
@@ -101,5 +144,10 @@ describe('exerciseChartData', () => {
 		expect(data?.summary).toBe(
 			'Bench press: 2 sessions. Heaviest set 105.0 kg, best estimated one-rep max 116.7 kg.'
 		);
+		expect(data?.headline).toEqual({
+			value: '115.0 kg',
+			caption: 'Estimated one-rep max',
+			detail: '-1.7 kg in this range'
+		});
 	});
 });

@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import Button from '../../design/Button.svelte';
 	import { ButtonVariant } from '../../design/button.constants.ts';
+	import Card from '../../design/Card.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import DailyGoalsFields from './DailyGoalsFields.svelte';
 	import type { DailyGoalsEditor, GoalsForm } from './daily-goals-editor.svelte.ts';
@@ -22,26 +23,10 @@
 	}
 </script>
 
-<section>
-	<h2>{messages.nutrition.dailyGoals}</h2>
+<Card title={messages.nutrition.dailyGoals}>
 	<DailyGoalsFields bind:form />
 	<Button variant={ButtonVariant.secondary} onclick={save}>{messages.nutrition.saveGoals}</Button>
 	{#if status !== undefined}
 		<p role="status">{status}</p>
 	{/if}
-</section>
-
-<style>
-	section {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: var(--space-3);
-	}
-
-	h2 {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-		font-weight: var(--font-weight-regular);
-	}
-</style>
+</Card>

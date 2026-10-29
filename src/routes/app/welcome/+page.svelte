@@ -5,7 +5,7 @@
 	import { GoalDirection } from '#lib/body/domain/goal-direction.constants.ts';
 	import { DIRECTION_LABELS, WeightGoalEditor } from '#lib/body/ui/weight-goal-editor.svelte.ts';
 	import Button from '#lib/design/Button.svelte';
-	import Illustration from '#lib/design/Illustration.svelte';
+	import Card from '#lib/design/Card.svelte';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import UnitField from '#lib/design/UnitField.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
@@ -62,15 +62,16 @@
 {#if ready !== undefined}
 	{@const screen = ready}
 	<div class="welcome">
-		<div class="hero"><Illustration icon="today" /></div>
-		<SegmentedControl
-			label={messages.settings.units}
-			options={unitOptions}
-			value={screen.units.unit}
-			onchange={(unit: MassUnit) => void screen.units.choose(unit)}
-		/>
+		<Card>
+			<SegmentedControl
+				label={messages.settings.units}
+				options={unitOptions}
+				value={screen.units.unit}
+				onchange={(unit: MassUnit) => void screen.units.choose(unit)}
+			/>
+		</Card>
 
-		<section>
+		<Card>
 			<UnitField
 				label={messages.welcome.optional(messages.body.goalWeight)}
 				unit={unitLabel(screen.units.unit)}
@@ -83,12 +84,11 @@
 					bind:value={direction}
 				/>
 			{/if}
-		</section>
+		</Card>
 
-		<section>
-			<h2>{messages.welcome.optional(messages.nutrition.dailyGoals)}</h2>
+		<Card title={messages.welcome.optional(messages.nutrition.dailyGoals)}>
 			<DailyGoalsFields bind:form={dailyGoals} />
-		</section>
+		</Card>
 
 		{#if screen.setup.problem !== undefined}
 			<p class="problem" role="alert">{screen.setup.problem}</p>
@@ -101,23 +101,7 @@
 	.welcome {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-6);
-		padding-bottom: var(--space-8);
-	}
-
-	.hero {
-		display: flex;
-		justify-content: center;
-	}
-
-	section {
-		display: flex;
-		flex-direction: column;
 		gap: var(--space-3);
-	}
-
-	h2 {
-		font-size: var(--font-size-small);
-		font-weight: var(--font-weight-regular);
+		padding-bottom: var(--space-8);
 	}
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Card from '../../design/Card.svelte';
 	import EmptyState from '../../design/EmptyState.svelte';
 	import Icon from '../../design/Icon.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
@@ -18,8 +19,7 @@
 	const { templates, onstart, onoptions }: Props = $props();
 </script>
 
-<section>
-	<h2>{messages.training.templates}</h2>
+<Card title={messages.training.templates} flush>
 	{#if templates.length === 0}
 		<EmptyState message={messages.training.noTemplates} />
 	{:else}
@@ -52,14 +52,9 @@
 			{/each}
 		</ul>
 	{/if}
-</section>
+</Card>
 
 <style>
-	h2 {
-		margin-bottom: var(--space-2);
-		font-size: var(--font-size-body);
-	}
-
 	ul {
 		margin: 0;
 		padding: 0;
@@ -69,6 +64,7 @@
 	li {
 		display: flex;
 		align-items: center;
+		padding-left: var(--space-4);
 	}
 
 	li + li {
@@ -99,8 +95,8 @@
 	.options {
 		display: grid;
 		place-items: center;
-		width: var(--tap-target);
-		height: var(--tap-target);
+		width: var(--space-12);
+		height: var(--space-12);
 		color: var(--color-text-muted);
 	}
 </style>

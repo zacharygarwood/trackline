@@ -13,11 +13,9 @@ export const ICON_PATHS = {
 	check: 'M5 12.5l4.5 4.5L19 7.5',
 	more: 'M6 12h.01M12 12h.01M18 12h.01',
 	plus: 'M12 6v12M6 12h12',
-	flame:
-		'M12 3c.5 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.7 1.2 2.7 2.3 2.7.2-2.6-.8-4.6.2-7.7z',
 	moon: 'M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z',
-	camera: 'M4 8h3.5L9 5.5h6L16.5 8H20v11H4zM12 10.5a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
-	chevron: 'M9 6l6 6-6 6'
+	back: 'M15 6l-6 6 6 6',
+	forward: 'M9 6l6 6-6 6'
 } as const;
 
 /** The name of an available icon. */

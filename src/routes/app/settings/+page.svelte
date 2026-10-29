@@ -4,6 +4,7 @@
 	import { WeightGoalEditor } from '#lib/body/ui/weight-goal-editor.svelte.ts';
 	import Button from '#lib/design/Button.svelte';
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
+	import Card from '#lib/design/Card.svelte';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import DailyGoalsForm from '#lib/nutrition/ui/DailyGoalsForm.svelte';
@@ -59,27 +60,27 @@
 	{@const goalEditor = goal}
 	{@const weekStartSetting = weekStart}
 	<div class="settings">
-		<SegmentedControl
-			label={messages.settings.units}
-			options={unitOptions}
-			value={unitsSetting.unit}
-			onchange={(unit: MassUnit) => void unitsSetting.choose(unit)}
-		/>
+		<Card title={messages.settings.preferences}>
+			<SegmentedControl
+				label={messages.settings.units}
+				options={unitOptions}
+				value={unitsSetting.unit}
+				onchange={(unit: MassUnit) => void unitsSetting.choose(unit)}
+			/>
+			<SegmentedControl
+				label={messages.settings.weekStart}
+				options={weekStartOptions}
+				value={weekStartSetting.weekStart}
+				onchange={(day: WeekStart) => void weekStartSetting.choose(day)}
+			/>
+		</Card>
 
-		<SegmentedControl
-			label={messages.settings.weekStart}
-			options={weekStartOptions}
-			value={weekStartSetting.weekStart}
-			onchange={(day: WeekStart) => void weekStartSetting.choose(day)}
-		/>
-
-		<section>
-			<h2>{messages.body.goalWeight}</h2>
+		<Card title={messages.body.goalWeight}>
 			<p>{goalEditor.describe(unitsSetting.unit)}</p>
 			<Button variant={ButtonVariant.secondary} onclick={() => (editingGoal = true)}>
 				{goalEditor.goal === undefined ? messages.body.setGoal : messages.body.changeGoal}
 			</Button>
-		</section>
+		</Card>
 
 		<DailyGoalsForm editor={dailyGoals} />
 
@@ -106,20 +107,7 @@
 	.settings {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-8);
+		gap: var(--space-3);
 		padding-bottom: var(--space-8);
-	}
-
-	section {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--space-2);
-	}
-
-	h2 {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-		font-weight: var(--font-weight-regular);
 	}
 </style>

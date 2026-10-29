@@ -36,10 +36,8 @@ test('create a food, log a different amount, and see scaled macros and goal prog
 		lunch.getByRole('button', { name: 'Chicken breast, 150 g, 248 kcal' })
 	).toBeVisible();
 	await expect(page.getByRole('meter', { name: 'Calories: 248 kcal of 2,000 kcal' })).toBeVisible();
-	const calories = page.getByRole('meter', { name: 'Calories: 248 kcal of 2,000 kcal' });
-	await expect(calories).toContainText('1,753');
-	await expect(calories).toContainText(messages.nutrition.kcalLeft);
-	await expect(page.getByText('103.5 g left')).toBeVisible();
+	await expect(page.getByText('1,753 kcal left')).toBeVisible();
+	await expect(page.getByText('46.5 / 150 g')).toBeVisible();
 
 	await page.getByRole('link', { name: messages.navigation.today }).click();
 	await expect(page.getByRole('meter', { name: 'Protein: 46.5 g of 150 g' })).toBeVisible();
