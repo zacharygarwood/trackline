@@ -66,6 +66,6 @@
 	}
 
 	.weight {
-		font-variant-numeric: tabular-nums;
+		font-family: var(--font-mono);
 	}
 </style>

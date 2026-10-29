@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Card from '../../design/Card.svelte';
-	import EmptyState from '../../design/EmptyState.svelte';
 	import Icon from '../../design/Icon.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { WorkoutTemplateId } from '../domain/ids.ts';
@@ -20,38 +19,33 @@
 </script>
 
 <Card title={messages.training.templates} flush>
-	{#if templates.length === 0}
-		<EmptyState message={messages.training.noTemplates} />
-	{:else}
-		<ul>
-			{#each templates as template (template.id)}
-				<li>
-					<button
-						type="button"
-						class="start"
-						onclick={() => {
-							onstart(template.id);
-						}}
+	<ul>
+		{#each templates as template (template.id)}
+			<li>
+				<button
+					type="button"
+					class="start"
+					onclick={() => {
+						onstart(template.id);
+					}}
+				>
+					<span class="name">{template.name}</span>
+					<span class="summary">{messages.training.templateSummary(template.exercises.length)}</span
 					>
-						<span class="name">{template.name}</span>
-						<span class="summary"
-							>{messages.training.templateSummary(template.exercises.length)}</span
-						>
-					</button>
-					<button
-						type="button"
-						class="options"
-						aria-label={messages.training.templateActions(template.name)}
-						onclick={() => {
-							onoptions(template);
-						}}
-					>
-						<Icon name="more" />
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+				</button>
+				<button
+					type="button"
+					class="options"
+					aria-label={messages.training.templateActions(template.name)}
+					onclick={() => {
+						onoptions(template);
+					}}
+				>
+					<Icon name="more" />
+				</button>
+			</li>
+		{/each}
+	</ul>
 </Card>
 
 <style>

@@ -33,7 +33,7 @@
 		min-height: var(--button-height);
 		padding: var(--space-3) var(--space-6);
 		border: none;
-		border-radius: var(--radius-medium);
+		border-radius: var(--radius-small);
 		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
 		transition: opacity var(--duration-quick);

@@ -65,6 +65,7 @@
 	}
 
 	.value {
+		font-family: var(--font-mono);
 		font-size: var(--font-size-stat);
 		font-weight: var(--font-weight-semibold);
 		font-variant-numeric: tabular-nums;

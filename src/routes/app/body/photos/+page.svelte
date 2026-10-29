@@ -7,6 +7,7 @@
 	import PhotoSheet from '#lib/body/ui/PhotoSheet.svelte';
 	import type { ProgressPhoto } from '#lib/body/domain/progress-photo.ts';
 	import EmptyState from '#lib/design/EmptyState.svelte';
+	import Fab from '#lib/design/Fab.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 
 	let gallery: PhotoGallery | undefined = $state();
@@ -26,7 +27,6 @@
 {#if gallery !== undefined}
 	{@const ready = gallery}
 	<div class="photos">
-		<AddPhotoButton gallery={ready} />
 		{#if ready.photos.length === 0}
 			<EmptyState message={messages.body.noPhotos} />
 		{:else}
@@ -40,6 +40,11 @@
 			/>
 		{/if}
 	</div>
+	<AddPhotoButton gallery={ready}>
+		{#snippet trigger(pick: () => void)}
+			<Fab label={messages.body.addPhoto} onclick={pick} />
+		{/snippet}
+	</AddPhotoButton>
 
 	{#if selected !== undefined}
 		{#key selected.id}
@@ -58,7 +63,7 @@
 	.photos {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-6);
-		padding-bottom: var(--space-6);
+		gap: var(--space-4);
+		padding-top: var(--space-4);
 	}
 </style>

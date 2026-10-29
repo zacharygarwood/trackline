@@ -91,8 +91,8 @@ export class WorkoutSession {
 		return this.library.find((exercise) => exercise.id === exerciseId)?.name ?? '';
 	}
 
-	/** What the user did last time for an exercise. */
-	hintFor(exerciseId: ExerciseId): string {
+	/** What the user did last time for an exercise; undefined if never done before. */
+	hintFor(exerciseId: ExerciseId): string | undefined {
 		return lastTimeHint(this.lastSessions.get(exerciseId) ?? [], this.unit);
 	}
 

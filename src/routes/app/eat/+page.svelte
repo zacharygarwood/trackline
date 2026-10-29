@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { getAppContext } from '#lib/app/app-context.ts';
-	import Button from '#lib/design/Button.svelte';
-	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import Card from '#lib/design/Card.svelte';
+	import Fab from '#lib/design/Fab.svelte';
 	import Icon from '#lib/design/Icon.svelte';
+	import IconButton from '#lib/design/IconButton.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import type { FoodLogEntry } from '#lib/nutrition/domain/food-log-entry.ts';
 	import { MEAL_SLOTS, type MealSlot } from '#lib/nutrition/domain/meal-slot.constants.ts';
@@ -34,64 +34,67 @@
 
 {#if day !== undefined}
 	{@const ready = day}
-	<div class="eat">
-		<Button onclick={() => (logging = true)}>{messages.nutrition.logFood}</Button>
-		<div class="day-switcher" role="group" aria-label={messages.nutrition.day}>
-			<button
-				type="button"
-				aria-label={messages.nutrition.previousDay}
-				onclick={() => ready.moveBy(-ONE_DAY)}
-			>
-				<Icon name="back" />
-			</button>
-			<span>{formatDate(ready.date, ready.today)}</span>
-			<button
-				type="button"
-				aria-label={messages.nutrition.nextDay}
-				disabled={!ready.date.isBefore(ready.today)}
-				onclick={() => ready.moveBy(ONE_DAY)}
-			>
-				<Icon name="forward" />
-			</button>
-		</div>
-		<Card>
-			<MacroProgress summary={ready.day.summary} />
-		</Card>
-		{#each MEAL_SLOTS as slot (slot)}
-			{@const entries = ready.entriesIn(slot)}
-			<Card title={SLOT_LABELS[slot]} flush>
-				{#snippet trailing()}
-					<span>{entries.length === 0 ? '' : slotCalories(entries)}</span>
-				{/snippet}
-				{#if entries.length === 0}
-					<p class="empty">{messages.nutrition.nothingLogged}</p>
-				{:else}
-					<ul>
-						{#each entries as entry (entry.id)}
-							{@const amount = formatAmount(entry.amount, entry.unitSnapshot)}
-							{@const calories = formatCalories(entry.macrosSnapshot.calories)}
-							<li>
-								<button
-									type="button"
-									class="entry"
-									aria-label={messages.nutrition.entry(entry.foodNameSnapshot, amount, calories)}
-									onclick={() => (editing = entry)}
-								>
-									<span>{entry.foodNameSnapshot}</span>
-									<span class="detail">{messages.nutrition.entryDetail(amount, calories)}</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
-					<div class="save">
-						<Button variant={ButtonVariant.quiet} onclick={() => (savingSlot = slot)}>
-							{messages.nutrition.saveSlotAsMeal(SLOT_LABELS[slot])}
-						</Button>
-					</div>
-				{/if}
-			</Card>
-		{/each}
+	<div class="day-switcher" role="group" aria-label={messages.nutrition.day}>
+		<button
+			type="button"
+			aria-label={messages.nutrition.previousDay}
+			onclick={() => ready.moveBy(-ONE_DAY)}
+		>
+			<Icon name="back" />
+		</button>
+		<span>{formatDate(ready.date, ready.today)}</span>
+		<button
+			type="button"
+			aria-label={messages.nutrition.nextDay}
+			disabled={!ready.date.isBefore(ready.today)}
+			onclick={() => ready.moveBy(ONE_DAY)}
+		>
+			<Icon name="forward" />
+		</button>
 	</div>
+	<Card>
+		<MacroProgress summary={ready.day.summary} />
+	</Card>
+	{#each MEAL_SLOTS as slot (slot)}
+		{@const entries = ready.entriesIn(slot)}
+		<Card title={SLOT_LABELS[slot]} flush>
+			{#snippet trailing()}
+				{#if entries.length > 0}
+					<span class="total">
+						{slotCalories(entries)}
+						<IconButton
+							label={messages.nutrition.saveSlotAsMeal(SLOT_LABELS[slot])}
+							icon="more"
+							onclick={() => (savingSlot = slot)}
+						/>
+					</span>
+				{/if}
+			{/snippet}
+			{#if entries.length > 0}
+				<ul>
+					{#each entries as entry (entry.id)}
+						{@const amount = formatAmount(entry.amount, entry.unitSnapshot)}
+						{@const calories = formatCalories(entry.macrosSnapshot.calories)}
+						<li>
+							<button
+								type="button"
+								class="entry"
+								aria-label={messages.nutrition.entry(entry.foodNameSnapshot, amount, calories)}
+								onclick={() => (editing = entry)}
+							>
+								<span class="food">
+									<span>{entry.foodNameSnapshot}</span>
+									<span class="amount">{amount}</span>
+								</span>
+								<span class="calories">{calories}</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</Card>
+	{/each}
+	<Fab label={messages.nutrition.logFood} onclick={() => (logging = true)} />
 
 	{#if logging}
 		<LogFoodSheet day={ready} onclose={() => (logging = false)} />
@@ -110,17 +113,16 @@
 {/if}
 
 <style>
-	.eat {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-		padding-bottom: var(--space-8);
-	}
-
 	.day-switcher {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		margin: 0 calc(-1 * var(--space-2));
+		padding: var(--space-1) 0;
+	}
+
+	.day-switcher span {
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.day-switcher button {
@@ -128,25 +130,23 @@
 		place-items: center;
 		width: var(--tap-target);
 		height: var(--tap-target);
-		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-medium);
-		background: var(--color-card);
+		border: none;
+		background: transparent;
+		color: var(--color-accent);
 		cursor: pointer;
 	}
 
-	.day-switcher span {
-		font-weight: var(--font-weight-semibold);
-	}
-
 	.day-switcher button:disabled {
+		color: var(--color-text-muted);
 		opacity: 0.4;
 		cursor: default;
 	}
 
-	.detail,
-	.empty {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
+	.total {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
+		font-family: var(--font-mono);
 	}
 
 	ul {
@@ -155,22 +155,11 @@
 		list-style: none;
 	}
 
-	.empty {
-		padding: 0 var(--space-4) var(--space-3);
-	}
-
-	.save {
-		padding: 0 var(--space-2) var(--space-2);
-	}
-
-	li + li {
-		border-top: var(--border-hairline) solid var(--color-divider);
-	}
-
 	.entry {
 		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
 		width: 100%;
 		min-height: var(--tap-target);
 		padding: var(--space-2) var(--space-4);
@@ -178,5 +167,21 @@
 		background: transparent;
 		text-align: left;
 		cursor: pointer;
+	}
+
+	.food {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.amount {
+		color: var(--color-text-muted);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-small);
+	}
+
+	.calories {
+		font-family: var(--font-mono);
+		white-space: nowrap;
 	}
 </style>

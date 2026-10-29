@@ -1,12 +1,13 @@
 <script lang="ts">
 	import Icon from '../../design/Icon.svelte';
-	import Stepper from '../../design/Stepper.svelte';
+	import NumberField from '../../design/NumberField.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import { MAX_REPS, MIN_REPS } from '../domain/workout-set.ts';
 	import { confirmWithVibration } from '../../ui/haptics.ts';
+	import { MAX_SET_WEIGHT, WEIGHT_PRECISION } from './weight-step.constants.ts';
 	import type { SetEntry } from './workout-session.svelte.ts';
 
-	/** Props for one set in the workout: reps and weight steppers and a check mark. */
+	/** Props for one line of the set table: number, weight, reps, check, and remove. */
 	interface Props {
 		/** The set's number, starting at 1. */
 		number: number;
@@ -14,10 +15,6 @@
 		entry: SetEntry;
 		/** The weight unit's label, for example "kg". */
 		unit: string;
-		/** How much one tap changes the weight. */
-		weightStep: number;
-		/** The heaviest weight that can be entered. */
-		maxWeight: number;
 		/** Called with new reps. */
 		onreps: (reps: number) => void;
 		/** Called with a new weight, in the user's unit. */
@@ -28,17 +25,7 @@
 		onremove: () => void;
 	}
 
-	const {
-		number,
-		entry,
-		unit,
-		weightStep,
-		maxWeight,
-		onreps,
-		onweight,
-		ontoggle,
-		onremove
-	}: Props = $props();
+	const { number, entry, unit, onreps, onweight, ontoggle, onremove }: Props = $props();
 
 	function toggleCompleted(): void {
 		if (!entry.completed) confirmWithVibration();
@@ -52,8 +39,18 @@
 	role="group"
 	aria-label={messages.training.setNumber(number)}
 >
-	<span class="number">{messages.training.setNumber(number)}</span>
-	<Stepper
+	<span class="number" aria-hidden="true">{number}</span>
+	<NumberField
+		label={messages.training.weight(unit)}
+		bind:value={
+			() => entry.weight,
+			(weight: number) => {
+				onweight(weight);
+			}
+		}
+		range={{ min: 0, max: MAX_SET_WEIGHT, step: WEIGHT_PRECISION }}
+	/>
+	<NumberField
 		label={messages.training.reps}
 		bind:value={
 			() => entry.reps,
@@ -62,16 +59,6 @@
 			}
 		}
 		range={{ min: MIN_REPS, max: MAX_REPS, step: 1 }}
-	/>
-	<Stepper
-		label={messages.training.weight(unit)}
-		bind:value={
-			() => entry.weight,
-			(weight: number) => {
-				onweight(weight);
-			}
-		}
-		range={{ min: 0, max: maxWeight, step: weightStep }}
 	/>
 	<button
 		type="button"
@@ -95,27 +82,16 @@
 <style>
 	.set {
 		display: grid;
-		grid-template-areas:
-			'number number remove'
-			'reps weight check';
-		grid-template-columns: 1fr 1fr auto;
+		grid-template-columns: var(--space-6) 1fr 1fr var(--tap-target) var(--tap-target);
 		align-items: center;
-		gap: var(--space-1) var(--space-2);
-		padding: var(--space-2) 0;
+		gap: var(--space-2);
+		padding: var(--space-1) 0;
 	}
 
 	.number {
-		grid-area: number;
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-	}
-
-	.check {
-		grid-area: check;
-	}
-
-	.remove {
-		grid-area: remove;
+		font-family: var(--font-mono);
+		text-align: center;
 	}
 
 	button {
@@ -123,18 +99,22 @@
 		place-items: center;
 		width: var(--tap-target);
 		height: var(--tap-target);
+		padding: 0;
 		border: none;
-		border-radius: var(--radius-round);
+		border-radius: var(--radius-small);
 		background: transparent;
 		color: var(--color-text-muted);
 		cursor: pointer;
+		--icon-size: 20px;
 	}
 
-	button.check {
+	.check {
+		border: var(--border-hairline) solid var(--color-divider);
 		background: var(--color-surface);
 	}
 
 	.completed .check {
+		border-color: var(--color-accent);
 		background: var(--color-accent);
 		color: var(--color-on-accent);
 	}

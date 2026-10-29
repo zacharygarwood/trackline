@@ -1,19 +1,20 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import Button from '../../design/Button.svelte';
-	import { ButtonVariant } from '../../design/button.constants.ts';
 	import Sheet from '../../design/Sheet.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { Pose } from '../domain/pose.constants.ts';
 	import type { PhotoGallery } from './photo-gallery.svelte.ts';
 	import { POSE_LABELS, POSES } from './pose-labels.ts';
 
-	/** Props for the Add photo button and the sheet that tags the chosen photo. */
+	/** Props for choosing a photo and the sheet that tags it. */
 	interface Props {
 		gallery: PhotoGallery;
-		variant?: ButtonVariant;
+		/** The control that starts it, given the function that opens the photo picker. */
+		trigger: Snippet<[() => void]>;
 	}
 
-	const { gallery, variant = ButtonVariant.primary }: Props = $props();
+	const { gallery, trigger }: Props = $props();
 
 	let picker: HTMLInputElement | undefined = $state();
 	let image: Uint8Array | undefined = $state();
@@ -42,7 +43,7 @@
 	}
 </script>
 
-<Button {variant} onclick={() => picker?.click()}>{messages.body.addPhoto}</Button>
+{@render trigger(() => picker?.click())}
 <input bind:this={picker} type="file" accept="image/*" hidden onchange={choose} />
 
 <Sheet bind:open title={messages.body.addPhoto}>

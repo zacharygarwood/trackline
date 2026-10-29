@@ -166,12 +166,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-4) var(--space-2);
+		padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-2) var(--space-2)
+			var(--space-4);
+		border-bottom: var(--border-hairline) solid var(--color-divider);
 		view-transition-name: header;
 	}
 
 	h1 {
 		font-size: var(--font-size-title);
+		letter-spacing: -0.01em;
 	}
 
 	header a {
@@ -191,7 +194,7 @@
 
 	main {
 		flex: 1;
-		padding: 0 var(--space-4);
+		padding: 0 var(--space-4) calc(var(--fab-size) + var(--space-6));
 	}
 
 	.tab-bar {
@@ -202,7 +205,7 @@
 	}
 
 	.notice {
-		margin: 0 var(--space-4) var(--space-4);
+		margin: var(--space-4);
 	}
 
 	.update {

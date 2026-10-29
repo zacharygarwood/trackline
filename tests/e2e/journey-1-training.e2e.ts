@@ -19,13 +19,11 @@ test('log a workout, repeat it from a template, keep the streak with a rest day,
 	await finishFirstRun(page);
 
 	await page.getByRole('link', { name: messages.navigation.train }).click();
-	await expect(page.getByText(messages.training.noTemplates)).toBeVisible();
 	await page.getByRole('button', { name: messages.training.startWorkout }).click();
 	await page.getByRole('button', { name: messages.training.addExercise }).click();
 	await page.getByRole('dialog').getByRole('textbox').fill('Squat');
 	await page.getByRole('button', { name: messages.training.addNamed('Squat') }).click();
 
-	await expect(page.getByText(messages.training.firstTime)).toBeVisible();
 	await enter(set(page, 1).getByRole('textbox', { name: messages.training.reps }), '5');
 	await enter(set(page, 1).getByRole('textbox', { name: messages.training.weight('kg') }), '100');
 	await set(page, 1)
@@ -70,14 +68,9 @@ test('log a workout, repeat it from a template, keep the streak with a rest day,
 
 	await page.clock.setFixedTime(new Date('2026-10-02T09:00:00'));
 	await page.reload();
-	await page
-		.getByRole('button', { name: messages.training.markRestDay(messages.dates.today) })
-		.click();
-
-	await expect(page.getByText(messages.training.weekSummary(1, 1))).toBeVisible();
-	await expect(
-		page.getByRole('button', { name: messages.training.markRestDay(messages.dates.today) })
-	).toHaveAttribute('aria-pressed', 'true');
+	const restDay = page.getByRole('switch', { name: messages.training.restDay });
+	await restDay.click();
+	await expect(restDay).toHaveAttribute('aria-checked', 'true');
 
 	await page.getByRole('link', { name: messages.navigation.stats }).click();
 	await expect(page.getByText(messages.stats.days(2)).first()).toBeVisible();

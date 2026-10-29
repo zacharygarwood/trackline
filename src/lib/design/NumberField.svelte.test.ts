@@ -1,12 +1,11 @@
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { messages } from '../i18n/messages.en.ts';
-import Stepper from './Stepper.svelte';
+import NumberField from './NumberField.svelte';
 
-function renderStepper(initial: number) {
+function renderField(initial: number) {
 	const state = $state({ value: initial });
-	render(Stepper, {
+	render(NumberField, {
 		props: {
 			label: 'Reps',
 			get value() {
@@ -21,26 +20,9 @@ function renderStepper(initial: number) {
 	return state;
 }
 
-describe('Stepper', () => {
-	it('steps up and down', async () => {
-		const state = renderStepper(5);
-		const user = userEvent.setup();
-
-		await user.click(screen.getByRole('button', { name: messages.design.increase('Reps') }));
-		await user.click(screen.getByRole('button', { name: messages.design.increase('Reps') }));
-		await user.click(screen.getByRole('button', { name: messages.design.decrease('Reps') }));
-
-		expect(state.value).toBe(6);
-	});
-
-	it('cannot step below the minimum', () => {
-		renderStepper(1);
-
-		expect(screen.getByRole('button', { name: messages.design.decrease('Reps') })).toBeDisabled();
-	});
-
+describe('NumberField', () => {
 	it('accepts a typed value', async () => {
-		const state = renderStepper(5);
+		const state = renderField(5);
 		const user = userEvent.setup();
 		const input = screen.getByRole('textbox', { name: 'Reps' });
 
@@ -52,7 +34,7 @@ describe('Stepper', () => {
 	});
 
 	it('restores the value when the typed text is not a number', async () => {
-		const state = renderStepper(5);
+		const state = renderField(5);
 		const user = userEvent.setup();
 		const input = screen.getByRole('textbox', { name: 'Reps' });
 
@@ -65,7 +47,7 @@ describe('Stepper', () => {
 	});
 
 	it('uses the numeric keyboard for whole-number steps', () => {
-		renderStepper(5);
+		renderField(5);
 
 		expect(screen.getByRole('textbox', { name: 'Reps' })).toHaveAttribute('inputmode', 'numeric');
 	});

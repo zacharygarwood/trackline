@@ -5,7 +5,7 @@ import { demoBackup, DEMO_TODAY } from './demo-backup.ts';
 
 const OUTPUT = 'static/screenshots';
 const SCREENS = [
-	{ name: 'today', path: '/app', ready: messages.training.lastSevenDays },
+	{ name: 'today', path: '/app', ready: messages.today.lastWorkout },
 	{ name: 'stats', path: '/app/stats', ready: messages.stats.currentStreak }
 ] as const;
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { ButtonVariant } from '../../design/button.constants.ts';
+	import AddRow from '../../design/AddRow.svelte';
 	import Card from '../../design/Card.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import { formatDate } from '../../ui/format.ts';
@@ -49,7 +49,11 @@
 			{/each}
 		</ul>
 	{/if}
-	<AddPhotoButton {gallery} variant={ButtonVariant.secondary} />
+	<AddPhotoButton {gallery}>
+		{#snippet trigger(pick: () => void)}
+			<AddRow label={messages.body.addPhoto} onclick={pick} />
+		{/snippet}
+	</AddPhotoButton>
 </Card>
 
 <style>

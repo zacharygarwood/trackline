@@ -39,93 +39,86 @@
 
 {#if screen !== undefined}
 	{@const ready = screen}
-	<div class="stats">
-		<Card title={messages.stats.streaks}>
-			<dl class="streaks">
-				<div>
-					<dt>{messages.stats.currentStreak}</dt>
-					<dd>{messages.stats.days(ready.streak.current)}</dd>
-				</div>
-				<div>
-					<dt>{messages.stats.longestStreak}</dt>
-					<dd>{messages.stats.days(ready.streak.longest)}</dd>
-				</div>
-			</dl>
-		</Card>
+	<Card title={messages.stats.streaks}>
+		<dl class="streaks">
+			<div>
+				<dt>{messages.stats.currentStreak}</dt>
+				<dd>{messages.stats.days(ready.streak.current)}</dd>
+			</div>
+			<div>
+				<dt>{messages.stats.longestStreak}</dt>
+				<dd>{messages.stats.days(ready.streak.longest)}</dd>
+			</div>
+		</dl>
+	</Card>
 
-		<Card title={messages.stats.activity}>
-			{#each ready.heatmaps as heatmap (heatmap.title)}
-				<ActivityHeatmapView {heatmap} today={ready.today} weekStart={ready.weekStart} />
-			{/each}
-		</Card>
+	<Card title={messages.stats.activity}>
+		{#each ready.heatmaps as heatmap (heatmap.title)}
+			<ActivityHeatmapView {heatmap} today={ready.today} weekStart={ready.weekStart} />
+		{/each}
+	</Card>
 
+	<Card>
 		<SegmentedControl
 			label={messages.stats.range}
 			options={ranges}
 			value={ready.range}
 			onchange={(range: StatsRange) => ready.changeRange(range)}
 		/>
+	</Card>
 
-		<StatsChart
-			title={messages.stats.weight}
-			data={ready.weightChart}
-			empty={messages.stats.noWeighIns}
-			legend={[{ mark: LegendMark.line, label: messages.stats.movingAverage }]}
-		/>
-		<StatsChart
-			title={messages.stats.calories}
-			data={ready.caloriesChart}
-			empty={messages.stats.noFood}
-			legend={nutritionLegend}
-		/>
-		<StatsChart
-			title={messages.stats.protein}
-			data={ready.proteinChart}
-			empty={messages.stats.noFood}
-			legend={nutritionLegend}
-		/>
+	<StatsChart
+		title={messages.stats.weight}
+		data={ready.weightChart}
+		empty={messages.stats.noWeighIns}
+		legend={[{ mark: LegendMark.line, label: messages.stats.movingAverage }]}
+	/>
+	<StatsChart
+		title={messages.stats.calories}
+		data={ready.caloriesChart}
+		empty={messages.stats.noFood}
+		legend={nutritionLegend}
+	/>
+	<StatsChart
+		title={messages.stats.protein}
+		data={ready.proteinChart}
+		empty={messages.stats.noFood}
+		legend={nutritionLegend}
+	/>
 
-		{#if ready.exercise === undefined}
-			<Card title={messages.stats.exerciseProgress}>
-				<p class="note">{messages.stats.noExercises}</p>
-			</Card>
-		{:else}
-			{@const chosen = ready.exercise}
-			<StatsChart
-				title={messages.stats.exerciseProgress}
-				data={ready.exerciseChart}
-				empty={messages.stats.noSessions}
-				legend={[
-					{ mark: LegendMark.line, label: messages.stats.estimatedOneRepMax },
-					{ mark: LegendMark.dot, label: messages.stats.heaviestSet }
-				]}
-			>
-				{#snippet controls()}
-					<label class="picker">
-						<span>{messages.stats.exercise}</span>
-						<select
-							value={chosen.id}
-							onchange={(event) => ready.chooseExercise(event.currentTarget.value)}
-						>
-							{#each ready.exercises as exercise (exercise.id)}
-								<option value={exercise.id}>{exercise.name}</option>
-							{/each}
-						</select>
-					</label>
-				{/snippet}
-			</StatsChart>
-		{/if}
-	</div>
+	{#if ready.exercise === undefined}
+		<Card title={messages.stats.exerciseProgress}>
+			<p class="note">{messages.stats.noExercises}</p>
+		</Card>
+	{:else}
+		{@const chosen = ready.exercise}
+		<StatsChart
+			title={messages.stats.exerciseProgress}
+			data={ready.exerciseChart}
+			empty={messages.stats.noSessions}
+			legend={[
+				{ mark: LegendMark.line, label: messages.stats.estimatedOneRepMax },
+				{ mark: LegendMark.dot, label: messages.stats.heaviestSet }
+			]}
+		>
+			{#snippet controls()}
+				<label class="picker">
+					<span>{messages.stats.exercise}</span>
+					<select
+						value={chosen.id}
+						onchange={(event) => ready.chooseExercise(event.currentTarget.value)}
+					>
+						{#each ready.exercises as exercise (exercise.id)}
+							<option value={exercise.id}>{exercise.name}</option>
+						{/each}
+					</select>
+				</label>
+			{/snippet}
+		</StatsChart>
+	{/if}
 {/if}
 
 <style>
-	.stats {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-		padding-bottom: var(--space-8);
-	}
-
 	.streaks {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -140,6 +133,7 @@
 
 	dd {
 		margin: 0;
+		font-family: var(--font-mono);
 		font-size: var(--font-size-stat);
 		font-weight: var(--font-weight-semibold);
 		font-variant-numeric: tabular-nums;

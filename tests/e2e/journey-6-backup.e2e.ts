@@ -32,7 +32,7 @@ test('export a backup, delete all data, and restore everything, photos included,
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.welcome.title);
 	await finishFirstRun(page);
 	await page.goto('/app/body');
-	await expect(page.getByText(messages.body.empty)).toBeVisible();
+	await expect(page.getByRole('region', { name: messages.body.history })).toHaveCount(0);
 	expect(await storedPhotoFiles(page)).toEqual([]);
 
 	await page.goto('/app/settings');

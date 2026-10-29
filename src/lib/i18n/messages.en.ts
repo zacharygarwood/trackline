@@ -126,7 +126,6 @@ export const messages = {
 		save: 'Save',
 		deleteWeighIn: 'Delete weigh-in',
 		history: 'History',
-		empty: 'No weigh-ins yet. Weigh in to start your graph.',
 		enterWeight: 'Enter your weight.',
 		weightOutOfRange: (min: string, max: string) => `Enter a weight between ${min} and ${max}.`,
 		editWeighIn: (date: string, weight: string) => `${date}, ${weight}. Edit`,
@@ -220,18 +219,10 @@ export const messages = {
 	training: {
 		startWorkout: 'Start workout',
 		templates: 'Templates',
-		noTemplates: 'No templates yet. Finish a workout and save it as a template.',
 		recent: 'Recent workouts',
-		noWorkouts: 'No workouts yet. Start one to log your first sets.',
-		lastSevenDays: 'Last 7 days',
-		weekSummary: (workouts: number, restDays: number) =>
-			`${countOf(workouts, 'workout', 'workouts')} · ${countOf(restDays, 'rest day', 'rest days')}`,
 		streak: (current: number, longest: number) =>
 			`Streak: ${countOf(current, 'day', 'days')}. Best: ${countOf(longest, 'day', 'days')}.`,
 		restDay: 'Rest day',
-		dayTrained: (date: string) => `${date}: workout`,
-		markRestDay: (date: string) => `Mark ${date} as a rest day`,
-		trained: 'Workout',
 		nothingLogged: 'Nothing logged',
 		addExercise: 'Add exercise',
 		exerciseName: 'Exercise name',
@@ -240,11 +231,12 @@ export const messages = {
 		removeExercise: (name: string) => `Remove ${name}`,
 		setNumber: (position: number) => `Set ${String(position)}`,
 		reps: 'Reps',
+		setColumn: 'Set',
+		exerciseOptions: (name: string) => `${name} options`,
 		weight: (unit: string) => `Weight (${unit})`,
 		completeSet: (position: number) => `Complete set ${String(position)}`,
 		removeSet: (position: number) => `Remove set ${String(position)}`,
 		lastTime: (sets: string) => `Last time: ${sets}`,
-		firstTime: 'First time doing this exercise.',
 		setSummary: (reps: number, weight: string) => `${String(reps)} × ${weight}`,
 		bodyweight: 'bodyweight',
 		note: 'Note',
@@ -280,7 +272,6 @@ export const messages = {
 		dinner: 'Dinner',
 		snacks: 'Snacks',
 		meal: 'Meal',
-		nothingLogged: 'Nothing logged.',
 		search: 'Search foods',
 		savedMeals: 'Saved meals',
 		recentFoods: 'Foods',
@@ -304,9 +295,10 @@ export const messages = {
 			'Check the food: it needs a name, a positive amount, a unit, and macros of zero or more.',
 		entry: (name: string, amount: string, calories: string) => `${name}, ${amount}, ${calories}`,
 		amountWithUnit: (amount: string, unit: string) => `${amount} ${unit}`,
-		entryDetail: (amount: string, calories: string) => `${amount} · ${calories}`,
 		kcal: (calories: string) => `${calories} kcal`,
 		ofTarget: (eaten: string, target: string) => `${eaten} / ${target}`,
+		left: 'Left',
+		overGoal: 'Over',
 		grams: (grams: string) => `${grams} g`,
 		macroLine: (amounts: {
 			readonly calories: string;
@@ -320,9 +312,6 @@ export const messages = {
 		saveMeal: 'Save meal',
 		mealNameProblem: 'Enter a name of up to 60 characters.',
 		progressOf: (label: string, eaten: string, target: string) => `${label}: ${eaten} of ${target}`,
-		remaining: (amount: string) => `${amount} left`,
-		over: (amount: string) => `${amount} over`,
-		noGoals: 'No daily goals yet. Set them in Settings.',
 		dailyGoals: 'Daily goals',
 		saveGoals: 'Save goals',
 		goalsSaved: 'Goals saved. Earlier days keep their old goals.',
@@ -380,14 +369,17 @@ export const messages = {
 			`${summary.name}: ${countOf(summary.sessions, 'session', 'sessions')}. Heaviest set ${summary.heaviest}, best estimated one-rep max ${summary.best}.`
 	},
 	today: {
-		weighedInToday: 'Weighed in today',
+		lastWorkout: 'Last workout',
+		workoutsLastSevenDays: 'Workouts, last 7 days',
+		latest: 'Latest',
+		none: '—',
 		weighedIn: (weight: string) => `Weighed in: ${weight}`,
-		notWeighedIn: 'Not weighed in yet.',
 		workoutDone: 'Workout done.',
 		restDayMarked: 'Rest day.',
 		noTraining: 'No workout yet today.',
 		food: 'Food',
-		body: 'Body'
+		weight: 'Weight',
+		training: 'Training'
 	},
 	welcome: {
 		title: 'Welcome',
@@ -397,8 +389,6 @@ export const messages = {
 	design: {
 		close: 'Close',
 		decimalSeparator: 'Decimal point',
-		deleteDigit: 'Delete',
-		decrease: (label: string) => `Decrease ${label}`,
-		increase: (label: string) => `Increase ${label}`
+		deleteDigit: 'Delete'
 	}
 } as const;

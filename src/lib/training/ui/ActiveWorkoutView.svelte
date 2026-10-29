@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Button from '../../design/Button.svelte';
 	import { ButtonVariant } from '../../design/button.constants.ts';
+	import Card from '../../design/Card.svelte';
+	import AddRow from '../../design/AddRow.svelte';
 	import Sheet from '../../design/Sheet.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { FinishedWorkout } from '../domain/workout.ts';
@@ -34,23 +36,25 @@
 </script>
 
 {#if session.workout !== undefined}
-	<div class="workout">
-		{#each session.workout.exercises as exercise (exercise.exerciseId)}
-			<ExerciseCard {session} {exercise} />
-		{/each}
-		<Button variant={ButtonVariant.secondary} onclick={() => (adding = true)}>
-			{messages.training.addExercise}
-		</Button>
+	{#each session.workout.exercises as exercise (exercise.exerciseId)}
+		<ExerciseCard {session} {exercise} />
+	{/each}
+	<Card>
+		<AddRow label={messages.training.addExercise} onclick={() => (adding = true)} />
+	</Card>
+	<Card>
 		<label>
 			<span>{messages.training.note}</span>
 			<textarea
 				value={session.workout.note}
 				onchange={(event) => session.setNote(event.currentTarget.value)}></textarea>
 		</label>
-		<Button onclick={finish}>{messages.training.finishWorkout}</Button>
-		<Button variant={ButtonVariant.quiet} onclick={() => (confirmingDiscard = true)}>
+	</Card>
+	<div class="actions">
+		<Button variant={ButtonVariant.secondary} onclick={() => (confirmingDiscard = true)}>
 			{messages.training.discardWorkout}
 		</Button>
+		<Button onclick={finish}>{messages.training.finishWorkout}</Button>
 	</div>
 {/if}
 
@@ -69,11 +73,11 @@
 {/if}
 
 <style>
-	.workout {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4);
-		padding-bottom: var(--space-8);
+	.actions {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-3);
+		padding: var(--space-4) 0;
 	}
 
 	label {

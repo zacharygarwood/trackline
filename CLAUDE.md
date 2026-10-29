@@ -38,7 +38,7 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 
 - Import app code through `#lib/...` with the file extension: `import { messages } from '#lib/i18n/messages.en.ts'`. Inside `src/lib`, sibling and parent modules use relative imports, also with the extension.
 - SvelteKit 3 modules: `$app/paths` (`resolve`), `$app/state`, `$app/env`. Route paths live in `src/routes/app/app-route.constants.ts`; always link with `resolve(AppRoute.x)`.
-- Design primitives live in `src/lib/design/` (Button, Card, Sheet, NumberPad, Stepper, TabBar, EmptyState, Icon). Logic behind a primitive goes in a plain `.ts` module next to it.
+- Design primitives live in `src/lib/design/` (Button, Card, Row, Fab, IconButton, AddRow, NumberField, Switch, Sheet, NumberPad, TabBar, EmptyState, Icon). Logic behind a primitive goes in a plain `.ts` module next to it.
 - User-facing text: `src/lib/i18n/messages.en.ts`. Identifiers: `*.constants.ts` (`as const`). SQL: `*.sql.ts`. These are the only files where string literals are allowed in `src/`.
 - Clock and IdGenerator implementations live in `src/lib/platform/system/`, the only place allowed to read the time or randomness.
 - Unit tests sit next to the code as `*.test.ts`, component tests as `*.svelte.test.ts` (jsdom). Fakes, builders, test support, and e2e live under `tests/`.

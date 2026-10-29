@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Card from '../../design/Card.svelte';
-	import EmptyState from '../../design/EmptyState.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { LocalDate } from '../../shared/local-date.ts';
 	import { formatDate } from '../../ui/format.ts';
@@ -20,18 +19,14 @@
 </script>
 
 <Card title={messages.training.recent} flush>
-	{#if workouts.length === 0}
-		<EmptyState message={messages.training.noWorkouts} />
-	{:else}
-		<ul>
-			{#each workouts as workout (workout.id)}
-				<li>
-					<span>{formatDate(workout.date, today)}</span>
-					<span class="summary">{describe(workout)}</span>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+	<ul>
+		{#each workouts as workout (workout.id)}
+			<li>
+				<span>{formatDate(workout.date, today)}</span>
+				<span class="summary">{describe(workout)}</span>
+			</li>
+		{/each}
+	</ul>
 </Card>
 
 <style>

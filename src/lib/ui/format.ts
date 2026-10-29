@@ -3,17 +3,11 @@ import type { LocalDate } from '../shared/local-date.ts';
 import { MassUnit } from '../shared/mass-unit.constants.ts';
 import { Mass } from '../shared/mass.ts';
 import { err, ok, type Result } from '../shared/result.ts';
-import {
-	DATE_FORMAT,
-	INSTANT_DATE_FORMAT,
-	WEEKDAY_FORMAT,
-	WEIGHT_FORMAT
-} from './format.constants.ts';
+import { DATE_FORMAT, INSTANT_DATE_FORMAT, WEIGHT_FORMAT } from './format.constants.ts';
 
 const weightNumber = new Intl.NumberFormat(undefined, WEIGHT_FORMAT);
 const dateFormat = new Intl.DateTimeFormat(undefined, DATE_FORMAT);
 const instantDateFormat = new Intl.DateTimeFormat(undefined, INSTANT_DATE_FORMAT);
-const weekdayFormat = new Intl.DateTimeFormat(undefined, WEEKDAY_FORMAT);
 const ENTRY_FRACTION_DIGITS = 1;
 const ONE_DAY_BACK = -1;
 
@@ -105,13 +99,4 @@ export function formatDate(date: LocalDate, today: LocalDate): string {
  */
 export function formatInstantDate(epochMilliseconds: number): string {
 	return instantDateFormat.format(epochMilliseconds);
-}
-
-/**
- * The short name of a date's day of the week, for example "Tue".
- *
- * @param date - The date.
- */
-export function formatWeekday(date: LocalDate): string {
-	return weekdayFormat.format(new Date(Date.UTC(date.year, date.month - 1, date.day)));
 }

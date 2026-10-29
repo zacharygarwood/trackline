@@ -52,6 +52,17 @@ describe('WorkoutSession', () => {
 		expect(session.hintFor(benchId)).toBe('Last time: 8 × 60.0 kg');
 	});
 
+	it('has no hint for an exercise never done before', async () => {
+		const { session } = screens();
+		await session.load(MassUnit.kg);
+		await session.start();
+		await session.addExercise('Squat');
+		const squat = session.workout?.exercises.at(0)?.exerciseId;
+		if (squat === undefined) throw new Error('expected an exercise');
+
+		expect(session.hintFor(squat)).toBeUndefined();
+	});
+
 	it('enters weights in pounds', async () => {
 		const { session } = screens();
 		await session.load(MassUnit.lb);
@@ -125,6 +136,19 @@ describe('TrainOverview', () => {
 
 		await overview.toggleRestDay(overview.today, true);
 		expect(overview.streakText).toBe('Streak: 0 days. Best: 0 days.');
+	});
+
+	it('counts the workouts of the last seven days and tells whether today was trained or rested', async () => {
+		const { session, overview } = screens();
+		await overview.load();
+		expect(overview.workoutsLastSevenDays).toBe(0);
+		expect(overview.todayActivity).toEqual({ date: overview.today, trained: false, rested: false });
+
+		await logBench(session);
+		await overview.load();
+
+		expect(overview.workoutsLastSevenDays).toBe(1);
+		expect(overview.todayActivity?.trained).toBe(true);
 	});
 });
 

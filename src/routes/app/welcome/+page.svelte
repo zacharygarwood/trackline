@@ -93,7 +93,9 @@
 		{#if screen.setup.problem !== undefined}
 			<p class="problem" role="alert">{screen.setup.problem}</p>
 		{/if}
-		<Button onclick={() => start(screen)}>{messages.welcome.start}</Button>
+		<div class="start">
+			<Button onclick={() => start(screen)}>{messages.welcome.start}</Button>
+		</div>
 	</div>
 {/if}
 
@@ -101,7 +103,12 @@
 	.welcome {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-3);
 		padding-bottom: var(--space-8);
+	}
+
+	.start {
+		display: flex;
+		flex-direction: column;
+		padding-top: var(--space-6);
 	}
 </style>

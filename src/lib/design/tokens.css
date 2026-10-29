@@ -5,25 +5,29 @@
 :root {
 	color-scheme: light dark;
 
-	--color-background: #f6f6f7;
+	--color-background: #fff;
 	--color-card: #fff;
-	--color-surface: #ececee;
-	--color-text: #1b1b1d;
-	--color-text-muted: #5e6068;
-	--color-divider: #e2e2e5;
+	--color-surface: #f0f0f0;
+	--color-text: #161616;
+	--color-text-muted: #5c5c5c;
+	--color-divider: #e4e4e4;
 	--color-accent: #b94a26;
 	--color-on-accent: #fff;
 	--color-rest: #2f6fb0;
 	--color-on-rest: #fff;
-	--color-backdrop: rgb(27 27 29 / 35%);
-	--color-heat-empty: #e6e6e9;
+	--color-backdrop: rgb(0 0 0 / 40%);
+	--color-heat-empty: #ebebeb;
 	--color-heat-muted: var(--color-rest);
+	--shadow-fab: 0 2px 8px rgb(0 0 0 / 25%);
 
-	--font-family: system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
+	--font-family: 'IBM Plex Sans', system-ui, sans-serif;
+	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+	--font-size-label: 0.75rem;
 	--font-size-small: 0.875rem;
 	--font-size-body: 1rem;
 	--font-size-title: 1.5rem;
-	--font-size-stat: 1.75rem;
+	--font-size-stat: 1.625rem;
+	--letter-spacing-label: 0.06em;
 	--font-size-display: 3rem;
 	--font-size-chart-label: 10px;
 	--font-weight-regular: 400;
@@ -40,7 +44,7 @@
 
 	--radius-small: 6px;
 	--radius-medium: 12px;
-	--radius-large: 20px;
+	--radius-large: 16px;
 	--radius-round: 999px;
 
 	--border-hairline: 1px;
@@ -49,6 +53,7 @@
 	--button-height: 48px;
 	--tab-bar-height: 64px;
 	--icon-size: 24px;
+	--fab-size: 56px;
 	--number-key-height: 56px;
 	--content-max-width: 600px;
 
@@ -58,18 +63,18 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--color-background: #121214;
-		--color-card: #1c1c1f;
-		--color-surface: #2a2a2e;
-		--color-text: #ececef;
-		--color-text-muted: #a2a3ab;
-		--color-divider: #2f2f33;
+		--color-background: #000;
+		--color-card: #000;
+		--color-surface: #1a1a1a;
+		--color-text: #f2f2f2;
+		--color-text-muted: #a0a0a0;
+		--color-divider: #262626;
 		--color-accent: #e8784c;
 		--color-on-accent: #2a1309;
 		--color-rest: #7eb3ee;
 		--color-on-rest: #0d1a29;
-		--color-backdrop: rgb(0 0 0 / 55%);
-		--color-heat-empty: #2a2a2e;
+		--color-backdrop: rgb(0 0 0 / 70%);
+		--color-heat-empty: #1f1f1f;
 	}
 }
 

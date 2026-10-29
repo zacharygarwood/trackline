@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	/** Props for a flat, bordered group that holds one part of a screen. */
+	/** Props for a full-width section of a screen: a small label, then its rows, then a divider. */
 	interface Props {
-		/** The group's heading. */
+		/** The section's label. */
 		title?: string;
-		/** Shown at the end of the heading row, such as a total or a link. */
+		/** Shown at the end of the label row, such as a total or an add button. */
 		trailing?: Snippet;
 		/** Lets rows run edge to edge; rows then pad themselves. */
 		flush?: boolean;
@@ -31,34 +31,36 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
+		margin: 0 calc(-1 * var(--space-4));
 		padding: var(--space-4);
-		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-medium);
-		background: var(--color-card);
+		border-bottom: var(--border-hairline) solid var(--color-divider);
 	}
 
 	.flush {
 		gap: 0;
-		padding: 0;
+		padding: var(--space-4) 0 var(--space-2);
 	}
 
 	header {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-3);
+		min-height: var(--space-6);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-small);
 		font-variant-numeric: tabular-nums;
 	}
 
 	.flush header {
-		padding: var(--space-3) var(--space-4) var(--space-1);
+		padding: 0 var(--space-4) var(--space-2);
 	}
 
 	h2 {
-		color: var(--color-text);
-		font-size: var(--font-size-small);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-label);
 		font-weight: var(--font-weight-semibold);
+		letter-spacing: var(--letter-spacing-label);
+		text-transform: uppercase;
 	}
 </style>

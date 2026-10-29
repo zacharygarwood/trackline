@@ -1,6 +1,6 @@
 # 0015. A plain, list-based tracker design
 
-- Status: accepted; supersedes ADR 0014 except its clay accent and blue rest days
+- Status: superseded by ADR 0016 (keeps the single clay accent, blue rest days, and headline stats)
 - Date: 2026-10-28
 
 ## Context

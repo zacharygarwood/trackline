@@ -2,7 +2,12 @@ import { messages } from '../../i18n/messages.en.ts';
 import type { Clock } from '../../shared/clock.ts';
 import type { LocalDate } from '../../shared/local-date.ts';
 import type { DeleteTemplate } from '../application/delete-template.ts';
-import type { GetTrainingDays, TrainingCalendar } from '../application/get-training-days.ts';
+import { first } from '../../shared/collections.ts';
+import type {
+	GetTrainingDays,
+	TrainingCalendar,
+	TrainingDay
+} from '../application/get-training-days.ts';
 import type { ListExercises } from '../application/list-exercises.ts';
 import type { ListRecentWorkouts } from '../application/list-recent-workouts.ts';
 import type { ListTemplates } from '../application/list-templates.ts';
@@ -51,6 +56,16 @@ export class TrainOverview {
 	/** Today's date. */
 	get today(): LocalDate {
 		return this.clock.today();
+	}
+
+	/** How many of the last seven days, today included, had a workout. */
+	get workoutsLastSevenDays(): number {
+		return (this.calendar?.days ?? []).filter((day) => day.trained).length;
+	}
+
+	/** Whether today had a workout or was marked as a rest day; undefined until loaded. */
+	get todayActivity(): TrainingDay | undefined {
+		return first(this.calendar?.days ?? []);
 	}
 
 	/** The streak line, for example "Streak: 3 days. Best: 5 days." */

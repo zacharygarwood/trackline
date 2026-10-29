@@ -20,8 +20,9 @@ export function describeSet(set: WorkoutSet, unit: MassUnit): string {
  *
  * @param sets - The sets from last session; empty for a new exercise.
  * @param unit - The unit to show weights in.
+ * @returns Undefined for an exercise never done before.
  */
-export function lastTimeHint(sets: readonly WorkoutSet[], unit: MassUnit): string {
-	if (sets.length === 0) return messages.training.firstTime;
+export function lastTimeHint(sets: readonly WorkoutSet[], unit: MassUnit): string | undefined {
+	if (sets.length === 0) return undefined;
 	return messages.training.lastTime(sets.map((set) => describeSet(set, unit)).join(', '));
 }

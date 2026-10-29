@@ -10,9 +10,8 @@
 	import WeighInSheet from '#lib/body/ui/WeighInSheet.svelte';
 	import WeightChart from '#lib/body/ui/WeightChart.svelte';
 	import type { WeighIn } from '#lib/body/domain/weigh-in.ts';
-	import Button from '#lib/design/Button.svelte';
 	import Card from '#lib/design/Card.svelte';
-	import EmptyState from '#lib/design/EmptyState.svelte';
+	import Fab from '#lib/design/Fab.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { first } from '#lib/shared/collections.ts';
 	import type { LocalDate } from '#lib/shared/local-date.ts';
@@ -49,40 +48,35 @@
 {#if screen !== undefined}
 	{@const ready = screen}
 	{@const latest = first(ready.weighIns)}
-	<div class="body">
-		<Button
-			onclick={() => {
-				weighInToday(ready.today);
-			}}>{messages.body.weighIn}</Button
-		>
+	{#if latest !== undefined}
 		<Card title={messages.stats.weight}>
 			{#snippet trailing()}
-				{#if latest !== undefined}
-					<span class="latest">{formatMass(latest.weight, ready.unit)}</span>
-				{/if}
+				<span class="latest">{formatMass(latest.weight, ready.unit)}</span>
 			{/snippet}
-			{#if latest === undefined}
-				<EmptyState message={messages.body.empty} />
-			{:else}
-				<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
-			{/if}
+			<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
 		</Card>
-		{#if gallery !== undefined}
-			<LatestPhotos {gallery} onopen={() => goto(resolve(AppRoute.photos))}>
-				{#snippet allPhotos()}
-					<a class="all-photos" href={resolve(AppRoute.photos)}>{messages.body.allPhotos}</a>
-				{/snippet}
-			</LatestPhotos>
-		{/if}
-		{#if ready.weighIns.length > 0}
-			<WeighInHistory
-				weighIns={ready.weighIns}
-				unit={ready.unit}
-				today={ready.today}
-				onselect={(weighIn: WeighIn) => (editing = { date: weighIn.date, existing: weighIn })}
-			/>
-		{/if}
-	</div>
+	{/if}
+	{#if gallery !== undefined}
+		<LatestPhotos {gallery} onopen={() => goto(resolve(AppRoute.photos))}>
+			{#snippet allPhotos()}
+				<a class="all-photos" href={resolve(AppRoute.photos)}>{messages.body.allPhotos}</a>
+			{/snippet}
+		</LatestPhotos>
+	{/if}
+	{#if ready.weighIns.length > 0}
+		<WeighInHistory
+			weighIns={ready.weighIns}
+			unit={ready.unit}
+			today={ready.today}
+			onselect={(weighIn: WeighIn) => (editing = { date: weighIn.date, existing: weighIn })}
+		/>
+	{/if}
+	<Fab
+		label={messages.body.weighIn}
+		onclick={() => {
+			weighInToday(ready.today);
+		}}
+	/>
 
 	{#if editing !== undefined}
 		{@const current = editing}
@@ -106,16 +100,9 @@
 		font-size: var(--font-size-small);
 	}
 
-	.body {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-		padding-bottom: var(--space-8);
-	}
-
 	.latest {
 		color: var(--color-text);
+		font-family: var(--font-mono);
 		font-size: var(--font-size-body);
-		font-weight: var(--font-weight-semibold);
 	}
 </style>

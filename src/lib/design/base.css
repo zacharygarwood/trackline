@@ -10,7 +10,9 @@ body {
 }
 
 html {
-	scroll-padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
+	scroll-padding-bottom: calc(
+		var(--tab-bar-height) + var(--fab-size) + var(--space-8) + env(safe-area-inset-bottom)
+	);
 }
 
 body {
@@ -33,6 +35,12 @@ p {
 h1,
 h2 {
 	font-weight: var(--font-weight-semibold);
+}
+
+input,
+textarea,
+select {
+	font-variant-numeric: tabular-nums;
 }
 
 a {

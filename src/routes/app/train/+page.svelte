@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { getAppContext } from '#lib/app/app-context.ts';
-	import Button from '#lib/design/Button.svelte';
+	import Card from '#lib/design/Card.svelte';
+	import Fab from '#lib/design/Fab.svelte';
+	import Switch from '#lib/design/Switch.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
-	import type { TrainingDay } from '#lib/training/application/get-training-days.ts';
 	import type { WorkoutTemplateId } from '#lib/training/domain/ids.ts';
 	import type { WorkoutTemplate } from '#lib/training/domain/workout-template.ts';
 	import type { FinishedWorkout } from '#lib/training/domain/workout.ts';
@@ -12,7 +13,6 @@
 	import TemplateList from '#lib/training/ui/TemplateList.svelte';
 	import TemplateSheet from '#lib/training/ui/TemplateSheet.svelte';
 	import { TrainOverview } from '#lib/training/ui/train-overview.svelte.ts';
-	import WeekView from '#lib/training/ui/WeekView.svelte';
 	import { WorkoutSession } from '#lib/training/ui/workout-session.svelte.ts';
 
 	let session: WorkoutSession | undefined = $state();
@@ -52,34 +52,40 @@
 			ondiscarded={() => void ready.load()}
 		/>
 	{:else}
-		<div class="overview">
-			<Button
-				onclick={() => {
-					notice = undefined;
-					void active.start();
-				}}>{messages.training.startWorkout}</Button
-			>
-			{#if notice !== undefined}
-				<p role="status">{notice}</p>
-			{/if}
+		{#if notice !== undefined}
+			<p class="notice" role="status">{notice}</p>
+		{/if}
+		{#if ready.todayActivity !== undefined && !ready.todayActivity.trained}
+			{@const today = ready.todayActivity}
+			<Card title={messages.dates.today}>
+				<Switch
+					label={messages.training.restDay}
+					checked={today.rested}
+					ontoggle={() => void ready.toggleRestDay(today.date, today.rested)}
+				/>
+			</Card>
+		{/if}
+		{#if ready.templates.length > 0}
 			<TemplateList
 				templates={ready.templates}
 				onstart={(id: WorkoutTemplateId) => void active.start(id)}
 				onoptions={(template: WorkoutTemplate) => (templateOptions = template)}
 			/>
-			{#if ready.calendar !== undefined}
-				<WeekView
-					days={ready.calendar.days}
-					today={ready.today}
-					ontoggle={(day: TrainingDay) => void ready.toggleRestDay(day.date, day.rested)}
-				/>
-			{/if}
+		{/if}
+		{#if ready.recent.length > 0}
 			<RecentWorkouts
 				workouts={ready.recent}
 				describe={(workout: FinishedWorkout) => ready.describe(workout)}
 				today={ready.today}
 			/>
-		</div>
+		{/if}
+		<Fab
+			label={messages.training.startWorkout}
+			onclick={() => {
+				notice = undefined;
+				void active.start();
+			}}
+		/>
 	{/if}
 
 	{#if justFinished !== undefined}
@@ -99,10 +105,7 @@
 {/if}
 
 <style>
-	.overview {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-		padding-bottom: var(--space-8);
+	.notice {
+		padding: var(--space-3) 0;
 	}
 </style>

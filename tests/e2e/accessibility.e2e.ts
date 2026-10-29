@@ -117,7 +117,7 @@ test('a focused control is never hidden behind the tab bar', async ({ page }) =>
 		{ screen: '/app/body', control: page.getByRole('button', { name: messages.body.addPhoto }) },
 		{
 			screen: '/app/train',
-			control: page.getByRole('button', { name: /^Mark .* as a rest day$/ }).last()
+			control: page.getByRole('switch', { name: messages.training.restDay })
 		}
 	];
 	for (const { screen, control } of controls) {
