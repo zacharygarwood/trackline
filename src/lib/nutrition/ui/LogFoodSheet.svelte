@@ -162,7 +162,6 @@
 
 	.preview {
 		min-height: var(--space-6);
-		font-size: var(--font-size-small);
 	}
 
 	.search {
@@ -175,7 +174,6 @@
 
 	h3 {
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 		font-weight: var(--font-weight-regular);
 	}
 

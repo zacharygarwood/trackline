@@ -32,9 +32,10 @@
 
 <style>
 	h3 {
-		margin-bottom: var(--space-2);
+		display: flex;
+		align-items: center;
+		min-height: var(--row-height);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 		font-weight: var(--font-weight-regular);
 	}
 
@@ -43,7 +44,6 @@
 		gap: var(--space-4);
 		margin-top: var(--space-2);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 	}
 
 	span::before {

@@ -7,10 +7,12 @@
 	import { MAX_SET_WEIGHT, WEIGHT_PRECISION } from './weight-step.constants.ts';
 	import type { SetEntry } from './workout-session.svelte.ts';
 
-	/** Props for one line of the set table: number, weight, reps, check, and remove. */
+	/** Props for one line of the set table: number, last time, weight, reps, check, and remove. */
 	interface Props {
 		/** The set's number, starting at 1. */
 		number: number;
+		/** The same set from last session, for example "60 × 8". */
+		previous: string | undefined;
 		/** The set's values, with the weight in the user's unit. */
 		entry: SetEntry;
 		/** The weight unit's label, for example "kg". */
@@ -25,7 +27,7 @@
 		onremove: () => void;
 	}
 
-	const { number, entry, unit, onreps, onweight, ontoggle, onremove }: Props = $props();
+	const { number, previous, entry, unit, onreps, onweight, ontoggle, onremove }: Props = $props();
 
 	function toggleCompleted(): void {
 		if (!entry.completed) confirmWithVibration();
@@ -40,6 +42,7 @@
 	aria-label={messages.training.setNumber(number)}
 >
 	<span class="number" aria-hidden="true">{number}</span>
+	<span class="previous">{previous ?? ''}</span>
 	<NumberField
 		label={messages.training.weight(unit)}
 		bind:value={
@@ -82,16 +85,17 @@
 <style>
 	.set {
 		display: grid;
-		grid-template-columns: var(--space-6) 1fr 1fr var(--tap-target) var(--tap-target);
+		grid-template-columns: var(--set-columns);
 		align-items: center;
-		gap: var(--space-2);
-		padding: var(--space-1) 0;
+		gap: var(--space-1);
+		min-height: var(--row-height);
 	}
 
-	.number {
+	.number,
+	.previous {
 		color: var(--color-text-muted);
-		font-family: var(--font-mono);
 		text-align: center;
+		white-space: nowrap;
 	}
 
 	button {

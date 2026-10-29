@@ -2,6 +2,7 @@
 	import Button from '../../design/Button.svelte';
 	import { ButtonVariant } from '../../design/button.constants.ts';
 	import Card from '../../design/Card.svelte';
+	import Row from '../../design/Row.svelte';
 	import Sheet from '../../design/Sheet.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { DataPanel } from './data-panel.svelte.ts';
@@ -51,12 +52,13 @@
 </script>
 
 <Card title={messages.settings.backup}>
-	<p>{messages.settings.backupExplainer}</p>
-	<p class="status">{panel.statusText}</p>
-	<Button onclick={() => panel.export()}>{messages.settings.exportBackup}</Button>
-	<Button variant={ButtonVariant.secondary} onclick={() => picker?.click()}>
-		{messages.settings.restoreBackup}
-	</Button>
+	<Row
+		label={messages.settings.lastBackup}
+		detail={panel.overdue ? messages.settings.overdue : undefined}
+		value={panel.lastBackup}
+	/>
+	<Row label={messages.settings.exportBackup} action onclick={() => void panel.export()} />
+	<Row label={messages.settings.restoreBackup} action onclick={() => picker?.click()} />
 	<input
 		bind:this={picker}
 		class="picker"
@@ -71,9 +73,7 @@
 </Card>
 
 <Card title={messages.settings.dangerZone}>
-	<Button variant={ButtonVariant.secondary} onclick={openDelete}
-		>{messages.settings.deleteAll}</Button
-	>
+	<Row label={messages.settings.deleteAll} action onclick={openDelete} />
 </Card>
 
 {#if restoreOpen && panel.pendingRestore !== undefined}
@@ -102,10 +102,6 @@
 {/if}
 
 <style>
-	.status {
-		color: var(--color-text-muted);
-	}
-
 	.picker {
 		display: none;
 	}

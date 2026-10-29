@@ -4,6 +4,7 @@
 	import Fab from '#lib/design/Fab.svelte';
 	import Icon from '#lib/design/Icon.svelte';
 	import IconButton from '#lib/design/IconButton.svelte';
+	import Row from '#lib/design/Row.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import type { FoodLogEntry } from '#lib/nutrition/domain/food-log-entry.ts';
 	import { MEAL_SLOTS, type MealSlot } from '#lib/nutrition/domain/meal-slot.constants.ts';
@@ -57,7 +58,7 @@
 	</Card>
 	{#each MEAL_SLOTS as slot (slot)}
 		{@const entries = ready.entriesIn(slot)}
-		<Card title={SLOT_LABELS[slot]} flush>
+		<Card title={SLOT_LABELS[slot]}>
 			{#snippet trailing()}
 				{#if entries.length > 0}
 					<span class="total">
@@ -70,28 +71,17 @@
 					</span>
 				{/if}
 			{/snippet}
-			{#if entries.length > 0}
-				<ul>
-					{#each entries as entry (entry.id)}
-						{@const amount = formatAmount(entry.amount, entry.unitSnapshot)}
-						{@const calories = formatCalories(entry.macrosSnapshot.calories)}
-						<li>
-							<button
-								type="button"
-								class="entry"
-								aria-label={messages.nutrition.entry(entry.foodNameSnapshot, amount, calories)}
-								onclick={() => (editing = entry)}
-							>
-								<span class="food">
-									<span>{entry.foodNameSnapshot}</span>
-									<span class="amount">{amount}</span>
-								</span>
-								<span class="calories">{calories}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
+			{#each entries as entry (entry.id)}
+				{@const amount = formatAmount(entry.amount, entry.unitSnapshot)}
+				{@const calories = formatCalories(entry.macrosSnapshot.calories)}
+				<Row
+					label={entry.foodNameSnapshot}
+					detail={amount}
+					value={calories}
+					ariaLabel={messages.nutrition.entry(entry.foodNameSnapshot, amount, calories)}
+					onclick={() => (editing = entry)}
+				/>
+			{/each}
 		</Card>
 	{/each}
 	<Fab label={messages.nutrition.logFood} onclick={() => (logging = true)} />
@@ -117,8 +107,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin: 0 calc(-1 * var(--space-2));
-		padding: var(--space-1) 0;
+		min-height: var(--row-height);
+		margin: 0 calc(-1 * var(--space-4));
+		padding: 0 calc(var(--space-4) + (var(--icon-size) - var(--tap-target)) / 2);
+		border-bottom: var(--border-hairline) solid var(--color-divider);
 	}
 
 	.day-switcher span {
@@ -145,43 +137,6 @@
 	.total {
 		display: flex;
 		align-items: center;
-		gap: var(--space-1);
-		font-family: var(--font-mono);
-	}
-
-	ul {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.entry {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-3);
-		width: 100%;
-		min-height: var(--tap-target);
-		padding: var(--space-2) var(--space-4);
-		border: none;
-		background: transparent;
-		text-align: left;
-		cursor: pointer;
-	}
-
-	.food {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.amount {
-		color: var(--color-text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--font-size-small);
-	}
-
-	.calories {
-		font-family: var(--font-mono);
-		white-space: nowrap;
+		gap: var(--space-2);
 	}
 </style>

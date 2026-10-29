@@ -40,7 +40,7 @@ describe('WorkoutSession', () => {
 		expect(session.workout).toBeUndefined();
 	});
 
-	it('shows last session as a hint and names exercises', async () => {
+	it('shows each set from last session and names exercises', async () => {
 		const { session } = screens();
 		await session.load(MassUnit.kg);
 		const { benchId } = await logBench(session);
@@ -49,10 +49,11 @@ describe('WorkoutSession', () => {
 		await session.addExercise('bench press');
 
 		expect(session.nameOf(benchId)).toBe('Bench press');
-		expect(session.hintFor(benchId)).toBe('Last time: 8 × 60.0 kg');
+		expect(session.previousFor(benchId, 0)).toBe('60 × 8');
+		expect(session.previousFor(benchId, 1)).toBeUndefined();
 	});
 
-	it('has no hint for an exercise never done before', async () => {
+	it('shows nothing from last session for an exercise never done before', async () => {
 		const { session } = screens();
 		await session.load(MassUnit.kg);
 		await session.start();
@@ -60,7 +61,7 @@ describe('WorkoutSession', () => {
 		const squat = session.workout?.exercises.at(0)?.exerciseId;
 		if (squat === undefined) throw new Error('expected an exercise');
 
-		expect(session.hintFor(squat)).toBeUndefined();
+		expect(session.previousFor(squat, 0)).toBeUndefined();
 	});
 
 	it('enters weights in pounds', async () => {

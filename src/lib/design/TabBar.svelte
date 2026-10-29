@@ -62,7 +62,7 @@
 		min-height: var(--tap-target);
 		padding: var(--space-2) var(--space-1);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
+		font-size: var(--font-size-label);
 		text-decoration: none;
 		user-select: none;
 	}

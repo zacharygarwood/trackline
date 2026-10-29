@@ -64,7 +64,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
-		font-size: var(--font-size-small);
 	}
 
 	input {
@@ -85,6 +84,5 @@
 
 	.hint {
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 	}
 </style>

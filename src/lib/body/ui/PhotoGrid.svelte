@@ -47,7 +47,6 @@
 	h2 {
 		margin-bottom: var(--space-2);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 		font-weight: var(--font-weight-regular);
 	}
 

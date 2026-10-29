@@ -55,17 +55,17 @@ describe('DataPanel', () => {
 		await panel.load();
 	});
 
-	it('nudges before the first backup', () => {
-		expect(panel.statusText).toBe(
-			'No backup yet. It has been a while. Consider exporting a fresh backup.'
-		);
+	it('shows no backup yet as overdue', () => {
+		expect(panel.lastBackup).toBe('Never');
+		expect(panel.overdue).toBe(true);
 	});
 
 	it('exports a backup and shows when', async () => {
 		await panel.export();
 
 		expect(saved.map((file) => file.name)).toEqual(['buffalog-backup-2026-10-27.zip']);
-		expect(panel.statusText).toBe('Last backup: Oct 27, 2026.');
+		expect(panel.lastBackup).toBe('Oct 27, 2026');
+		expect(panel.overdue).toBe(false);
 	});
 
 	it('describes what a restore replaces, then restores on confirmation', async () => {

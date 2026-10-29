@@ -50,7 +50,7 @@ test('log a workout, repeat it from a template, keep the streak with a rest day,
 	await page
 		.getByRole('button', { name: `Legs ${messages.training.templateSummary(1)}`, exact: true })
 		.click();
-	await expect(page.getByText('Last time: 5 × 100.0 kg, 5 × 100.0 kg')).toBeVisible();
+	await expect(set(page, 1).getByText('100 × 5')).toBeVisible();
 	for (const number of [1, 2]) {
 		await expect(
 			set(page, number).getByRole('textbox', { name: messages.training.reps })

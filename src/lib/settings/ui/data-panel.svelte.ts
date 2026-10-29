@@ -53,15 +53,15 @@ export class DataPanel {
 		private readonly saveFile: (file: BackupFile) => void
 	) {}
 
-	/** The last-backup line, plus a gentle reminder when one is due. */
-	get statusText(): string {
-		if (this.status === undefined) return '';
-		const { lastExportAt, overdue } = this.status;
-		const last =
-			lastExportAt === undefined
-				? messages.settings.neverExported
-				: messages.settings.lastExport(formatInstantDate(lastExportAt));
-		return overdue ? `${last} ${messages.settings.backupOverdue}` : last;
+	/** When the last backup was made, for example "Oct 27, 2026", or "Never". */
+	get lastBackup(): string {
+		const lastExportAt = this.status?.lastExportAt;
+		return lastExportAt === undefined ? messages.settings.never : formatInstantDate(lastExportAt);
+	}
+
+	/** Whether it is time to export a fresh backup. */
+	get overdue(): boolean {
+		return this.status?.overdue ?? false;
 	}
 
 	/** Loads the backup status. */

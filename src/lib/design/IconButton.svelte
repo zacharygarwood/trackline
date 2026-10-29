@@ -23,7 +23,8 @@
 		place-items: center;
 		width: var(--tap-target);
 		height: var(--tap-target);
-		margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) 0;
+		margin: calc(-1 * var(--space-3)) calc((var(--icon-size) - var(--tap-target)) / 2);
+		margin-left: 0;
 		padding: 0;
 		border: none;
 		border-radius: var(--radius-small);

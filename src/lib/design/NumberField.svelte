@@ -44,7 +44,6 @@
 		border: var(--border-hairline) solid var(--color-divider);
 		border-radius: var(--radius-small);
 		background: var(--color-surface);
-		font-family: var(--font-mono);
 		font-size: var(--font-size-body);
 		text-align: center;
 	}

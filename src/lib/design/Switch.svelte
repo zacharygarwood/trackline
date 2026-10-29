@@ -22,7 +22,7 @@
 		justify-content: space-between;
 		gap: var(--space-3);
 		width: 100%;
-		min-height: var(--tap-target);
+		min-height: var(--row-height);
 		padding: 0;
 		border: none;
 		background: transparent;

@@ -22,7 +22,7 @@ import { InvalidName } from '../domain/name.ts';
 import type { SetLocation } from '../domain/workout-editing.ts';
 import { setsOf, type ActiveWorkout, type FinishedWorkout } from '../domain/workout.ts';
 import type { WorkoutSet } from '../domain/workout-set.ts';
-import { lastTimeHint } from './workout-format.ts';
+import { formatPrevious } from './workout-format.ts';
 
 /** The message for an exercise that couldn't be added. */
 const addExerciseProblem = (error: unknown) =>
@@ -91,9 +91,16 @@ export class WorkoutSession {
 		return this.library.find((exercise) => exercise.id === exerciseId)?.name ?? '';
 	}
 
-	/** What the user did last time for an exercise; undefined if never done before. */
-	hintFor(exerciseId: ExerciseId): string | undefined {
-		return lastTimeHint(this.lastSessions.get(exerciseId) ?? [], this.unit);
+	/**
+	 * The same set from last session, for example "60 × 8".
+	 *
+	 * @param exerciseId - The exercise.
+	 * @param position - The set's position, from 0.
+	 * @returns Undefined when last session had no such set.
+	 */
+	previousFor(exerciseId: ExerciseId, position: number): string | undefined {
+		const set = elementAt(this.lastSessions.get(exerciseId) ?? [], position);
+		return set === undefined ? undefined : formatPrevious(set, this.unit);
 	}
 
 	/** A set's values for the steppers. */

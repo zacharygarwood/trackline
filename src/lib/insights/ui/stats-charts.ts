@@ -12,19 +12,16 @@ import type {
 } from '../application/insights-queries.ts';
 import { Nutrient } from './nutrient.constants.ts';
 
-/** The number a chart is about, shown large above it. */
-export interface StatsHeadline {
-	/** For example "79.6 kg". */
+/** One number shown above a chart, for example "7-day average: 79.6 kg". */
+export interface StatsFact {
+	readonly label: string;
 	readonly value: string;
-	/** What the value is, for example "7-day average". */
-	readonly caption: string;
-	/** A second fact, such as the change over the range; undefined when there is none. */
-	readonly detail: string | undefined;
 }
 
 /** What a Stats line chart draws, already in display units. */
 export interface StatsChartData {
-	readonly headline: StatsHeadline;
+	/** The numbers the chart is about, most important first. */
+	readonly facts: readonly StatsFact[];
 	readonly points: readonly ChartPoint[];
 	readonly trend: readonly ChartPoint[];
 	readonly goal: readonly ChartPoint[];
@@ -38,13 +35,13 @@ const signedTenths = new Intl.NumberFormat(undefined, {
 	signDisplay: 'exceptZero'
 });
 
-/** How far a weight moved from the first value to the last, or undefined for a single value. */
-function changeOver(masses: readonly Mass[], unit: MassUnit): string | undefined {
+/** How far a weight moved from the first value to the last; nothing for a single value. */
+function changeOver(masses: readonly Mass[], unit: MassUnit): readonly StatsFact[] {
 	const start = first(masses);
 	const end = last(masses);
-	if (start === undefined || end === undefined || start === end) return undefined;
+	if (start === undefined || end === undefined || start === end) return [];
 	const change = signedTenths.format(end.toUnit(unit) - start.toUnit(unit));
-	return messages.stats.changeInRange(messages.stats.mass(change, unitLabel(unit)));
+	return [{ label: messages.stats.change, value: messages.stats.mass(change, unitLabel(unit)) }];
 }
 
 const at = (date: LocalDate, y: number): ChartPoint => ({ x: date.toEpochDay(), y });
@@ -69,14 +66,13 @@ export function weightChartData(
 	const latest = last(trend);
 	if (latest === undefined) return undefined;
 	return {
-		headline: {
-			value: formatMass(latest.average, unit),
-			caption: messages.stats.movingAverage,
-			detail: changeOver(
+		facts: [
+			{ label: messages.stats.movingAverage, value: formatMass(latest.average, unit) },
+			...changeOver(
 				trend.map((point) => point.average),
 				unit
 			)
-		},
+		],
 		points: trend.map((point) => at(point.date, point.weight.toUnit(unit))),
 		trend: trend.map((point) => at(point.date, point.average.toUnit(unit))),
 		goal: [],
@@ -132,11 +128,12 @@ export function nutritionChartData(
 	const latestGoal = goal(latest);
 	const average = format(mean(days.map(eaten)));
 	return {
-		headline: {
-			value: average,
-			caption: messages.stats.dailyAverage,
-			detail: latestGoal === undefined ? undefined : messages.stats.goalOf(format(latestGoal))
-		},
+		facts: [
+			{ label: messages.stats.dailyAverage, value: average },
+			...(latestGoal === undefined
+				? []
+				: [{ label: messages.stats.goal, value: format(latestGoal) }])
+		],
 		points: daily,
 		trend: daily,
 		goal: goalSteps(days, goal),
@@ -162,14 +159,16 @@ export function exerciseChartData(
 	const latest = last(sessions);
 	if (latest === undefined) return undefined;
 	return {
-		headline: {
-			value: formatMass(latest.estimatedOneRepMax, unit),
-			caption: messages.stats.estimatedOneRepMax,
-			detail: changeOver(
+		facts: [
+			{
+				label: messages.stats.estimatedOneRepMax,
+				value: formatMass(latest.estimatedOneRepMax, unit)
+			},
+			...changeOver(
 				sessions.map((session) => session.estimatedOneRepMax),
 				unit
 			)
-		},
+		],
 		points: sessions.map((session) => at(session.date, session.heaviest.toUnit(unit))),
 		trend: sessions.map((session) => at(session.date, session.estimatedOneRepMax.toUnit(unit))),
 		goal: [],

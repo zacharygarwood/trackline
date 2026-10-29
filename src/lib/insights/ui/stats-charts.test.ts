@@ -57,11 +57,10 @@ describe('weightChartData', () => {
 			MassUnit.kg
 		);
 
-		expect(data?.headline).toEqual({
-			value: '79.6 kg',
-			caption: '7-day average',
-			detail: '-1.4 kg in this range'
-		});
+		expect(data?.facts).toEqual([
+			{ label: '7-day average', value: '79.6 kg' },
+			{ label: 'Change', value: '-1.4 kg' }
+		]);
 	});
 
 	it('shows a gain with a plus sign and leaves out the change for a single weigh-in', () => {
@@ -77,8 +76,8 @@ describe('weightChartData', () => {
 			MassUnit.kg
 		);
 
-		expect(gained?.headline.detail).toBe('+0.5 kg in this range');
-		expect(single?.headline.detail).toBeUndefined();
+		expect(gained?.facts).toContainEqual({ label: 'Change', value: '+0.5 kg' });
+		expect(single?.facts).toEqual([{ label: '7-day average', value: '80.0 kg' }]);
 	});
 });
 
@@ -103,11 +102,10 @@ describe('nutritionChartData', () => {
 		expect(data?.summary).toBe(
 			'Calories on 4 logged days, averaging 2,125 kcal. Latest goal 2,400 kcal.'
 		);
-		expect(data?.headline).toEqual({
-			value: '2,125 kcal',
-			caption: 'Daily average',
-			detail: 'Goal 2,400 kcal'
-		});
+		expect(data?.facts).toEqual([
+			{ label: 'Daily average', value: '2,125 kcal' },
+			{ label: 'Goal', value: '2,400 kcal' }
+		]);
 	});
 
 	it('draws protein in grams and leaves out the goal before any was set', () => {
@@ -116,11 +114,7 @@ describe('nutritionChartData', () => {
 		expect(data?.trend.map((point) => point.y)).toEqual([92.4]);
 		expect(data?.goal).toEqual([]);
 		expect(data?.summary).toBe('Protein on 1 logged day, averaging 92 g.');
-		expect(data?.headline).toEqual({
-			value: '92 g',
-			caption: 'Daily average',
-			detail: undefined
-		});
+		expect(data?.facts).toEqual([{ label: 'Daily average', value: '92 g' }]);
 	});
 });
 
@@ -144,10 +138,9 @@ describe('exerciseChartData', () => {
 		expect(data?.summary).toBe(
 			'Bench press: 2 sessions. Heaviest set 105.0 kg, best estimated one-rep max 116.7 kg.'
 		);
-		expect(data?.headline).toEqual({
-			value: '115.0 kg',
-			caption: 'Estimated one-rep max',
-			detail: '-1.7 kg in this range'
-		});
+		expect(data?.facts).toEqual([
+			{ label: 'Estimated one-rep max', value: '115.0 kg' },
+			{ label: 'Change', value: '-1.7 kg' }
+		]);
 	});
 });

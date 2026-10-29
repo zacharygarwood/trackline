@@ -23,24 +23,24 @@ body {
 	font-size: var(--font-size-body);
 	font-weight: var(--font-weight-regular);
 	line-height: var(--line-height);
+	font-variant-numeric: tabular-nums;
 	-webkit-tap-highlight-color: transparent;
 }
 
 h1,
 h2,
+h3,
 p {
 	margin: 0;
+}
+
+h3 {
+	font-size: var(--font-size-body);
 }
 
 h1,
 h2 {
 	font-weight: var(--font-weight-semibold);
-}
-
-input,
-textarea,
-select {
-	font-variant-numeric: tabular-nums;
 }
 
 a {

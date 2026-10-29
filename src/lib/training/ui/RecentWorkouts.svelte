@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Card from '../../design/Card.svelte';
+	import Row from '../../design/Row.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { LocalDate } from '../../shared/local-date.ts';
 	import { formatDate } from '../../ui/format.ts';
@@ -18,36 +19,8 @@
 	const { workouts, describe, today }: Props = $props();
 </script>
 
-<Card title={messages.training.recent} flush>
-	<ul>
-		{#each workouts as workout (workout.id)}
-			<li>
-				<span>{formatDate(workout.date, today)}</span>
-				<span class="summary">{describe(workout)}</span>
-			</li>
-		{/each}
-	</ul>
+<Card title={messages.training.recent}>
+	{#each workouts as workout (workout.id)}
+		<Row label={describe(workout)} value={formatDate(workout.date, today)} />
+	{/each}
 </Card>
-
-<style>
-	ul {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	li {
-		display: flex;
-		flex-direction: column;
-		padding: var(--space-3) var(--space-4);
-	}
-
-	li + li {
-		border-top: var(--border-hairline) solid var(--color-divider);
-	}
-
-	.summary {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-	}
-</style>

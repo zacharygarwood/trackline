@@ -19,7 +19,8 @@ test('export a backup, delete all data, and restore everything, photos included,
 	expect(backup.suggestedFilename()).toMatch(/^buffalog-backup-\d{4}-\d{2}-\d{2}\.zip$/);
 	const backupPath = testInfo.outputPath('backup.zip');
 	await backup.saveAs(backupPath);
-	await expect(page.getByText(/^Last backup:/)).toBeVisible();
+	await expect(page.getByText(messages.settings.lastBackup)).toBeVisible();
+	await expect(page.getByText(messages.settings.never)).toBeHidden();
 
 	await page.getByRole('button', { name: messages.settings.deleteAll }).click();
 	const deleteSheet = page.getByRole('dialog', { name: messages.settings.deleteTitle });

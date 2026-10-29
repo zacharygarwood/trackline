@@ -55,34 +55,27 @@
 		{#snippet trailing()}
 			<IconButton label={messages.body.weighIn} icon="plus" onclick={() => (weighing = true)} />
 		{/snippet}
-		<dl>
-			<Row
-				label={latestWeighIn === undefined
-					? messages.today.latest
-					: formatDate(latestWeighIn.date, bodyScreen.today)}
-				value={latestWeighIn === undefined
-					? messages.today.none
-					: formatMass(latestWeighIn.weight, bodyScreen.unit)}
-			/>
-		</dl>
+		<Row
+			label={latestWeighIn === undefined
+				? messages.today.latest
+				: formatDate(latestWeighIn.date, bodyScreen.today)}
+			value={latestWeighIn === undefined
+				? messages.today.none
+				: formatMass(latestWeighIn.weight, bodyScreen.unit)}
+		/>
 	</Card>
 
 	<Card title={messages.today.training}>
-		<dl>
-			<Row
-				label={messages.today.lastWorkout}
-				value={lastWorkout === undefined
-					? messages.today.none
-					: formatDate(lastWorkout.date, overview.today)}
-			/>
-			<Row
-				label={messages.today.workoutsLastSevenDays}
-				value={String(overview.workoutsLastSevenDays)}
-			/>
-		</dl>
-		{#if lastWorkout !== undefined}
-			<p class="muted">{overview.describe(lastWorkout)}</p>
-		{/if}
+		<Row
+			label={messages.today.lastWorkout}
+			value={lastWorkout === undefined
+				? messages.today.none
+				: formatDate(lastWorkout.date, overview.today)}
+		/>
+		<Row
+			label={messages.today.workoutsLastSevenDays}
+			value={String(overview.workoutsLastSevenDays)}
+		/>
 	</Card>
 
 	{#if weighing}
@@ -104,14 +97,3 @@
 		/>
 	{/if}
 {/if}
-
-<style>
-	dl {
-		margin: 0;
-	}
-
-	.muted {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-	}
-</style>

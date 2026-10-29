@@ -22,7 +22,6 @@
 	const { session, exercise }: Props = $props();
 
 	const name = $derived(session.nameOf(exercise.exerciseId));
-	const hint = $derived(session.hintFor(exercise.exerciseId));
 	const unit = $derived(unitLabel(session.unit));
 
 	let options = $state(false);
@@ -36,18 +35,17 @@
 			onclick={() => (options = true)}
 		/>
 	{/snippet}
-	{#if hint !== undefined}
-		<p class="hint">{hint}</p>
-	{/if}
 	<div class="sets">
 		<div class="columns" aria-hidden="true">
 			<span>{messages.training.setColumn}</span>
+			<span>{messages.training.previousColumn}</span>
 			<span>{unit}</span>
 			<span>{messages.training.reps}</span>
 		</div>
 		{#each exercise.sets as set, position (position)}
 			<SetRow
 				number={position + 1}
+				previous={session.previousFor(exercise.exerciseId, position)}
 				entry={session.entryOf(set)}
 				{unit}
 				onreps={(reps: number) =>
@@ -77,16 +75,10 @@
 {/if}
 
 <style>
-	.hint {
-		color: var(--color-text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--font-size-small);
-	}
-
 	.columns {
 		display: grid;
-		grid-template-columns: var(--space-6) 1fr 1fr calc(var(--tap-target) * 2 + var(--space-2));
-		gap: var(--space-2);
+		grid-template-columns: var(--set-columns);
+		gap: var(--space-1);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-label);
 		font-weight: var(--font-weight-semibold);

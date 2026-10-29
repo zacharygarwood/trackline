@@ -24,7 +24,6 @@
 		padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
 		border-radius: var(--radius-medium);
 		background: var(--color-surface);
-		font-size: var(--font-size-small);
 	}
 
 	button {

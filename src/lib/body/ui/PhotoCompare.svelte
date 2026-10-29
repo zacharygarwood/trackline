@@ -121,7 +121,6 @@
 		justify-content: space-between;
 		margin-top: var(--space-1);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 	}
 
 	input[type='range'] {

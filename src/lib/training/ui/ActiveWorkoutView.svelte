@@ -42,13 +42,11 @@
 	<Card>
 		<AddRow label={messages.training.addExercise} onclick={() => (adding = true)} />
 	</Card>
-	<Card>
-		<label>
-			<span>{messages.training.note}</span>
-			<textarea
-				value={session.workout.note}
-				onchange={(event) => session.setNote(event.currentTarget.value)}></textarea>
-		</label>
+	<Card title={messages.training.note}>
+		<textarea
+			aria-label={messages.training.note}
+			value={session.workout.note}
+			onchange={(event) => session.setNote(event.currentTarget.value)}></textarea>
 	</Card>
 	<div class="actions">
 		<Button variant={ButtonVariant.secondary} onclick={() => (confirmingDiscard = true)}>
@@ -80,21 +78,13 @@
 		padding: var(--space-4) 0;
 	}
 
-	label {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
-	}
-
 	textarea {
 		min-height: var(--space-12);
 		padding: var(--space-2) var(--space-3);
 		border: var(--border-hairline) solid var(--color-divider);
 		border-radius: var(--radius-small);
 		background: var(--color-surface);
-		font-size: var(--font-size-body);
+		margin-bottom: var(--space-2);
 		resize: vertical;
 	}
 </style>

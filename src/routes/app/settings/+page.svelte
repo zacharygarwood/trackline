@@ -2,9 +2,8 @@
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import WeightGoalSheet from '#lib/body/ui/WeightGoalSheet.svelte';
 	import { WeightGoalEditor } from '#lib/body/ui/weight-goal-editor.svelte.ts';
-	import Button from '#lib/design/Button.svelte';
-	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import Card from '#lib/design/Card.svelte';
+	import Row from '#lib/design/Row.svelte';
 	import SegmentedControl from '#lib/design/SegmentedControl.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import DailyGoalsForm from '#lib/nutrition/ui/DailyGoalsForm.svelte';
@@ -75,11 +74,12 @@
 			/>
 		</Card>
 
-		<Card title={messages.body.goalWeight}>
-			<p>{goalEditor.describe(unitsSetting.unit)}</p>
-			<Button variant={ButtonVariant.secondary} onclick={() => (editingGoal = true)}>
-				{goalEditor.goal === undefined ? messages.body.setGoal : messages.body.changeGoal}
-			</Button>
+		<Card title={messages.settings.goals}>
+			<Row
+				label={messages.body.goalWeight}
+				value={goalEditor.describe(unitsSetting.unit)}
+				onclick={() => (editingGoal = true)}
+			/>
 		</Card>
 
 		<DailyGoalsForm editor={dailyGoals} />

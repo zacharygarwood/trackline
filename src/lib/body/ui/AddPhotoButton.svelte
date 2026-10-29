@@ -70,7 +70,6 @@
 		flex-direction: column;
 		gap: var(--space-1);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 	}
 
 	input[type='date'] {
@@ -93,7 +92,6 @@
 	legend {
 		margin-bottom: var(--space-2);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-small);
 	}
 
 	.poses {

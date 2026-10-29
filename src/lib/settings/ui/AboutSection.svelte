@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Card from '../../design/Card.svelte';
+	import Row from '../../design/Row.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
-	import ExternalLink from '../../design/ExternalLink.svelte';
 	import { ExternalUrl } from '../../ui/external-url.constants.ts';
 
 	/** Props for Settings' About section. */
@@ -14,34 +14,12 @@
 </script>
 
 <Card title={messages.settings.about}>
-	<p>{messages.settings.version(version)}</p>
-	<p>
-		{messages.settings.licensed}
-		<ExternalLink href={ExternalUrl.license}>{messages.settings.licenseName}</ExternalLink>
-	</p>
-	<ul>
-		<li>
-			<ExternalLink href={ExternalUrl.source}>{messages.settings.sourceCode}</ExternalLink>
-		</li>
-		<li>
-			<ExternalLink href={ExternalUrl.donate}>{messages.settings.donate}</ExternalLink>
-		</li>
-	</ul>
+	<Row label={messages.settings.versionLabel} value={version} />
+	<Row
+		label={messages.settings.license}
+		value={messages.settings.licenseShort}
+		href={ExternalUrl.license}
+	/>
+	<Row label={messages.settings.sourceCode} action href={ExternalUrl.source} />
+	<Row label={messages.settings.donate} action href={ExternalUrl.donate} />
 </Card>
-
-<style>
-	ul {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	li {
-		display: flex;
-		align-items: center;
-		min-height: var(--tap-target);
-	}
-</style>

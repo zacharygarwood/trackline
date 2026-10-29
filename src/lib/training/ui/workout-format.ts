@@ -1,28 +1,15 @@
 import { messages } from '../../i18n/messages.en.ts';
 import type { MassUnit } from '../../shared/mass-unit.constants.ts';
-import { formatMass } from '../../ui/format.ts';
 import type { WorkoutSet } from '../domain/workout-set.ts';
 
-/**
- * One set in words, for example "8 × 60.0 kg" or "12 × bodyweight".
- *
- * @param set - The set.
- * @param unit - The unit to show weights in.
- */
-export function describeSet(set: WorkoutSet, unit: MassUnit): string {
-	const weight =
-		set.weight.kilograms === 0 ? messages.training.bodyweight : formatMass(set.weight, unit);
-	return messages.training.setSummary(set.reps, weight);
-}
+const upToOneDecimal = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
 
 /**
- * The last-session hint shown under an exercise.
+ * A set from last session as the set table shows it, weight then reps, for example "60 × 8".
  *
- * @param sets - The sets from last session; empty for a new exercise.
- * @param unit - The unit to show weights in.
- * @returns Undefined for an exercise never done before.
+ * @param set - The set.
+ * @param unit - The unit to show the weight in; zero is bodyweight.
  */
-export function lastTimeHint(sets: readonly WorkoutSet[], unit: MassUnit): string | undefined {
-	if (sets.length === 0) return undefined;
-	return messages.training.lastTime(sets.map((set) => describeSet(set, unit)).join(', '));
+export function formatPrevious(set: WorkoutSet, unit: MassUnit): string {
+	return messages.training.previous(upToOneDecimal.format(set.weight.toUnit(unit)), set.reps);
 }

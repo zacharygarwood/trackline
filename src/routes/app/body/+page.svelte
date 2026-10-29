@@ -15,7 +15,7 @@
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { first } from '#lib/shared/collections.ts';
 	import type { LocalDate } from '#lib/shared/local-date.ts';
-	import { formatDate, formatMass } from '#lib/ui/format.ts';
+	import { formatDate } from '#lib/ui/format.ts';
 	import { AppRoute } from '../app-route.constants.ts';
 
 	/** The weigh-in being entered: a new one for today, or an existing one being edited. */
@@ -50,9 +50,6 @@
 	{@const latest = first(ready.weighIns)}
 	{#if latest !== undefined}
 		<Card title={messages.stats.weight}>
-			{#snippet trailing()}
-				<span class="latest">{formatMass(latest.weight, ready.unit)}</span>
-			{/snippet}
 			<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
 		</Card>
 	{/if}
@@ -97,12 +94,5 @@
 <style>
 	.all-photos {
 		color: var(--color-accent);
-		font-size: var(--font-size-small);
-	}
-
-	.latest {
-		color: var(--color-text);
-		font-family: var(--font-mono);
-		font-size: var(--font-size-body);
 	}
 </style>
