@@ -1,171 +1,192 @@
 import { describe, expect, it } from 'vitest';
-import { aSet } from '../../../../tests/builders/training.builder.ts';
 import { trainingApp } from '../../../../tests/support/training-app.ts';
-import { first } from '../../shared/collections.ts';
+import { DistanceUnit } from '../../shared/distance-unit.constants.ts';
 import { MassUnit } from '../../shared/mass-unit.constants.ts';
-import { MoveDirection } from '../domain/workout-template.ts';
-import { setsOf } from '../domain/workout.ts';
+import { WeekStart } from '../../shared/week-start.constants.ts';
+import { TrackedField } from '../domain/tracking.constants.ts';
+import { WEIGHT_AND_REPS } from '../domain/tracking.ts';
 import { TrainOverview } from './train-overview.svelte.ts';
+import { TrainScreen } from './train-screen.svelte.ts';
+import { WeekDayState } from './week-strip.constants.ts';
+import { WorkoutBuilder } from './workout-builder.svelte.ts';
 import { WorkoutSession } from './workout-session.svelte.ts';
+
+const preferences = () => ({
+	units: { mass: MassUnit.lb, distance: DistanceUnit.mi },
+	restSeconds: 90
+});
 
 function screens() {
 	const app = trainingApp();
-	return { app, session: new WorkoutSession(app), overview: new TrainOverview(app, app.clock) };
+	return {
+		app,
+		train: new TrainScreen(app),
+		builder: new WorkoutBuilder(app),
+		session: new WorkoutSession(app, app.clock, preferences),
+		overview: new TrainOverview(app, app.clock)
+	};
 }
 
-async function logBench(session: WorkoutSession) {
-	await session.start();
-	await session.addExercise('Bench press');
-	const benchId = first(session.workout?.exercises ?? [])?.exerciseId;
-	if (benchId === undefined) throw new Error('expected an exercise');
-	const location = { exerciseId: benchId, position: 0 };
-	await Promise.all([
-		session.setReps(location, 8),
-		session.setWeight(location, 60),
-		session.toggleCompleted(location)
-	]);
-	return { benchId, finished: await session.finish() };
+async function withBench(app: ReturnType<typeof trainingApp>) {
+	const bench = await app.createExercise.execute({
+		name: 'Bench press',
+		tracking: WEIGHT_AND_REPS
+	});
+	if (!bench.ok) throw new Error('expected bench press');
+	return bench.value;
 }
+
+describe('TrainScreen', () => {
+	it('starts a workout of one exercise and adds more to it', async () => {
+		const { app, train } = screens();
+		const bench = await withBench(app);
+		await train.load();
+
+		await train.startExercise(bench);
+		await train.load();
+		train.query = 'squat';
+		expect(train.canCreate).toBe(true);
+		expect(await train.create(WEIGHT_AND_REPS)).toBe('Squat');
+
+		expect(train.activeName).toBe('Bench press');
+		expect(train.query).toBe('');
+		expect(train.matches.map((exercise) => exercise.name)).toEqual(['Squat', 'Bench press']);
+	});
+
+	it('starts a saved workout, or adds its exercises to the one in progress', async () => {
+		const { app, train, builder } = screens();
+		const bench = await withBench(app);
+		await builder.load();
+		builder.name = 'push day';
+		builder.add(bench);
+		expect(await builder.save()).toBe('Push day');
+		await train.load();
+		const [push] = train.visibleTemplates;
+		if (push === undefined) throw new Error('expected a template');
+
+		await train.startTemplate(push);
+		await train.load();
+
+		expect(train.activeName).toBe('Push day');
+		expect(train.active?.exercises).toHaveLength(1);
+	});
+});
+
+describe('WorkoutBuilder', () => {
+	it('needs a name and an exercise, and can create an exercise on the way', async () => {
+		const { builder } = screens();
+		await builder.load();
+		builder.name = 'Climbing';
+		expect(builder.canSave).toBe(false);
+
+		builder.query = 'boulder';
+		await builder.create({
+			fields: [TrackedField.grade],
+			grades: { scale: 'v' },
+			countLabel: undefined
+		});
+
+		expect(builder.chosen.map((exercise) => exercise.name)).toEqual(['Boulder']);
+		expect(builder.canSave).toBe(true);
+		builder.remove(0);
+		expect(builder.canSave).toBe(false);
+	});
+});
 
 describe('WorkoutSession', () => {
-	it('logs a set in the user unit and finishes the workout', async () => {
-		const { session } = screens();
-		await session.load(MassUnit.kg);
+	it('logs sets from the steppers, moves on after three, and rests in between', async () => {
+		const { app, train, session } = screens();
+		const bench = await withBench(app);
+		await train.startExercise(bench);
+		await session.load();
+		session.step(bench.id, 'weight', 1);
+		session.type(bench.id, 'reps', '8');
 
-		const { benchId, finished } = await logBench(session);
+		expect(await session.logCurrent()).toBe('5 × 8 logged');
+		expect(session.rest.left(app.clock.now())).toBe(90);
+		await session.logCurrent();
+		await session.logCurrent();
 
-		expect(finished === undefined ? undefined : setsOf(finished, benchId)).toEqual([
-			aSet(8, 60, true)
-		]);
-		expect(session.workout).toBeUndefined();
+		expect(
+			session.workout?.exercises.find((entry) => entry.exerciseId === bench.id)?.sets
+		).toHaveLength(3);
+		expect(session.current).toBe(-1);
+		expect(session.rest.running).toBe(false);
 	});
 
-	it('shows each set from last session and names exercises', async () => {
-		const { session } = screens();
-		await session.load(MassUnit.kg);
-		const { benchId } = await logBench(session);
-
-		await session.start();
-		await session.addExercise('bench press');
-
-		expect(session.nameOf(benchId)).toBe('Bench press');
-		expect(session.previousFor(benchId, 0)).toBe('60 × 8');
-		expect(session.previousFor(benchId, 1)).toBeUndefined();
-	});
-
-	it('shows nothing from last session for an exercise never done before', async () => {
-		const { session } = screens();
-		await session.load(MassUnit.kg);
-		await session.start();
-		await session.addExercise('Squat');
-		const squat = session.workout?.exercises.at(0)?.exerciseId;
-		if (squat === undefined) throw new Error('expected an exercise');
-
-		expect(session.previousFor(squat, 0)).toBeUndefined();
-	});
-
-	it('enters weights in pounds', async () => {
-		const { session } = screens();
-		await session.load(MassUnit.lb);
-		await session.start();
-		await session.addExercise('Squat');
-		const squat = first(session.workout?.exercises ?? []);
-		if (squat === undefined) throw new Error('expected an exercise');
-
-		const location = { exerciseId: squat.exerciseId, position: 0 };
-		await session.setReps(location, 5);
-		await session.setWeight(location, 225);
-
-		const set = first(
-			session.workout === undefined ? [] : (setsOf(session.workout, squat.exerciseId) ?? [])
-		);
-		expect(set === undefined ? undefined : session.entryOf(set)).toEqual({
-			reps: 5,
-			weight: 225,
-			completed: false
+	it('times an effort and logs it when done early', async () => {
+		const { app, session } = screens();
+		const plank = await app.createExercise.execute({
+			name: 'Plank',
+			tracking: { fields: [TrackedField.time], grades: undefined, countLabel: undefined }
 		});
+		if (!plank.ok) throw new Error('expected plank');
+		await app.startWorkout.execute({ templateId: undefined });
+		await app.addExerciseToWorkout.execute({ name: 'Plank' });
+		await session.load();
+
+		session.toggleStopwatch(plank.value.id);
+		app.clock.advance(65_000);
+		expect(await session.doneWithCurrent()).toBe('Plank done');
+
+		expect(
+			session.workout?.exercises.find((entry) => entry.exerciseId === plank.value.id)?.sets
+		).toEqual([
+			{
+				seconds: 65,
+				completed: true,
+				weight: undefined,
+				reps: undefined,
+				grade: undefined,
+				distance: undefined,
+				count: undefined
+			}
+		]);
 	});
 
-	it('explains a rejected exercise name', async () => {
-		const { session } = screens();
-		await session.start();
+	it('finishes with Undo, and discards with Undo', async () => {
+		const { app, train, session } = screens();
+		const bench = await withBench(app);
+		await train.startExercise(bench);
+		await session.load();
+		await session.logCurrent();
 
-		expect(await session.addExercise(' ')).toBe('Enter a name of up to 60 characters.');
-		await session.addExercise('Squat');
-		expect(await session.addExercise('squat')).toBe('That exercise is already in this workout.');
-	});
+		const finished = await session.finish();
+		expect(finished.saved).toBe(true);
+		if (finished.before === undefined) throw new Error('expected the workout');
+		await session.restore(finished.before);
+		expect(await app.getActiveWorkout.execute()).toEqual(finished.before);
 
-	it('discards a workout with nothing completed when finishing', async () => {
-		const { session } = screens();
-		await session.start();
-		await session.addExercise('Squat');
-
-		expect(await session.finish()).toBeUndefined();
+		const discarded = await session.discard();
+		expect(await app.getActiveWorkout.execute()).toBeUndefined();
+		expect(discarded?.id).toBe(finished.before.id);
 	});
 });
 
 describe('TrainOverview', () => {
-	it('saves a finished workout as a template and manages templates', async () => {
-		const { session, overview } = screens();
-		const { finished } = await logBench(session);
-		if (finished === undefined) throw new Error('expected a finished workout');
-
-		expect(await overview.saveAsTemplate(finished.id, 'Push')).toBeUndefined();
-		expect(await overview.saveAsTemplate(finished.id, '')).toBe(
-			'Enter a name of up to 60 characters.'
-		);
-		await overview.saveAsTemplate(finished.id, 'Upper');
-		const [push, upper] = overview.templates;
-		if (push === undefined || upper === undefined) throw new Error('expected two templates');
-
-		await overview.move(upper.id, MoveDirection.up);
-		await overview.rename(push.id, 'Push day');
-		expect(overview.templates.map((template) => template.name)).toEqual(['Upper', 'Push day']);
-
-		await overview.remove(upper.id);
-		expect(overview.templates.map((template) => template.name)).toEqual(['Push day']);
-		expect(overview.describe(finished)).toBe('Bench press · 1 set');
-	});
-
-	it('toggles a rest day and shows the streak', async () => {
-		const { overview } = screens();
+	it("shows this week's workouts and sums up finished ones, and saves them", async () => {
+		const { app, train, session, overview } = screens();
+		const bench = await withBench(app);
+		await train.startExercise(bench);
+		await session.load();
+		await session.logCurrent();
+		app.clock.advance(1_800_000);
+		await session.finish();
 		await overview.load();
+		const [workout] = overview.recent;
+		if (workout === undefined) throw new Error('expected a workout');
 
-		await overview.toggleRestDay(overview.today, false);
-		expect(overview.streakText).toBe('Streak: 1 day. Best: 1 day.');
-		expect(first(overview.calendar?.days ?? [])?.rested).toBe(true);
-
-		await overview.toggleRestDay(overview.today, true);
-		expect(overview.streakText).toBe('Streak: 0 days. Best: 0 days.');
-	});
-
-	it('counts the workouts of the last seven days and tells whether today was trained or rested', async () => {
-		const { session, overview } = screens();
-		await overview.load();
-		expect(overview.workoutsLastSevenDays).toBe(0);
-		expect(overview.todayActivity).toEqual({ date: overview.today, trained: false, rested: false });
-
-		await logBench(session);
-		await overview.load();
-
-		expect(overview.workoutsLastSevenDays).toBe(1);
-		expect(overview.todayActivity?.trained).toBe(true);
-	});
-});
-
-describe('WorkoutSession ordering', () => {
-	it('saves a set checked off just before finishing', async () => {
-		const { session } = screens();
-		await session.start();
-		await session.addExercise('Squat');
-		const squat = first(session.workout?.exercises ?? []);
-		if (squat === undefined) throw new Error('expected an exercise');
-		const location = { exerciseId: squat.exerciseId, position: 0 };
-
-		const checked = session.toggleCompleted(location);
-		const finished = await session.finish();
-		await checked;
-
-		expect(finished === undefined ? undefined : setsOf(finished, squat.exerciseId)).toHaveLength(1);
+		const today = overview
+			.thisWeek(WeekStart.monday)
+			.find((day) => day.date.equals(app.clock.today()));
+		expect(today?.state).toBe(WeekDayState.trained);
+		expect(overview.nameOf(workout)).toBe('Bench press');
+		expect(overview.summaryOf(workout, preferences().units).map((row) => row.value)).toEqual([
+			'30:00',
+			'1 × 10 at 0 lb'
+		]);
+		expect(overview.canSave(workout)).toBe(true);
+		expect(await overview.save(workout)).toBe(true);
+		expect(overview.canSave(workout)).toBe(false);
 	});
 });

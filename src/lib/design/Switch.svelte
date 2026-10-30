@@ -1,5 +1,5 @@
 <script lang="ts">
-	/** Props for a labelled on/off row, such as "Rest day". */
+	/** Props for a labelled on/off row, such as "Carbs and fat". */
 	interface Props {
 		label: string;
 		checked: boolean;
@@ -8,52 +8,62 @@
 	}
 
 	const { label, checked, ontoggle }: Props = $props();
+	const labelId = $props.id();
 </script>
 
-<button type="button" role="switch" aria-checked={checked} onclick={ontoggle}>
-	<span>{label}</span>
-	<span class="track" class:checked aria-hidden="true"><span class="thumb"></span></span>
-</button>
+<div class="row">
+	<p id={labelId}>{label}</p>
+	<button
+		type="button"
+		role="switch"
+		aria-checked={checked}
+		aria-labelledby={labelId}
+		class:checked
+		onclick={ontoggle}
+	>
+		<span class="thumb"></span>
+	</button>
+</div>
 
 <style>
-	button {
+	.row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: var(--space-3);
-		width: 100%;
-		min-height: var(--row-height);
-		padding: 0;
-		border: none;
-		background: transparent;
-		text-align: left;
-		cursor: pointer;
+		min-height: var(--setting-row-height);
 	}
 
-	.track {
-		display: flex;
-		align-items: center;
-		width: var(--space-12);
-		height: var(--space-6);
-		padding: var(--space-1);
-		border-radius: var(--radius-round);
-		background: var(--color-text-muted);
-		transition: background var(--duration-quick);
+	p {
+		font-size: var(--font-size-17);
+	}
+
+	button {
+		position: relative;
+		width: var(--switch-width);
+		height: var(--switch-height);
+		padding: 0;
+		border: var(--border-control) solid var(--color-field-line);
+		background: transparent;
+		transition: background var(--duration-quick) ease;
 	}
 
 	.thumb {
-		width: var(--space-4);
-		height: var(--space-4);
-		border-radius: var(--radius-round);
-		background: var(--color-background);
-		transition: transform var(--duration-quick);
+		position: absolute;
+		top: var(--switch-inset);
+		left: var(--switch-inset);
+		width: var(--switch-thumb);
+		height: var(--switch-thumb);
+		background: var(--color-text-muted);
+		transition: transform var(--duration-quick) ease;
 	}
 
 	.checked {
-		background: var(--color-rest);
+		border-color: var(--color-accent);
+		background: var(--color-accent);
 	}
 
 	.checked .thumb {
-		transform: translateX(var(--space-6));
+		background: var(--color-on-accent);
+		transform: translateX(var(--switch-travel));
 	}
 </style>

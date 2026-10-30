@@ -55,15 +55,12 @@
 
 	legend {
 		margin-bottom: var(--space-2);
-		color: var(--color-text-muted);
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.segments {
 		display: flex;
-		gap: var(--space-1);
-		padding: var(--space-1);
-		border-radius: var(--radius-medium);
-		background: var(--color-surface);
 	}
 
 	label {
@@ -71,18 +68,27 @@
 		display: grid;
 		place-items: center;
 		min-height: var(--tap-target);
-		border-radius: var(--radius-small);
+		margin-left: calc(-1 * var(--border-control));
+		border: var(--border-control) solid var(--color-edge);
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
 		user-select: none;
 	}
 
+	label:first-child {
+		margin-left: 0;
+	}
+
 	label.chosen {
-		background: var(--color-card);
-		font-weight: var(--font-weight-semibold);
+		border-color: var(--color-accent);
+		background: var(--color-accent);
+		color: var(--color-on-accent);
 	}
 
 	label:has(input:focus-visible) {
-		outline: var(--focus-ring-width) solid var(--color-accent);
+		outline: var(--focus-ring-width) solid var(--color-text);
+		outline-offset: var(--focus-ring-width);
 	}
 
 	input {

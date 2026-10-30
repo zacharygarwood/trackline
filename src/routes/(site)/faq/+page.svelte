@@ -25,7 +25,7 @@
 	}
 
 	h1 {
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-22);
 	}
 
 	section {
@@ -35,6 +35,6 @@
 	}
 
 	h2 {
-		font-size: var(--font-size-body);
+		font-size: var(--font-size-17);
 	}
 </style>

@@ -1,142 +1,157 @@
 <script lang="ts">
 	import { getAppContext } from '#lib/app/app-context.ts';
-	import Card from '#lib/design/Card.svelte';
-	import Fab from '#lib/design/Fab.svelte';
-	import Icon from '#lib/design/Icon.svelte';
-	import IconButton from '#lib/design/IconButton.svelte';
-	import Row from '#lib/design/Row.svelte';
+	import { FieldEdges } from '#lib/design/button.constants.ts';
+	import SearchField from '#lib/design/SearchField.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import type { FoodLogEntry } from '#lib/nutrition/domain/food-log-entry.ts';
-	import { MEAL_SLOTS, type MealSlot } from '#lib/nutrition/domain/meal-slot.constants.ts';
-	import EntrySheet from '#lib/nutrition/ui/EntrySheet.svelte';
-	import LogFoodSheet from '#lib/nutrition/ui/LogFoodSheet.svelte';
-	import MacroProgress from '#lib/nutrition/ui/MacroProgress.svelte';
-	import { NutritionDay } from '#lib/nutrition/ui/nutrition-day.svelte.ts';
-	import { formatAmount, formatCalories, SLOT_LABELS } from '#lib/nutrition/ui/nutrition-format.ts';
-	import SaveMealSheet from '#lib/nutrition/ui/SaveMealSheet.svelte';
-	import { formatDate } from '#lib/ui/format.ts';
+	import type { Food } from '#lib/nutrition/domain/food.ts';
+	import EatenRow from '#lib/nutrition/ui/EatenRow.svelte';
+	import { amountLabel } from '#lib/nutrition/ui/food-portions.ts';
+	import FoodRow from '#lib/nutrition/ui/FoodRow.svelte';
+	import { FoodScreen } from '#lib/nutrition/ui/food-screen.svelte.ts';
+	import MacroTotals from '#lib/nutrition/ui/MacroTotals.svelte';
+	import NewFoodSection from '#lib/nutrition/ui/NewFoodSection.svelte';
+	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
+	import { capitalized } from '#lib/training/ui/exercise-search.ts';
+	import { getToaster } from '#lib/ui/toast.svelte.ts';
 
-	const ONE_DAY = 1;
+	/** How long + turns into a check after adding, in milliseconds. */
+	const ADDED_MILLISECONDS = 1400;
 
-	let day: NutritionDay | undefined = $state();
-	let logging = $state(false);
-	let editing: FoodLogEntry | undefined = $state();
-	let savingSlot: MealSlot | undefined = $state();
+	const preferences = getPreferences();
+	const toaster = getToaster();
+	let screen: FoodScreen | undefined = $state();
+	let searchInput: HTMLInputElement | undefined = $state();
+	let justAdded: Food['id'] | undefined = $state();
+	let addedTimer: ReturnType<typeof setTimeout> | undefined;
 
 	void getAppContext().then(async (app) => {
-		const next = new NutritionDay(app.nutrition, app.clock);
+		const next = new FoodScreen(app.nutrition, app.clock);
 		await next.load();
-		day = next;
+		screen = next;
 	});
 
-	const slotCalories = (entries: readonly FoodLogEntry[]) =>
-		formatCalories(entries.reduce((total, entry) => total + entry.macrosSnapshot.calories, 0));
+	function confirm(ready: FoodScreen, food: Food, entry: FoodLogEntry | undefined): void {
+		if (entry === undefined) return;
+		clearTimeout(addedTimer);
+		justAdded = food.id;
+		addedTimer = setTimeout(() => (justAdded = undefined), ADDED_MILLISECONDS);
+		toaster.show(
+			messages.food.added(food.name, amountLabel(entry.amount, entry.unitSnapshot)),
+			() => ready.remove(entry)
+		);
+	}
+
+	async function add(ready: FoodScreen, food: Food, typed: boolean): Promise<void> {
+		confirm(ready, food, typed ? await ready.addTyped(food) : await ready.add(food));
+	}
+
+	async function create(ready: FoodScreen): Promise<void> {
+		const name = capitalized(ready.query);
+		const entry = await ready.create(
+			preferences.current.trackCarbsAndFat,
+			preferences.current.newFoodUnit
+		);
+		const food = ready.foods.find((known) => known.name === name);
+		if (food !== undefined) confirm(ready, food, entry);
+		searchInput?.focus();
+	}
+
+	async function remove(ready: FoodScreen, entry: FoodLogEntry): Promise<void> {
+		await ready.remove(entry);
+		toaster.show(messages.food.removed(entry.foodNameSnapshot), () => ready.restore(entry));
+	}
 </script>
 
-{#if day !== undefined}
-	{@const ready = day}
-	<div class="day-switcher" role="group" aria-label={messages.nutrition.day}>
-		<button
-			type="button"
-			aria-label={messages.nutrition.previousDay}
-			onclick={() => ready.moveBy(-ONE_DAY)}
-		>
-			<Icon name="back" />
-		</button>
-		<span>{formatDate(ready.date, ready.today)}</span>
-		<button
-			type="button"
-			aria-label={messages.nutrition.nextDay}
-			disabled={!ready.date.isBefore(ready.today)}
-			onclick={() => ready.moveBy(ONE_DAY)}
-		>
-			<Icon name="forward" />
-		</button>
-	</div>
-	<Card>
-		<MacroProgress summary={ready.day.summary} />
-	</Card>
-	{#each MEAL_SLOTS as slot (slot)}
-		{@const entries = ready.entriesIn(slot)}
-		<Card title={SLOT_LABELS[slot]}>
-			{#snippet trailing()}
-				{#if entries.length > 0}
-					<span class="total">
-						{slotCalories(entries)}
-						<IconButton
-							label={messages.nutrition.saveSlotAsMeal(SLOT_LABELS[slot])}
-							icon="more"
-							onclick={() => (savingSlot = slot)}
-						/>
-					</span>
-				{/if}
-			{/snippet}
-			{#each entries as entry (entry.id)}
-				{@const amount = formatAmount(entry.amount, entry.unitSnapshot)}
-				{@const calories = formatCalories(entry.macrosSnapshot.calories)}
-				<Row
-					label={entry.foodNameSnapshot}
-					detail={amount}
-					value={calories}
-					ariaLabel={messages.nutrition.entry(entry.foodNameSnapshot, amount, calories)}
-					onclick={() => (editing = entry)}
-				/>
-			{/each}
-		</Card>
-	{/each}
-	<Fab label={messages.nutrition.logFood} onclick={() => (logging = true)} />
-
-	{#if logging}
-		<LogFoodSheet day={ready} onclose={() => (logging = false)} />
-	{/if}
-	{#if editing !== undefined}
-		<EntrySheet day={ready} entry={editing} onclose={() => (editing = undefined)} />
-	{/if}
-	{#if savingSlot !== undefined}
-		<SaveMealSheet
-			day={ready}
-			slot={savingSlot}
-			label={SLOT_LABELS[savingSlot]}
-			onclose={() => (savingSlot = undefined)}
+{#if screen !== undefined}
+	{@const ready = screen}
+	<section aria-label={messages.food.totals}>
+		<MacroTotals
+			summary={ready.day.summary}
+			trackCarbsAndFat={preferences.current.trackCarbsAndFat}
+			today={false}
 		/>
+	</section>
+
+	<SearchField
+		label={messages.food.search}
+		edges={FieldEdges.top}
+		bind:input={searchInput}
+		bind:value={
+			() => ready.query,
+			(text: string) => {
+				ready.search(text);
+			}
+		}
+	/>
+
+	<ul
+		class="list"
+		aria-label={ready.query.trim() === '' ? messages.food.recent : messages.food.results}
+	>
+		{#each ready.visibleFoods as food (food.id)}
+			<FoodRow
+				{food}
+				open={ready.openFood === food.id}
+				added={justAdded === food.id}
+				bind:amount={ready.amount}
+				ontoggle={() => {
+					ready.toggleFood(food);
+				}}
+				onstep={(direction: number) => {
+					ready.stepFoodAmount(food, direction);
+				}}
+				onadd={(typed: boolean) => add(ready, food, typed)}
+			/>
+		{/each}
+	</ul>
+
+	{#if ready.canCreate}
+		<NewFoodSection
+			name={capitalized(ready.query)}
+			form={ready.form}
+			trackCarbsAndFat={preferences.current.trackCarbsAndFat}
+			defaultUnit={preferences.current.newFoodUnit}
+			onadd={() => create(ready)}
+		/>
+	{/if}
+
+	<h2>{messages.food.eatenToday}</h2>
+	<ul class="list" aria-label={messages.food.eatenToday}>
+		{#each ready.day.entries as entry (entry.id)}
+			<EatenRow
+				{entry}
+				open={ready.openEntry === entry.id}
+				ontoggle={() => {
+					ready.toggleEntry(entry.id);
+				}}
+				onstep={(direction: number) => ready.stepEntry(entry, direction)}
+				onchange={(amount: number) => ready.changeAmount(entry, amount)}
+				onremove={() => remove(ready, entry)}
+			/>
+		{/each}
+	</ul>
+	{#if ready.day.entries.length === 0}
+		<p class="empty">{messages.food.nothingYet}</p>
 	{/if}
 {/if}
 
 <style>
-	.day-switcher {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		min-height: var(--row-height);
-		margin: 0 calc(-1 * var(--space-4));
-		padding: 0 calc(var(--space-4) + (var(--icon-size) - var(--tap-target)) / 2);
-		border-bottom: var(--border-hairline) solid var(--color-divider);
+	.list {
+		margin: 0 calc(-1 * var(--gutter));
+		border-top: var(--border-hairline) solid var(--color-divider);
 	}
 
-	.day-switcher span {
+	h2 {
+		margin-top: var(--space-9);
+		padding-bottom: var(--space-3);
+		font-size: var(--font-size-15);
 		font-weight: var(--font-weight-semibold);
 	}
 
-	.day-switcher button {
-		display: grid;
-		place-items: center;
-		width: var(--tap-target);
-		height: var(--tap-target);
-		border: none;
-		background: transparent;
-		color: var(--color-accent);
-		cursor: pointer;
-	}
-
-	.day-switcher button:disabled {
+	.empty {
+		margin-top: var(--space-4);
 		color: var(--color-text-muted);
-		opacity: 0.4;
-		cursor: default;
-	}
-
-	.total {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
+		font-size: var(--font-size-16);
 	}
 </style>

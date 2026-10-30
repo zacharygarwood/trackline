@@ -61,23 +61,23 @@
 	.number-pad {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-2);
+		gap: var(--space-1);
 	}
 
 	button {
 		display: grid;
 		place-items: center;
 		min-height: var(--number-key-height);
-		border: none;
-		border-radius: var(--radius-medium);
-		background: var(--color-surface);
-		font-size: var(--font-size-title);
+		border: var(--border-control) solid var(--color-edge);
+		background: transparent;
+		font-size: var(--font-size-22);
+		font-weight: var(--font-weight-semibold);
 		font-variant-numeric: tabular-nums;
 		cursor: pointer;
 	}
 
 	button:active {
-		background: var(--color-divider);
+		background: var(--color-surface);
 	}
 
 	.decimal {

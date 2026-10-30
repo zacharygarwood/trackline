@@ -90,6 +90,11 @@ describe('foods and the log', () => {
 
 		await app.deleteLogEntry.execute({ id: entry.id });
 		expect((await app.getDayNutrition.execute({ date: app.clock.today() })).entries).toEqual([]);
+
+		await app.restoreLogEntry.execute({ entry: changed });
+		expect((await app.getDayNutrition.execute({ date: app.clock.today() })).entries).toEqual([
+			changed
+		]);
 	});
 
 	it('lists foods most recently logged first', async () => {

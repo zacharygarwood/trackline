@@ -1,12 +1,11 @@
 import { err, type Result } from '../../shared/result.ts';
 import { createExercise, type Exercise } from '../domain/exercise.ts';
 import type { InvalidName } from '../domain/name.ts';
-import { suggestNextSet } from '../domain/set-suggestion.ts';
+import { WEIGHT_AND_REPS, type InvalidTracking } from '../domain/tracking.ts';
 import { addExercise, type ExerciseAlreadyInWorkout } from '../domain/workout-editing.ts';
 import type { ActiveWorkout } from '../domain/workout.ts';
 import type { IdGenerator } from '../../shared/id-generator.ts';
 import { changeActiveWorkout, type NoActiveWorkout } from './active-workout.ts';
-import { lastSessionOf } from './last-session.ts';
 import type { Exercises, Workouts } from './training-ports.ts';
 
 /** The exercise's name, as picked from the library or typed new. */
@@ -15,7 +14,8 @@ export interface AddExerciseCommand {
 }
 
 /** Why an exercise couldn't be added. */
-export type AddExerciseProblem = InvalidName | ExerciseAlreadyInWorkout | NoActiveWorkout;
+export type AddExerciseProblem =
+	InvalidName | InvalidTracking | ExerciseAlreadyInWorkout | NoActiveWorkout;
 
 /** What adding an exercise needs. */
 export interface AddExercisePorts {
@@ -25,8 +25,8 @@ export interface AddExercisePorts {
 }
 
 /**
- * Adds an exercise to the workout in progress, creating it in the library
- * when the name is new. Its first set is pre-filled from last session.
+ * Adds an exercise, with no sets yet, to the workout in progress. A name not
+ * in the library becomes a new exercise that tracks weight and reps.
  */
 export class AddExerciseToWorkout {
 	constructor(private readonly ports: AddExercisePorts) {}
@@ -35,15 +35,15 @@ export class AddExerciseToWorkout {
 	async execute(command: AddExerciseCommand): Promise<Result<ActiveWorkout, AddExerciseProblem>> {
 		const exercise = await this.findOrCreate(command.name);
 		if (!exercise.ok) return exercise;
-		const lastSession = await lastSessionOf(this.ports.workouts, exercise.value.id);
-		const firstSet = suggestNextSet({ current: [], lastSession });
 		return changeActiveWorkout(this.ports.workouts, (workout) =>
-			addExercise(workout, { exerciseId: exercise.value.id, sets: [firstSet] })
+			addExercise(workout, { exerciseId: exercise.value.id, sets: [] })
 		);
 	}
 
-	private async findOrCreate(name: string): Promise<Result<Exercise, InvalidName>> {
-		const created = createExercise({ id: this.ports.ids.next(), name });
+	private async findOrCreate(
+		name: string
+	): Promise<Result<Exercise, InvalidName | InvalidTracking>> {
+		const created = createExercise({ id: this.ports.ids.next(), name, tracking: WEIGHT_AND_REPS });
 		if (!created.ok) return err(created.error);
 		const existing = await this.ports.exercises.findByName(created.value.name);
 		if (existing !== undefined) return { ok: true, value: existing };

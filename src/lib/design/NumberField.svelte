@@ -41,10 +41,10 @@
 		width: 100%;
 		min-height: var(--tap-target);
 		padding: 0 var(--space-2);
-		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-small);
-		background: var(--color-surface);
-		font-size: var(--font-size-body);
+		border: var(--border-control) solid var(--color-edge);
+		background: transparent;
+		font-size: var(--font-size-17);
+		font-weight: var(--font-weight-bold);
 		text-align: center;
 	}
 </style>

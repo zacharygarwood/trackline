@@ -6,30 +6,41 @@ import { expect } from './fixtures.ts';
 export async function finishFirstRun(page: Page): Promise<void> {
 	await page.goto('/app/welcome');
 	await page.getByRole('button', { name: messages.welcome.start }).click();
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+	await expectOnTab(page, messages.navigation.today);
+}
+
+/** Checks that a tab is the one being shown. */
+export async function expectOnTab(page: Page, tab: string): Promise<void> {
+	await expect(
+		page
+			.getByRole('navigation', { name: messages.navigation.tabs })
+			.getByRole('link', { name: tab })
+	).toHaveAttribute('aria-current', 'page');
 }
 
 /**
- * Types an entry on the open sheet's number pad.
+ * Checks in from the Body tab: types today's weight, optionally adds a photo, and saves.
  *
- * @param page - The page with an open sheet.
- * @param entry - Digits and at most one decimal point, for example "80.4".
+ * @param page - Any page of the app.
+ * @param entry - The weight as typed, for example "80.4"; empty to leave it.
+ * @param photo - A photo file to add, if any.
  */
-export async function typeOnNumberPad(page: Page, entry: string): Promise<void> {
-	const sheet = page.getByRole('dialog');
-	for (const key of entry) {
-		const name = key === '.' ? messages.design.decimalSeparator : key;
-		await sheet.getByRole('button', { name, exact: true }).click();
-	}
-}
-
-/** Records a weigh-in for the current day from the Body tab. */
-export async function weighIn(page: Page, entry: string): Promise<void> {
+export async function checkIn(page: Page, entry: string, photo?: string): Promise<void> {
 	await page.goto('/app/body');
-	await page.getByRole('button', { name: messages.body.weighIn }).click();
-	await typeOnNumberPad(page, entry);
-	await page.getByRole('dialog').getByRole('button', { name: messages.body.save }).click();
-	await expect(page.getByRole('dialog')).toBeHidden();
+	const field = page.getByRole('spinbutton', { name: /^Weight, / });
+	await field.fill(entry);
+	if (photo !== undefined) {
+		await page.getByLabel(messages.checkIn.takePhoto).setInputFiles(photo);
+	}
+	const save = page.getByRole('button', {
+		name: new RegExp(`^(${messages.checkIn.checkIn}|${messages.checkIn.update})$`)
+	});
+	await save.click();
+	await expect(
+		page
+			.getByText(new RegExp(`^(${messages.checkIn.checkedIn}|${messages.checkIn.updated})$`))
+			.first()
+	).toBeVisible();
 }
 
 /** A photo file as stored on the device. */
@@ -52,23 +63,4 @@ export async function storedPhotoFiles(page: Page): Promise<readonly StoredPhoto
 		}
 		return files;
 	});
-}
-
-/**
- * Adds a progress photo from the Body tab or the gallery: Add photo, pick the
- * file, optionally change the date, then tap the pose.
- */
-export async function addPhoto(
-	page: Page,
-	file: string,
-	pose: string,
-	date?: string
-): Promise<void> {
-	const chooser = page.waitForEvent('filechooser');
-	await page.getByRole('button', { name: messages.body.addPhoto }).click();
-	await (await chooser).setFiles(file);
-	const sheet = page.getByRole('dialog', { name: messages.body.addPhoto });
-	if (date !== undefined) await sheet.getByLabel(messages.body.photoDate).fill(date);
-	await sheet.getByRole('button', { name: pose, exact: true }).click();
-	await expect(sheet).toBeHidden();
 }

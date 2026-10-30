@@ -23,6 +23,7 @@
 	.detail {
 		flex-shrink: 0;
 		color: var(--color-text-muted);
+		font-size: var(--font-size-15);
 	}
 
 	.value {

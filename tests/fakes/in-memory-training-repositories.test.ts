@@ -6,11 +6,12 @@ import {
 	InMemoryWorkoutTemplateRepository
 } from './in-memory-training-repositories.ts';
 
-describeTrainingRepositories(() =>
-	Promise.resolve({
-		exercises: new InMemoryExerciseRepository(),
-		workouts: new InMemoryWorkoutRepository(),
+describeTrainingRepositories(() => {
+	const workouts = new InMemoryWorkoutRepository();
+	return Promise.resolve({
+		exercises: new InMemoryExerciseRepository(workouts),
+		workouts,
 		templates: new InMemoryWorkoutTemplateRepository(),
 		restDays: new InMemoryRestDayRepository()
-	})
-);
+	});
+});

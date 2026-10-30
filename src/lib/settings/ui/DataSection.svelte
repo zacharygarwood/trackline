@@ -116,7 +116,6 @@
 		min-height: var(--tap-target);
 		padding: 0 var(--space-3);
 		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-small);
 		background: var(--color-surface);
 	}
 </style>

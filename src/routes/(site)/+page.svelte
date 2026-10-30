@@ -76,7 +76,6 @@
 		width: 100%;
 		height: auto;
 		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-large);
 	}
 
 	section {
@@ -86,16 +85,16 @@
 	}
 
 	h1 {
-		font-size: var(--font-size-display);
+		font-size: var(--font-size-56);
 		line-height: 1;
 	}
 
 	h2 {
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-22);
 	}
 
 	.tagline {
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-22);
 	}
 
 	.open {
@@ -104,7 +103,6 @@
 		justify-content: center;
 		min-height: var(--tap-target);
 		padding: var(--space-3) var(--space-6);
-		border-radius: var(--radius-round);
 		background: var(--color-accent);
 		color: var(--color-on-accent);
 		font-weight: var(--font-weight-semibold);

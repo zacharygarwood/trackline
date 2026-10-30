@@ -20,7 +20,7 @@ body {
 	background: var(--color-background);
 	color: var(--color-text);
 	font-family: var(--font-family);
-	font-size: var(--font-size-body);
+	font-size: var(--font-size-16);
 	font-weight: var(--font-weight-regular);
 	line-height: var(--line-height);
 	font-variant-numeric: tabular-nums;
@@ -35,7 +35,7 @@ p {
 }
 
 h3 {
-	font-size: var(--font-size-body);
+	font-size: var(--font-size-17);
 }
 
 h1,
@@ -55,12 +55,14 @@ textarea {
 }
 
 button {
+	border-radius: 0;
+	cursor: pointer;
 	user-select: none;
 	touch-action: manipulation;
 }
 
 :focus-visible {
-	outline: var(--focus-ring-width) solid var(--color-accent);
+	outline: var(--focus-ring-width) solid var(--color-text);
 	outline-offset: var(--focus-ring-width);
 }
 
@@ -68,9 +70,56 @@ input,
 textarea {
 	min-width: 0;
 	max-width: 100%;
+	border-radius: 0;
+}
+
+input::placeholder,
+textarea::placeholder {
+	color: var(--color-placeholder);
+}
+
+button:disabled {
+	cursor: default;
+}
+
+input[type='number'] {
+	appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+	margin: 0;
+	appearance: none;
+}
+
+input:focus-visible {
+	outline: none;
+}
+
+ul,
+ol {
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
 	animation-duration: var(--duration-quick);
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(var(--rise-distance));
+	}
 }

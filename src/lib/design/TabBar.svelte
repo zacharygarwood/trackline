@@ -28,7 +28,7 @@
 		{#each tabs as tab (tab.href)}
 			<li>
 				<a href={tab.href} aria-current={tab.href === currentHref ? ARIA_CURRENT_PAGE : undefined}>
-					<Icon name={tab.icon} />
+					<span class="glyph"><Icon name={tab.icon} /></span>
 					<span>{tab.label}</span>
 				</a>
 			</li>
@@ -39,7 +39,7 @@
 <style>
 	nav {
 		border-top: var(--border-hairline) solid var(--color-divider);
-		background: var(--color-card);
+		background: var(--color-background);
 		padding-bottom: env(safe-area-inset-bottom);
 	}
 
@@ -55,20 +55,41 @@
 	}
 
 	a {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: var(--space-1);
-		min-height: var(--tap-target);
-		padding: var(--space-2) var(--space-1);
+		justify-content: center;
+		gap: var(--tab-gap);
+		min-height: calc(var(--tab-bar-height) - var(--border-hairline));
+		padding: 0 var(--space-1);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-label);
+		font-size: var(--font-size-12);
+		font-weight: var(--font-weight-medium);
 		text-decoration: none;
 		user-select: none;
 	}
 
 	a[aria-current='page'] {
-		color: var(--color-accent);
+		color: var(--color-text);
 		font-weight: var(--font-weight-semibold);
+	}
+
+	.glyph {
+		display: flex;
+	}
+
+	a[aria-current='page'] .glyph {
+		color: var(--color-accent);
+	}
+
+	a[aria-current='page']::before {
+		position: absolute;
+		top: calc(-1 * var(--border-hairline));
+		right: var(--tab-indicator-inset);
+		left: var(--tab-indicator-inset);
+		height: var(--tab-indicator);
+		background: var(--color-accent);
+		content: '';
 	}
 </style>

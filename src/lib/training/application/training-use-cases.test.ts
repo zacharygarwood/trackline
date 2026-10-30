@@ -7,11 +7,13 @@ import { first } from '../../shared/collections.ts';
 import { InvalidName } from '../domain/name.ts';
 import { DayHasWorkout } from '../domain/rest-day.ts';
 import { ExerciseAlreadyInWorkout, NotInWorkout } from '../domain/workout-editing.ts';
-import { MoveDirection } from '../domain/workout-template.ts';
 import { NoCompletedSets, setsOf, type ActiveWorkout } from '../domain/workout.ts';
-import { InvalidReps } from '../domain/workout-set.ts';
+import { EmptySet, InvalidReps } from '../domain/workout-set.ts';
+import { TrackedField } from '../domain/tracking.constants.ts';
+import { WEIGHT_AND_REPS } from '../domain/tracking.ts';
+import { OtherWorkoutInProgress } from './restore-workout.ts';
+import { Distance } from '../../shared/distance.ts';
 import { NoActiveWorkout } from './active-workout.ts';
-import { TemplateNotFound } from './start-workout.ts';
 
 const kg = (amount: number) => expectOk(Mass.fromKg(amount));
 
@@ -29,14 +31,8 @@ async function logSquats(
 	await app.startWorkout.execute({ templateId: undefined });
 	const workout = expectOk(await app.addExerciseToWorkout.execute({ name: 'Squat' }));
 	const squat = exerciseIdOf(workout);
-	for (const [position, [reps, weight]] of sets.entries()) {
-		if (position > 0) await app.addSet.execute({ exerciseId: squat });
-		await app.updateSet.execute({
-			location: { exerciseId: squat, position },
-			reps,
-			weight: kg(weight),
-			completed: true
-		});
+	for (const [reps, weight] of sets) {
+		await app.logSet.execute({ exerciseId: squat, measures: { reps, weight: kg(weight) } });
 	}
 	return expectOk(await app.finishWorkout.execute());
 }
@@ -52,7 +48,7 @@ describe('starting and editing a workout', () => {
 		expect(again.id).toBe(started.id);
 	});
 
-	it('adds a new exercise to the library and the workout, with one suggested set', async () => {
+	it('adds a new exercise to the library and the workout, tracking weight and reps, with no sets yet', async () => {
 		const app = trainingApp();
 		await app.startWorkout.execute({ templateId: undefined });
 
@@ -61,9 +57,8 @@ describe('starting and editing a workout', () => {
 		expect((await app.listExercises.execute()).map((exercise) => exercise.name)).toEqual([
 			'bench press'
 		]);
-		expect(setsOf(workout, exerciseIdOf(workout))).toEqual([
-			{ reps: 10, weight: Mass.zero, completed: false }
-		]);
+		expect(setsOf(workout, exerciseIdOf(workout))).toEqual([]);
+		expect((await app.listExercises.execute()).at(0)?.tracking).toEqual(WEIGHT_AND_REPS);
 	});
 
 	it('reuses an existing exercise whatever the case, and refuses it twice', async () => {
@@ -93,43 +88,59 @@ describe('starting and editing a workout', () => {
 		).toBeInstanceOf(NoActiveWorkout);
 	});
 
-	it('pre-fills a new set from the previous one, and shows last session', async () => {
+	it('logs completed sets in order, and shows last session', async () => {
 		const app = trainingApp();
 		await logSquats(app, [5, 100], [5, 105]);
 		await app.startWorkout.execute({ templateId: undefined });
-		const workout = expectOk(await app.addExerciseToWorkout.execute({ name: 'Squat' }));
-		const squat = exerciseIdOf(workout);
+		const squat = exerciseIdOf(expectOk(await app.addExerciseToWorkout.execute({ name: 'Squat' })));
 
-		expect(setsOf(workout, squat)).toEqual([aSet(5, 100)]);
-		await app.updateSet.execute({
-			location: { exerciseId: squat, position: 0 },
-			reps: 6,
-			weight: kg(102.5),
-			completed: true
-		});
-		const withSecond = expectOk(await app.addSet.execute({ exerciseId: squat }));
+		const workout = expectOk(
+			await app.logSet.execute({ exerciseId: squat, measures: { reps: 6, weight: kg(102.5) } })
+		);
 
-		expect(setsOf(withSecond, squat)?.at(1)).toEqual(aSet(6, 102.5));
+		expect(setsOf(workout, squat)).toEqual([aSet(6, 102.5, true)]);
 		expect(await app.getLastPerformance.execute({ exerciseId: squat })).toEqual([
 			aSet(5, 100, true),
 			aSet(5, 105, true)
 		]);
 	});
 
-	it('rejects impossible reps and missing sets', async () => {
+	it('logs a timed effort with a distance', async () => {
+		const app = trainingApp();
+		const run = expectOk(
+			await app.createExercise.execute({
+				name: 'Run',
+				tracking: {
+					fields: [TrackedField.time, TrackedField.distance],
+					grades: undefined,
+					countLabel: undefined
+				}
+			})
+		);
+		await app.startWorkout.execute({ templateId: undefined });
+		await app.addExerciseToWorkout.execute({ name: 'run' });
+
+		const workout = expectOk(
+			await app.logSet.execute({
+				exerciseId: run.id,
+				measures: { seconds: 1960, distance: expectOk(Distance.fromMeters(5470)) }
+			})
+		);
+
+		expect(setsOf(workout, run.id)?.at(0)).toMatchObject({ seconds: 1960, completed: true });
+	});
+
+	it('rejects impossible sets and missing sets', async () => {
 		const app = trainingApp();
 		await app.startWorkout.execute({ templateId: undefined });
 		const squat = exerciseIdOf(expectOk(await app.addExerciseToWorkout.execute({ name: 'Squat' })));
 
-		const zeroReps = await app.updateSet.execute({
-			location: { exerciseId: squat, position: 0 },
-			reps: 0,
-			weight: kg(1),
-			completed: false
-		});
+		const zeroReps = await app.logSet.execute({ exerciseId: squat, measures: { reps: 0 } });
+		const empty = await app.logSet.execute({ exerciseId: squat, measures: {} });
 		const missing = await app.removeSet.execute({ location: { exerciseId: squat, position: 4 } });
 
 		expect(expectErr(zeroReps)).toBeInstanceOf(InvalidReps);
+		expect(expectErr(empty)).toBeInstanceOf(EmptySet);
 		expect(expectErr(missing)).toBeInstanceOf(NotInWorkout);
 	});
 
@@ -137,7 +148,8 @@ describe('starting and editing a workout', () => {
 		const app = trainingApp();
 		await app.startWorkout.execute({ templateId: undefined });
 		const squat = exerciseIdOf(expectOk(await app.addExerciseToWorkout.execute({ name: 'Squat' })));
-		await app.addSet.execute({ exerciseId: squat });
+		await app.logSet.execute({ exerciseId: squat, measures: { reps: 5 } });
+		await app.logSet.execute({ exerciseId: squat, measures: { reps: 5 } });
 		const afterRemoval = expectOk(
 			await app.removeSet.execute({ location: { exerciseId: squat, position: 0 } })
 		);
@@ -185,61 +197,31 @@ describe('finishing a workout', () => {
 	it('needs a workout in progress', async () => {
 		expect(expectErr(await trainingApp().finishWorkout.execute())).toBeInstanceOf(NoActiveWorkout);
 	});
-});
 
-describe('templates', () => {
-	it('saves a finished workout as a template and starts from it with last session pre-filled', async () => {
+	it('brings a finished or discarded workout back as it was', async () => {
 		const app = trainingApp();
-		const finished = await logSquats(app, [5, 100], [5, 105]);
-		const template = expectOk(
-			await app.saveWorkoutAsTemplate.execute({ workoutId: finished.id, name: 'Legs' })
+		await app.startWorkout.execute({ templateId: undefined });
+		const before = expectOk(await app.addExerciseToWorkout.execute({ name: 'Squat' }));
+		const logged = expectOk(
+			await app.logSet.execute({ exerciseId: exerciseIdOf(before), measures: { reps: 5 } })
 		);
+		await app.finishWorkout.execute();
 
-		const started = expectOk(await app.startWorkout.execute({ templateId: template.id }));
+		expectOk(await app.restoreWorkout.execute({ workout: logged }));
 
-		expect(started.sourceTemplateId).toBe(template.id);
-		expect(started.exercises.map((exercise) => exercise.sets)).toEqual([
-			[aSet(5, 100), aSet(5, 105)]
-		]);
+		expect(await app.getActiveWorkout.execute()).toEqual(logged);
+		expect(await app.listRecentWorkouts.execute({ limit: 5 })).toEqual([]);
 	});
 
-	it('refuses to start from a template that is gone', async () => {
+	it('refuses to bring a workout back over another in progress', async () => {
 		const app = trainingApp();
-		const finished = await logSquats(app, [5, 100]);
-		const template = expectOk(
-			await app.saveWorkoutAsTemplate.execute({ workoutId: finished.id, name: 'Legs' })
+		const old = expectOk(await app.startWorkout.execute({ templateId: undefined }));
+		await app.discardWorkout.execute();
+		await app.startWorkout.execute({ templateId: undefined });
+
+		expect(expectErr(await app.restoreWorkout.execute({ workout: old }))).toBeInstanceOf(
+			OtherWorkoutInProgress
 		);
-		await app.deleteTemplate.execute({ id: template.id });
-
-		expect(expectErr(await app.startWorkout.execute({ templateId: template.id }))).toBeInstanceOf(
-			TemplateNotFound
-		);
-	});
-
-	it('renames, reorders, and deletes templates, keeping positions contiguous', async () => {
-		const app = trainingApp();
-		const finished = await logSquats(app, [5, 100]);
-		const names = ['A', 'B', 'C'];
-		const saved = [];
-		for (const name of names) {
-			saved.push(
-				expectOk(await app.saveWorkoutAsTemplate.execute({ workoutId: finished.id, name }))
-			);
-		}
-		const [a, b, c] = saved;
-		if (a === undefined || b === undefined || c === undefined)
-			throw new Error('expected three templates');
-
-		expectOk(await app.renameTemplate.execute({ id: a.id, name: 'Alpha' }));
-		await app.moveTemplate.execute({ id: c.id, direction: MoveDirection.up });
-		await app.deleteTemplate.execute({ id: b.id });
-
-		expect(
-			(await app.listTemplates.execute()).map((template) => [template.name, template.position])
-		).toEqual([
-			['Alpha', 0],
-			['C', 1]
-		]);
 	});
 });
 

@@ -9,6 +9,7 @@ import { last } from '../../src/lib/shared/collections.ts';
 import { NodeSqliteExecutor } from '../support/node-sqlite-executor.ts';
 import { expectOk } from '../support/result.ts';
 import { TestDatabase } from '../support/test-database.ts';
+import { activitySets } from './demo-activities.ts';
 
 const MIGRATIONS_FOLDER = path.join(import.meta.dirname, '../../src/lib/platform/db/migrations');
 
@@ -116,48 +117,125 @@ const LIFTS = [
 	['Overhead press', 40, 6]
 ] as const;
 
-function training(): SqlStatement[] {
-	const exerciseIds = LIFTS.map(() => id());
-	const exercises = LIFTS.map(([name], index) =>
-		statement('INSERT INTO exercise (id, name) VALUES (?, ?)', [exerciseIds[index] ?? '', name])
-	);
-	const statements: SqlStatement[] = [...exercises];
-	for (let back = 300; back >= 0; back -= 1) {
-		const weekday = back % 7;
-		const missed = back % 23 === 6;
-		if ((weekday === 0 || weekday === 2 || weekday === 4) && !missed) {
-			const workoutId = id();
+/** Exercises beyond the lifts: a run, bouldering, and yoga, with what each tracks. */
+const ACTIVITIES = [
+	['Run', 'distance,time', null],
+	['Bouldering', 'grade', 'v'],
+	['Yoga', 'time', null]
+] as const;
+
+const ACTIVITY_NAMES = ACTIVITIES.map(([name]) => name);
+
+function templates(liftIds: readonly string[], activityIds: readonly string[]): SqlStatement[] {
+	const plans = [
+		['Push day', [liftIds.at(1), liftIds.at(3)]],
+		['Legs', [liftIds.at(0), liftIds.at(2)]],
+		['Easy run', [activityIds.at(0)]],
+		['Climbing', [activityIds.at(1)]]
+	] as const;
+	return plans.flatMap(([name, exercises], position) => {
+		const templateId = id();
+		return [
+			statement('INSERT INTO workout_template (id, name, position) VALUES (?, ?, ?)', [
+				templateId,
+				name,
+				position
+			]),
+			...exercises.map((exerciseId, index) =>
+				statement(
+					'INSERT INTO template_exercise (template_id, position, exercise_id, target_sets) VALUES (?, ?, ?, 3)',
+					[templateId, index, exerciseId ?? '']
+				)
+			)
+		];
+	});
+}
+
+function workoutWith(
+	back: number,
+	minutes: number,
+	exercises: readonly (readonly [string, (readonly (number | null)[])[]])[]
+) {
+	const workoutId = id();
+	const statements = [
+		statement(
+			'INSERT INTO workout (id, date, started_at, finished_at, note, source_template_id) VALUES (?, ?, ?, ?, ?, NULL)',
+			[workoutId, day(back), at(back, 17), at(back, 17) + minutes * 60_000, '']
+		)
+	];
+	exercises.forEach(([exerciseId, sets], position) => {
+		statements.push(
+			statement(
+				'INSERT INTO workout_exercise (workout_id, position, exercise_id) VALUES (?, ?, ?)',
+				[workoutId, position, exerciseId]
+			)
+		);
+		sets.forEach((set, setPosition) => {
 			statements.push(
 				statement(
-					'INSERT INTO workout (id, date, started_at, finished_at, note, source_template_id) VALUES (?, ?, ?, ?, ?, NULL)',
-					[workoutId, day(back), at(back, 17), at(back, 18), '']
+					`INSERT INTO workout_set (workout_id, exercise_position, position, reps, weight_kg, seconds,
+						distance_m, grade, count, completed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+					[workoutId, position, setPosition, ...set]
 				)
 			);
-			LIFTS.filter((_, index) => (index + weekday) % 2 === 0 || index === 0).forEach(
-				([, start, reps], position) => {
-					const lift = LIFTS.findIndex(([, other]) => other === start);
-					statements.push(
-						statement(
-							'INSERT INTO workout_exercise (workout_id, position, exercise_id) VALUES (?, ?, ?)',
-							[workoutId, position, exerciseIds[lift] ?? '']
-						)
-					);
-					const kilograms = Math.round((start + (300 - back) * 0.1) / 2.5) * 2.5;
-					for (let set = 0; set < 3; set += 1) {
-						statements.push(
-							statement(
-								'INSERT INTO workout_set (workout_id, exercise_position, position, reps, weight_kg, completed) VALUES (?, ?, ?, ?, ?, 1)',
-								[workoutId, position, set, reps, kilograms]
-							)
-						);
-					}
-				}
-			);
-		} else if (back < 40 && !missed) {
-			statements.push(
-				statement('INSERT INTO rest_day (id, date) VALUES (?, ?)', [id(), day(back)])
-			);
+		});
+	});
+	return statements;
+}
+
+function liftWorkout(back: number, weekday: number, exerciseIds: readonly string[]) {
+	const lifts = LIFTS.filter((_, index) => (index + weekday / 2) % 2 === 0 || index === 0).map(
+		([, start, reps]) => {
+			const lift = LIFTS.findIndex(([, other]) => other === start);
+			const kilograms = Math.round((start + (300 - back) * 0.1) / 2.5) * 2.5;
+			const sets = [0, 1, 2].map(() => [reps, kilograms, null, null, null, null]);
+			return [exerciseIds.at(lift) ?? '', sets] as const;
 		}
+	);
+	return workoutWith(back, 45 + (back % 4) * 10, lifts);
+}
+
+function activityWorkout(back: number, weekday: number, activityIds: readonly string[]) {
+	const second = back % 2 === 0 ? 1 : 2;
+	const index = weekday === 1 ? 0 : second;
+	const name = ACTIVITY_NAMES.at(index) ?? 'Run';
+	return workoutWith(back, 30 + (back % 3) * 15, [
+		[activityIds.at(index) ?? '', activitySets(name, back)]
+	]);
+}
+
+function dayOfTraining(
+	back: number,
+	exerciseIds: readonly string[],
+	activityIds: readonly string[]
+) {
+	const weekday = back % 7;
+	if (back % 23 === 6) return [];
+	if (weekday === 0 || weekday === 2 || weekday === 4)
+		return liftWorkout(back, weekday, exerciseIds);
+	if (weekday === 1 || weekday === 5) return activityWorkout(back, weekday, activityIds);
+	return back < 40
+		? [statement('INSERT INTO rest_day (id, date) VALUES (?, ?)', [id(), day(back)])]
+		: [];
+}
+
+function training(): SqlStatement[] {
+	const exerciseIds = LIFTS.map(() => id());
+	const activityIds = ACTIVITIES.map(() => id());
+	const statements: SqlStatement[] = [
+		...LIFTS.map(([name], index) =>
+			statement('INSERT INTO exercise (id, name) VALUES (?, ?)', [exerciseIds[index] ?? '', name])
+		),
+		...ACTIVITIES.map(([name, fields, scale], index) =>
+			statement(
+				'INSERT INTO exercise (id, name, tracked_fields, grade_scale) VALUES (?, ?, ?, ?)',
+				[activityIds[index] ?? '', name, fields, scale]
+			)
+		),
+		...templates(exerciseIds, activityIds)
+	];
+	for (let back = 300; back >= 0; back -= 1) {
+		statements.push(...dayOfTraining(back, exerciseIds, activityIds));
 	}
 	return statements;
 }

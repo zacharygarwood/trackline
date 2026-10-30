@@ -34,6 +34,23 @@ import type { LocalDate } from '../../src/lib/shared/local-date.ts';
 export class InMemoryExerciseRepository implements ExerciseReader, ExerciseWriter {
 	private readonly exercises = new Map<ExerciseId, Exercise>();
 
+	/** @param workouts - Where to look for when each exercise was last used. */
+	constructor(private readonly workouts: InMemoryWorkoutRepository) {}
+
+	findAllByRecentUse(): Promise<readonly Exercise[]> {
+		const lastUsed = (exercise: Exercise) => this.workouts.lastStartedWith(exercise.id);
+		return Promise.resolve(
+			[...this.exercises.values()].toSorted((a, b) => {
+				const [usedA, usedB] = [lastUsed(a), lastUsed(b)];
+				if (usedA === undefined || usedB === undefined) {
+					if (usedA !== usedB) return usedA === undefined ? -1 : 1;
+					return b.id.localeCompare(a.id);
+				}
+				return usedB - usedA;
+			})
+		);
+	}
+
 	findAll(): Promise<readonly Exercise[]> {
 		return Promise.resolve(
 			[...this.exercises.values()].toSorted((a, b) => a.name.localeCompare(b.name))
@@ -109,6 +126,14 @@ export class InMemoryWorkoutRepository implements WorkoutReader, WorkoutWriter {
 			throw new Error('UNIQUE constraint failed: one active workout');
 		}
 		this.workouts.set(workout.id, workout);
+	}
+
+	/** When the latest workout with an exercise started, in or out of progress. */
+	lastStartedWith(exerciseId: ExerciseId): number | undefined {
+		const starts = [...this.workouts.values()]
+			.filter((workout) => workout.exercises.some((exercise) => exercise.exerciseId === exerciseId))
+			.map((workout) => workout.startedAt);
+		return starts.length === 0 ? undefined : Math.max(...starts);
 	}
 
 	delete(id: WorkoutId): Promise<void> {

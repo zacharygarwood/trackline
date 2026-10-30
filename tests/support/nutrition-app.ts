@@ -1,6 +1,7 @@
 import { ChangeLogAmount } from '../../src/lib/nutrition/application/change-log-amount.ts';
 import { CreateFood } from '../../src/lib/nutrition/application/create-food.ts';
 import { DeleteLogEntry } from '../../src/lib/nutrition/application/delete-log-entry.ts';
+import { RestoreLogEntry } from '../../src/lib/nutrition/application/restore-log-entry.ts';
 import { DeleteSavedMeal } from '../../src/lib/nutrition/application/delete-saved-meal.ts';
 import { GetDailyGoals } from '../../src/lib/nutrition/application/get-daily-goals.ts';
 import { GetDayNutrition } from '../../src/lib/nutrition/application/get-day-nutrition.ts';
@@ -34,6 +35,7 @@ export function nutritionApp(clock = new FixedClock(Date.UTC(2026, 9, 27, 12), '
 		logFood: new LogFood({ foods, log, clock, ids }),
 		changeLogAmount: new ChangeLogAmount(log),
 		deleteLogEntry: new DeleteLogEntry(log),
+		restoreLogEntry: new RestoreLogEntry(log),
 		getDayNutrition: new GetDayNutrition(log, goals),
 		getLastAmount: new GetLastAmount(log),
 		saveMealFromSlot: new SaveMealFromSlot({ log, meals, ids }),

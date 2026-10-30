@@ -5,8 +5,8 @@ import { demoBackup, DEMO_TODAY } from './demo-backup.ts';
 
 const OUTPUT = 'static/screenshots';
 const SCREENS = [
-	{ name: 'today', path: '/app', ready: messages.today.lastWorkout },
-	{ name: 'stats', path: '/app/stats', ready: messages.stats.currentStreak }
+	{ name: 'today', path: '/app', ready: messages.today.thisWeek },
+	{ name: 'stats', path: '/app/stats', ready: messages.trends.workoutDays }
 ] as const;
 
 test('capture the landing page screenshots', async ({ page }) => {
@@ -25,8 +25,16 @@ test('capture the landing page screenshots', async ({ page }) => {
 		.click();
 	await reloaded;
 
-	for (const scheme of ['light', 'dark'] as const) {
-		await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	const themes = {
+		light: messages.preferences.themes.light,
+		dark: messages.preferences.themes.dark
+	};
+	for (const [scheme, theme] of Object.entries(themes)) {
+		await page.goto('/app/settings');
+		const choice = page.getByRole('button', { name: theme, exact: true });
+		await choice.click();
+		await expect(choice).toHaveAttribute('aria-pressed', 'true');
 		for (const screen of SCREENS) {
 			await page.goto(screen.path);
 			await expect(page.getByText(screen.ready).first()).toBeVisible();

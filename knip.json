@@ -2,5 +2,5 @@
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"ignoreExportsUsedInFile": true,
 	"entry": ["vitest.mutation.config.ts"],
-	"ignoreDependencies": ["@fontsource-variable/ibm-plex-sans"]
+	"ignoreDependencies": ["@fontsource-variable/inter-tight"]
 }

@@ -1,130 +1,109 @@
 import type { Clock } from '../../shared/clock.ts';
-import { first } from '../../shared/collections.ts';
+import { last } from '../../shared/collections.ts';
 import type { LocalDate } from '../../shared/local-date.ts';
-import { MassUnit } from '../../shared/mass-unit.constants.ts';
-import { WeekStart } from '../../shared/week-start.constants.ts';
-import type { GetActivity } from '../application/get-activity.ts';
-import type { GetExerciseProgress } from '../application/get-exercise-progress.ts';
+import type { MassUnit } from '../../shared/mass-unit.constants.ts';
+import type { GetExerciseHistory } from '../application/get-exercise-history.ts';
 import type { GetTrends, Trends } from '../application/get-trends.ts';
-import type {
-	ActivityDays,
-	ExerciseSession,
-	StreakSummary,
-	TrackedExercise
-} from '../application/insights-queries.ts';
-import type { ListTrackedExercises } from '../application/list-tracked-exercises.ts';
+import type { GetWorkoutDays } from '../application/get-workout-days.ts';
+import type { ExerciseDay, WorkoutDay } from '../application/insights-queries.ts';
 import { StatsRange } from '../application/stats-range.constants.ts';
-import { activityHeatmaps } from './activity-heatmaps.ts';
-import { Nutrient } from './nutrient.constants.ts';
-import { exerciseChartData, nutritionChartData, weightChartData } from './stats-charts.ts';
+import { rangeWeeks, startOfDays } from '../application/stats-range.ts';
+import { mean, toBars, weeklyCalories } from './stats-math.ts';
 
-/** Reads the unit the user shows weights in; supplied by the settings context. */
-export interface MassUnitSource {
-	execute(): Promise<MassUnit>;
-}
-
-/** Reads the day the user's weeks begin on; supplied by the settings context. */
-export interface WeekStartSource {
-	execute(): Promise<WeekStart>;
-}
-
-/** The use cases the Stats screen calls. */
+/** The use cases the Stats tab calls. */
 export interface StatsScreenUseCases {
-	readonly getActivity: GetActivity;
 	readonly getTrends: GetTrends;
-	readonly listTrackedExercises: ListTrackedExercises;
-	readonly getExerciseProgress: GetExerciseProgress;
-	readonly getMassUnit: MassUnitSource;
-	readonly getWeekStart: WeekStartSource;
+	readonly getWorkoutDays: GetWorkoutDays;
+	readonly getExerciseHistory: GetExerciseHistory;
 }
 
-const NO_ACTIVITY: ActivityDays = { trained: [], rested: [], foodLogged: [], proteinGoalMet: [] };
+const DAYS_PER_WEEK = 7;
+/** The most points a weight line draws; longer ranges are thinned out. */
+const MAX_WEIGHT_POINTS = 70;
+/** Headroom above the calorie goal and the highest bar. */
+const GOAL_HEADROOM = 1.2;
+const BAR_HEADROOM = 1.05;
 
-/** State and actions of the Stats tab: streaks, heatmaps, and charts over a chosen range. */
+/** State of the Stats tab: the range, and everything charted over it. */
 export class StatsScreen {
-	range: StatsRange = $state(StatsRange.fourWeeks);
-	unit: MassUnit = $state(MassUnit.kg);
-	weekStart: WeekStart = $state(WeekStart.monday);
-	streak: StreakSummary = $state({ current: 0, longest: 0 });
-	exercises: readonly TrackedExercise[] = $state([]);
-	exercise: TrackedExercise | undefined = $state();
-	private activity: ActivityDays = $state(NO_ACTIVITY);
-	private trends: Trends = $state({ weight: [], nutrition: [] });
-	private sessions: readonly ExerciseSession[] = $state([]);
-
-	readonly heatmaps = $derived(activityHeatmaps(this.activity));
-	readonly weightChart = $derived(weightChartData(this.trends.weight, this.unit));
-	readonly caloriesChart = $derived(nutritionChartData(this.trends.nutrition, Nutrient.calories));
-	readonly proteinChart = $derived(nutritionChartData(this.trends.nutrition, Nutrient.protein));
-	readonly exerciseChart = $derived(
-		this.exercise === undefined
-			? undefined
-			: exerciseChartData(this.sessions, this.exercise.name, this.unit)
-	);
+	range: StatsRange = $state(StatsRange.threeMonths);
+	trends: Trends = $state({ weight: [], nutrition: [] });
+	workoutDays: readonly WorkoutDay[] = $state([]);
+	exerciseDays: readonly ExerciseDay[] = $state([]);
 
 	constructor(
 		private readonly useCases: StatsScreenUseCases,
 		private readonly clock: Clock
 	) {}
 
-	/** The last day the heatmaps show. */
+	/** Today's date. */
 	get today(): LocalDate {
 		return this.clock.today();
 	}
 
-	/** Loads everything the screen shows for the current range. */
+	/** How many weeks the range covers. */
+	get weeks(): number {
+		return rangeWeeks(this.range);
+	}
+
+	/** Loads everything for the current range. */
 	async load(): Promise<void> {
-		const [activity, unit, weekStart, exercises] = await Promise.all([
-			this.useCases.getActivity.execute(),
-			this.useCases.getMassUnit.execute(),
-			this.useCases.getWeekStart.execute(),
-			this.useCases.listTrackedExercises.execute()
-		]);
-		this.weekStart = weekStart;
-		this.activity = activity.days;
-		this.streak = activity.streak;
-		this.unit = unit;
-		this.exercises = exercises;
-		this.exercise = first(exercises);
-		await Promise.all([this.loadTrends(), this.loadSessions()]);
-	}
-
-	/**
-	 * Shows the charts for another range.
-	 *
-	 * @param range - The range to show.
-	 */
-	async changeRange(range: StatsRange): Promise<void> {
-		this.range = range;
-		await Promise.all([this.loadTrends(), this.loadSessions()]);
-	}
-
-	/**
-	 * Shows another exercise's progress. Ignores ids that aren't in the list.
-	 *
-	 * @param id - The chosen exercise's id, as the picker reports it.
-	 */
-	async chooseExercise(id: string): Promise<void> {
-		const chosen = this.exercises.find((exercise) => exercise.id === id);
-		if (chosen === undefined) return;
-		this.exercise = chosen;
-		this.sessions = [];
-		await this.loadSessions();
-	}
-
-	private async loadTrends(): Promise<void> {
 		const range = this.range;
-		const trends = await this.useCases.getTrends.execute({ range });
-		if (range === this.range) this.trends = trends;
+		[this.trends, this.workoutDays, this.exerciseDays] = await Promise.all([
+			this.useCases.getTrends.execute({ range }),
+			this.useCases.getWorkoutDays.execute(),
+			this.useCases.getExerciseHistory.execute({ range })
+		]);
 	}
 
-	private async loadSessions(): Promise<void> {
-		const { range, exercise } = this;
-		if (exercise === undefined) return;
-		const sessions = await this.useCases.getExerciseProgress.execute({
-			exercise: exercise.id,
-			range
-		});
-		if (range === this.range && exercise.id === this.exercise?.id) this.sessions = sessions;
+	/** Switches the range and reloads. */
+	async choose(range: StatsRange): Promise<void> {
+		this.range = range;
+		await this.load();
+	}
+
+	/** Minutes of workouts on a day, for the heatmap. */
+	readonly minutesOf = (date: LocalDate): number =>
+		this.workoutDays.find((day) => day.date.equals(date))?.minutes ?? 0;
+
+	/** How many days in the range had a workout. */
+	get workoutDayCount(): number {
+		const start = startOfDays(this.today, this.weeks * DAYS_PER_WEEK);
+		return this.workoutDays.filter((day) => !day.date.isBefore(start)).length;
+	}
+
+	/** Weigh-ins over the range in a unit, oldest first, thinned to at most 70 points. */
+	weights(unit: MassUnit): readonly number[] {
+		const all = this.trends.weight.map((point) => point.weight.toUnit(unit));
+		const step = Math.max(1, Math.round(all.length / MAX_WEIGHT_POINTS));
+		const thinned = all.filter((_, index) => index % step === 0);
+		const newest = last(all);
+		return newest === undefined || last(thinned) === newest ? thinned : [...thinned, newest];
+	}
+
+	/** The average daily calories of each bar: one per week, or per four weeks over long ranges. */
+	get calorieBars(): readonly number[] {
+		return toBars(
+			weeklyCalories(this.trends.nutrition, { today: this.today, weeks: this.weeks }),
+			mean
+		);
+	}
+
+	/** The average calories of the days logged in the range. */
+	get calorieAverage(): number {
+		return mean(this.trends.nutrition.map((day) => day.calories));
+	}
+
+	/** The calorie goal in effect most recently, if any. */
+	get calorieGoal(): number | undefined {
+		return last(this.trends.nutrition)?.calorieGoal;
+	}
+
+	/** The calories that fill the chart's height. */
+	get calorieScale(): number {
+		return Math.max(
+			(this.calorieGoal ?? 0) * GOAL_HEADROOM,
+			Math.max(0, ...this.calorieBars) * BAR_HEADROOM
+		);
 	}
 }

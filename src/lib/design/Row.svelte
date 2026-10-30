@@ -66,6 +66,11 @@
 		cursor: pointer;
 	}
 
+	a.line:hover,
+	button.line:hover {
+		background: var(--color-hover);
+	}
+
 	.action {
 		color: var(--color-accent);
 		font-weight: var(--font-weight-semibold);

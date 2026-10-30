@@ -2,6 +2,8 @@
 export const AppRoute = {
 	today: '/app',
 	train: '/app/train',
+	workout: '/app/train/workout',
+	newWorkout: '/app/train/new',
 	eat: '/app/eat',
 	body: '/app/body',
 	photos: '/app/body/photos',

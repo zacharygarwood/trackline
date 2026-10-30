@@ -1,11 +1,11 @@
 import { expect, test } from './fixtures.ts';
-import { finishFirstRun } from './helpers.ts';
+import { expectOnTab, finishFirstRun } from './helpers.ts';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 
 const tabs = [
 	messages.navigation.today,
-	messages.navigation.train,
 	messages.navigation.eat,
+	messages.navigation.train,
 	messages.navigation.body,
 	messages.navigation.stats
 ];
@@ -18,14 +18,14 @@ test('a new user starts on the welcome screen, then lands on Today', async ({ pa
 	await expect(page.getByRole('navigation', { name: messages.navigation.tabs })).toBeHidden();
 	await page.getByRole('button', { name: messages.welcome.start }).click();
 
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+	await expectOnTab(page, messages.navigation.today);
 });
 
 test('the app opens on Today with five tabs', async ({ page }) => {
 	await finishFirstRun(page);
 	await page.goto('/app');
 
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+	await expectOnTab(page, messages.navigation.today);
 	const navigation = page.getByRole('navigation', { name: messages.navigation.tabs });
 	for (const tab of tabs) {
 		await expect(navigation.getByRole('link', { name: tab })).toBeVisible();
@@ -76,7 +76,7 @@ test('iPhone Safari users see how to add the app to the home screen until they d
 	await expect(hint).toBeHidden();
 
 	await page.reload();
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+	await expectOnTab(page, messages.navigation.today);
 	await expect(page.getByText(messages.app.installHint)).toBeHidden();
 });
 
@@ -101,11 +101,15 @@ test('first-run goals are saved with Get started, in the chosen units', async ({
 		await page.getByRole('textbox', { name: macro }).fill('100');
 	}
 	await page.getByRole('button', { name: messages.welcome.start }).click();
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
+	await expectOnTab(page, messages.navigation.today);
 
 	await page.goto('/app/settings');
-	await expect(page.getByText('165.0 lb, Gain')).toBeVisible();
-	await expect(page.getByRole('textbox', { name: messages.nutrition.calories })).toHaveValue(
+	await expect(page.getByRole('spinbutton', { name: messages.nutrition.calories })).toHaveValue(
 		'2400'
 	);
+	await expect(
+		page.getByRole('group', { name: messages.preferences.weight }).getByRole('button', {
+			name: messages.units.lb
+		})
+	).toHaveAttribute('aria-pressed', 'true');
 });

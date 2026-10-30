@@ -7,10 +7,11 @@ import {
 } from '../../../../tests/builders/training.builder.ts';
 import { expectErr, expectOk } from '../../../../tests/support/result.ts';
 import { LocalDate } from '../../shared/local-date.ts';
+import { Distance } from '../../shared/distance.ts';
 import { Mass } from '../../shared/mass.ts';
 import { createExercise } from './exercise.ts';
 import { InvalidName, parseName } from './name.ts';
-import { prefillSets, suggestNextSet } from './set-suggestion.ts';
+import { suggestNextSet } from './set-suggestion.ts';
 import { trainingStreak } from './training-streak.ts';
 import { finishWorkout, NoCompletedSets, setsOf } from './workout.ts';
 import {
@@ -23,7 +24,8 @@ import {
 	replaceSet,
 	setNote
 } from './workout-editing.ts';
-import { createWorkoutSet, InvalidReps } from './workout-set.ts';
+import { WEIGHT_AND_REPS } from './tracking.ts';
+import { createWorkoutSet, EmptySet, InvalidMeasure, InvalidReps } from './workout-set.ts';
 
 const date = (text: string) => expectOk(LocalDate.parse(text));
 const squat = anExerciseId();
@@ -39,7 +41,9 @@ describe('parseName', () => {
 	});
 
 	it('names an exercise', () => {
-		expect(expectOk(createExercise({ id: squat, name: ' Squat ' })).name).toBe('Squat');
+		expect(
+			expectOk(createExercise({ id: squat, name: ' Squat ', tracking: WEIGHT_AND_REPS })).name
+		).toBe('Squat');
 	});
 });
 
@@ -50,6 +54,26 @@ describe('createWorkoutSet', () => {
 
 	it.each([0, 1000, 2.5])('rejects %d reps', (reps) => {
 		expect(expectErr(createWorkoutSet(aSet(reps, 0)))).toBeInstanceOf(InvalidReps);
+	});
+
+	it('accepts a time, distance, grade, or count on its own', () => {
+		const run = { seconds: 1960, distance: expectOk(Distance.fromMeters(5400)), completed: true };
+		expect(expectOk(createWorkoutSet(run)).seconds).toBe(1960);
+		expect(expectOk(createWorkoutSet({ grade: 0, completed: true })).grade).toBe(0);
+		expect(expectOk(createWorkoutSet({ count: 12, completed: true })).count).toBe(12);
+	});
+
+	it.each([{ seconds: -1 }, { seconds: Number.NaN }, { count: -2 }, { grade: 1.5 }, { grade: -1 }])(
+		'rejects %o',
+		(measure) => {
+			expect(expectErr(createWorkoutSet({ ...measure, completed: true }))).toBeInstanceOf(
+				InvalidMeasure
+			);
+		}
+	);
+
+	it('rejects a set that records nothing', () => {
+		expect(expectErr(createWorkoutSet({ completed: true }))).toBeInstanceOf(EmptySet);
 	});
 });
 
@@ -144,23 +168,6 @@ describe('suggestNextSet', () => {
 			weight: Mass.zero,
 			completed: false
 		});
-	});
-});
-
-describe('prefillSets', () => {
-	it('copies last session set by set', () => {
-		expect(prefillSets([aSet(8, 60, true), aSet(6, 65, true)], 2)).toEqual([
-			aSet(8, 60),
-			aSet(6, 65)
-		]);
-	});
-
-	it('repeats the last set when the template asks for more sets than last session had', () => {
-		expect(prefillSets([aSet(8, 60, true)], 3)).toEqual([aSet(8, 60), aSet(8, 60), aSet(8, 60)]);
-	});
-
-	it('starts a new exercise at 10 reps of bodyweight', () => {
-		expect(prefillSets([], 1)).toEqual([{ reps: 10, weight: Mass.zero, completed: false }]);
 	});
 });
 

@@ -88,141 +88,67 @@ describe('SqliteInsightsQueries', () => {
 		});
 	});
 
-	describe('exercise progress', () => {
-		it('tracks only exercises with completed weighted sets in finished workouts, most recent first', async () => {
-			const bench = await seed.exercise('Bench press');
+	describe('workoutDays', () => {
+		it('adds up the minutes of each day of finished workouts, from a date', async () => {
 			const squat = await seed.exercise('Squat');
-			const pullUp = await seed.exercise('Pull-up');
-			const deadlift = await seed.exercise('Deadlift');
-			const row = await seed.exercise('Row');
-			await seed.workout('2026-10-01', [[bench, [[5, 100]]]]);
-			await seed.workout('2026-10-10', [
-				[squat, [[5, 120]]],
-				[pullUp, [[8, 0]]]
-			]);
-			await seed.workout('2026-10-20', [
-				[bench, [[5, 102.5]]],
-				[row, [[8, 60, false]]]
-			]);
-			await seed.workout('2026-10-21', [[deadlift, [[5, 140]]]], false);
+			await seed.workout('2026-09-30', [[squat, [[5, 100]]]], { minutes: 40 });
+			await seed.workout('2026-10-02', [[squat, [[5, 100]]]], { minutes: 45 });
+			await seed.workout('2026-10-02', [[squat, [[5, 100]]]], { minutes: 15 });
+			await seed.workout('2026-10-03', [[squat, [[5, 100]]]], { minutes: 30, finished: false });
 
-			expect(await queries.trackedExercises()).toEqual([
-				{ id: bench, name: 'Bench press' },
-				{ id: squat, name: 'Squat' }
-			]);
+			const days = await queries.workoutDays(date('2026-10-01'));
+
+			expect(days.map((day) => [day.date.toString(), day.minutes])).toEqual([['2026-10-02', 60]]);
 		});
+	});
 
-		it('takes the heaviest completed set and the best Epley estimate of each day', async () => {
+	describe('exerciseDays', () => {
+		it('totals completed sets per exercise per day, from a date', async () => {
 			const bench = await seed.exercise('Bench press');
-			await seed.workout('2026-10-01', [
+			const run = await seed.exercise('Run');
+			await seed.workout('2026-09-30', [[bench, [[5, 90]]]]);
+			await seed.workout('2026-10-05', [
 				[
 					bench,
 					[
 						[5, 100],
-						[8, 90],
-						[3, 110, false]
+						[8, 95],
+						[3, 120, false]
+					]
+				],
+				[
+					run,
+					[
+						{ seconds: 1200, meters: 3000 },
+						{ seconds: 600, meters: 1500 }
 					]
 				]
 			]);
-			await seed.workout('2026-10-08', [[bench, [[1, 120]]]]);
-			await seed.workout('2026-10-08', [[bench, [[10, 60]]]]);
 
-			const sessions = await queries.exerciseSessions(bench, undefined);
+			const days = await queries.exerciseDays(date('2026-10-01'));
 
-			expect(
-				sessions.map((session) => [
-					session.date.toString(),
-					session.heaviest.kilograms,
-					Number(session.estimatedOneRepMax.kilograms.toFixed(2))
-				])
-			).toEqual([
-				['2026-10-01', 100, 116.67],
-				['2026-10-08', 120, 120]
-			]);
+			expect(days).toHaveLength(2);
+			expect(days.find((day) => day.exerciseId === bench)).toMatchObject({
+				mostReps: 8,
+				hardestGrade: undefined,
+				meters: 0
+			});
+			expect(days.find((day) => day.exerciseId === bench)?.heaviest?.kilograms).toBe(100);
+			expect(days.find((day) => day.exerciseId === run)).toMatchObject({
+				heaviest: undefined,
+				meters: 4500,
+				seconds: 1800,
+				count: 0
+			});
 		});
 
-		it('leaves out days before the range', async () => {
-			const bench = await seed.exercise('Bench press');
-			await seed.workout('2026-10-01', [[bench, [[5, 100]]]]);
-			await seed.workout('2026-10-08', [[bench, [[5, 105]]]]);
+		it('keeps the hardest grade and the total count', async () => {
+			const boulder = await seed.exercise('Bouldering');
+			await seed.workout('2026-10-05', [[boulder, [{ grade: 3 }, { grade: 5 }, { count: 4 }]]]);
 
-			const sessions = await queries.exerciseSessions(bench, date('2026-10-02'));
+			const [day] = await queries.exerciseDays(undefined);
 
-			expect(dates(sessions.map((session) => session.date))).toEqual(['2026-10-08']);
-		});
-	});
-
-	describe('activityDays', () => {
-		it('lists trained, rested, and food-logged days from a date', async () => {
-			const bench = await seed.exercise('Bench press');
-			await seed.workout('2026-09-30', [[bench, [[5, 100]]]]);
-			await seed.workout('2026-10-02', [[bench, [[5, 100]]]]);
-			await seed.workout('2026-10-02', [[bench, [[5, 100]]]]);
-			await seed.workout('2026-10-04', [[bench, [[5, 100]]]], false);
-			await seed.restDay('2026-10-03');
-			await seed.eaten('2026-10-02', 500, 20);
-			await seed.eaten('2026-10-02', 500, 20);
-			await seed.eaten('2026-10-05', 500, 20);
-
-			const activity = await queries.activityDays(date('2026-10-01'));
-
-			expect(dates(activity.trained)).toEqual(['2026-10-02']);
-			expect(dates(activity.rested)).toEqual(['2026-10-03']);
-			expect(dates(activity.foodLogged)).toEqual(['2026-10-02', '2026-10-05']);
-		});
-
-		it('counts the protein goal as met only against a positive goal in effect that day', async () => {
-			await seed.eaten('2026-09-30', 200, 200);
-			await seed.goals('2026-10-01', 2000, 100);
-			await seed.eaten('2026-10-01', 1000, 60);
-			await seed.eaten('2026-10-01', 1000, 40);
-			await seed.eaten('2026-10-02', 1000, 99);
-			await seed.goals('2026-10-03', 2000, 0);
-			await seed.eaten('2026-10-03', 1000, 50);
-
-			const activity = await queries.activityDays(date('2026-09-01'));
-
-			expect(dates(activity.proteinGoalMet)).toEqual(['2026-10-01']);
-		});
-	});
-
-	describe('trainingStreak', () => {
-		const today = date('2026-10-28');
-
-		it('is zero with nothing logged', async () => {
-			expect(await queries.trainingStreak(today)).toEqual({ current: 0, longest: 0 });
-		});
-
-		it('counts rest days and workouts, and today does not break the run yet', async () => {
-			const bench = await seed.exercise('Bench press');
-			await seed.workout('2026-10-25', [[bench, [[5, 100]]]]);
-			await seed.restDay('2026-10-26');
-			await seed.workout('2026-10-27', [[bench, [[5, 100]]]]);
-			await seed.workout('2026-10-27', [[bench, [[5, 100]]]]);
-
-			expect(await queries.trainingStreak(today)).toEqual({ current: 3, longest: 3 });
-		});
-
-		it('includes today once it has a workout or rest day', async () => {
-			await seed.restDay('2026-10-27');
-			await seed.restDay('2026-10-28');
-
-			expect(await queries.trainingStreak(today)).toEqual({ current: 2, longest: 2 });
-		});
-
-		it('ends the current run after a missed day but remembers the longest', async () => {
-			for (const day of ['2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13', '2026-10-26']) {
-				await seed.restDay(day);
-			}
-
-			expect(await queries.trainingStreak(today)).toEqual({ current: 0, longest: 4 });
-		});
-
-		it('ignores workouts still in progress', async () => {
-			const bench = await seed.exercise('Bench press');
-			await seed.workout('2026-10-27', [[bench, [[5, 100]]]], false);
-
-			expect(await queries.trainingStreak(today)).toEqual({ current: 0, longest: 0 });
+			expect(day).toMatchObject({ hardestGrade: 5, count: 4 });
 		});
 	});
 

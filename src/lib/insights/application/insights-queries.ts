@@ -20,35 +20,30 @@ export interface NutritionDay {
 	readonly proteinGoal: number | undefined;
 }
 
+/** One day with at least one finished workout. */
+export interface WorkoutDay {
+	readonly date: LocalDate;
+	/** How long that day's workouts took together. */
+	readonly minutes: number;
+}
+
 /** Identifies an exercise from the training context. */
 export type TrackedExerciseId = Id<'Exercise'>;
 
-/** An exercise with at least one weighted set in a finished workout. */
-export interface TrackedExercise {
-	readonly id: TrackedExerciseId;
-	readonly name: string;
-}
-
-/** The best of one day's completed sets of an exercise. */
-export interface ExerciseSession {
+/** What was done of one exercise on one day, from completed sets of finished workouts. */
+export interface ExerciseDay {
+	readonly exerciseId: TrackedExerciseId;
 	readonly date: LocalDate;
-	readonly heaviest: Mass;
-	readonly estimatedOneRepMax: Mass;
-}
-
-/** Days with something logged, each list oldest first. */
-export interface ActivityDays {
-	readonly trained: readonly LocalDate[];
-	readonly rested: readonly LocalDate[];
-	readonly foodLogged: readonly LocalDate[];
-	readonly proteinGoalMet: readonly LocalDate[];
-}
-
-/** Consecutive days with a workout or a rest day. */
-export interface StreakSummary {
-	/** The run ending today, or yesterday if today has nothing yet. */
-	readonly current: number;
-	readonly longest: number;
+	/** The heaviest weight, if any set recorded one. */
+	readonly heaviest: Mass | undefined;
+	/** The most reps in one set, if any set recorded reps. */
+	readonly mostReps: number | undefined;
+	/** The hardest grade's position on its scale, if any set recorded a grade. */
+	readonly hardestGrade: number | undefined;
+	/** Totals across the day's sets; zero when not recorded. */
+	readonly meters: number;
+	readonly seconds: number;
+	readonly count: number;
 }
 
 /** Reads body weight with its moving average. */
@@ -69,25 +64,20 @@ export interface NutritionTrendQuery {
 	nutritionDays(since: LocalDate | undefined): Promise<readonly NutritionDay[]>;
 }
 
-/** Reads per-exercise strength progress. */
-export interface ExerciseProgressQuery {
-	/** Exercises with weighted history, most recently trained first. */
-	trackedExercises(): Promise<readonly TrackedExercise[]>;
+/** Reads which days had workouts and how long they took. */
+export interface WorkoutDaysQuery {
 	/**
-	 * @param exercise - The exercise to read.
-	 * @param since - The first day to include, or undefined for all time.
-	 * @returns One session per day trained, oldest first.
+	 * @param since - The first day to include.
+	 * @returns Days with a finished workout, oldest first.
 	 */
-	exerciseSessions(
-		exercise: TrackedExerciseId,
-		since: LocalDate | undefined
-	): Promise<readonly ExerciseSession[]>;
+	workoutDays(since: LocalDate): Promise<readonly WorkoutDay[]>;
 }
 
-/** Reads which days had activity, and the training streak. */
-export interface ActivityQuery {
-	/** @param since - The first day to include. */
-	activityDays(since: LocalDate): Promise<ActivityDays>;
-	/** @param today - The day that doesn't break a streak until it is over. */
-	trainingStreak(today: LocalDate): Promise<StreakSummary>;
+/** Reads what was done of each exercise over time. */
+export interface ExerciseHistoryQuery {
+	/**
+	 * @param since - The first day to include, or undefined for all time.
+	 * @returns One row per exercise per day trained, oldest first.
+	 */
+	exerciseDays(since: LocalDate | undefined): Promise<readonly ExerciseDay[]>;
 }

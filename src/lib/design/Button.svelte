@@ -1,25 +1,28 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
-	import { ButtonVariant } from './button.constants.ts';
+	import { ButtonSize, ButtonVariant } from './button.constants.ts';
 
-	/** Props for a button; any other button attribute passes through. */
+	/** Props for a square button; any other button attribute passes through. */
 	interface Props extends Omit<HTMLButtonAttributes, 'class' | 'children'> {
 		/** Visual emphasis; defaults to `primary`. */
 		variant?: ButtonVariant;
+		/** Height; defaults to `regular` (56 px). */
+		size?: ButtonSize;
 		/** The button's content. */
 		children: Snippet;
 	}
 
 	const {
 		variant = ButtonVariant.primary,
+		size = ButtonSize.regular,
 		type = 'button',
 		children,
 		...attributes
 	}: Props = $props();
 </script>
 
-<button class="button {variant}" {type} {...attributes}>
+<button class="button {variant} {size}" {type} {...attributes}>
 	{@render children()}
 </button>
 
@@ -28,24 +31,31 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-2);
-		min-width: var(--tap-target);
-		min-height: var(--button-height);
-		padding: var(--space-3) var(--space-6);
+		gap: var(--chip-gap);
+		padding: 0 var(--space-5);
 		border: none;
-		border-radius: var(--radius-small);
+		font-size: var(--font-size-16);
 		font-weight: var(--font-weight-semibold);
-		cursor: pointer;
-		transition: opacity var(--duration-quick);
 	}
 
 	.button:disabled {
-		opacity: 0.4;
-		cursor: default;
+		opacity: 0.35;
 	}
 
-	.button:active:not(:disabled) {
-		opacity: 0.8;
+	.compact {
+		min-height: var(--control-height);
+	}
+
+	.medium {
+		min-height: var(--field-height);
+	}
+
+	.regular {
+		min-height: var(--button-height);
+	}
+
+	.tall {
+		min-height: var(--log-button-height);
 	}
 
 	.primary {
@@ -54,13 +64,16 @@
 	}
 
 	.secondary {
-		border: var(--border-hairline) solid var(--color-divider);
-		background: var(--color-card);
+		border: var(--border-control) solid var(--color-edge);
+		background: transparent;
 		color: var(--color-text);
 	}
 
 	.quiet {
+		min-height: var(--tap-target);
+		padding: 0;
 		background: transparent;
 		color: var(--color-accent);
+		font-size: var(--font-size-15);
 	}
 </style>

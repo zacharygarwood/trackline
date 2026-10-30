@@ -25,21 +25,19 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.box {
 		display: flex;
 		align-items: center;
 		min-height: var(--tap-target);
-		padding: 0 var(--space-3);
-		border: var(--border-hairline) solid var(--color-divider);
-		border-radius: var(--radius-small);
-		background: var(--color-surface);
+		border-bottom: var(--border-field) solid var(--color-field-line);
 	}
 
 	.box:focus-within {
-		outline: var(--focus-ring-width) solid var(--color-accent);
-		outline-offset: var(--focus-ring-width);
+		border-bottom-color: var(--color-text);
 	}
 
 	input {
@@ -48,13 +46,15 @@
 		padding: 0;
 		border: none;
 		background: transparent;
-		font-size: var(--font-size-body);
+		font-size: var(--font-size-22);
+		font-weight: var(--font-weight-bold);
 		font-variant-numeric: tabular-nums;
 		outline: none;
 	}
 
 	.unit {
 		color: var(--color-text-muted);
-		font-size: var(--font-size-body);
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-regular);
 	}
 </style>

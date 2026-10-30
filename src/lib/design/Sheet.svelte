@@ -57,7 +57,7 @@
 		margin: auto auto 0;
 		padding: 0;
 		border: none;
-		border-radius: var(--radius-large) var(--radius-large) 0 0;
+		border-top: var(--border-hairline) solid var(--color-divider);
 		background: var(--color-background);
 		color: var(--color-text);
 		overscroll-behavior: contain;
@@ -75,7 +75,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
-		padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+		padding: var(--space-4) var(--gutter) calc(var(--space-4) + env(safe-area-inset-bottom));
 	}
 
 	header {
@@ -85,7 +85,7 @@
 	}
 
 	h2 {
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-22);
 	}
 
 	header button {
@@ -93,9 +93,9 @@
 		place-items: center;
 		width: var(--tap-target);
 		height: var(--tap-target);
+		margin-right: calc(var(--space-3) * -1);
 		border: none;
-		border-radius: var(--radius-round);
-		background: var(--color-surface);
+		background: transparent;
 		cursor: pointer;
 	}
 

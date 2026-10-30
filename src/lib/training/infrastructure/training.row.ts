@@ -1,7 +1,11 @@
-/** An `exercise` table row. */
+/** An `exercise` table row; `tracked_fields` is a comma-separated list and `custom_grades` a JSON array. */
 export type ExerciseRow = {
 	readonly id: string;
 	readonly name: string;
+	readonly tracked_fields: string;
+	readonly grade_scale: string | null;
+	readonly custom_grades: string | null;
+	readonly count_label: string | null;
 };
 
 /** A `workout` table row; `finished_at` is null while in progress. */
@@ -21,13 +25,17 @@ export type WorkoutExerciseRow = {
 	readonly exercise_id: string;
 };
 
-/** A `workout_set` table row; `completed` is 0 or 1. */
+/** A `workout_set` table row; `completed` is 0 or 1, and each measure is null when not recorded. */
 export type WorkoutSetRow = {
 	readonly workout_id: string;
 	readonly exercise_position: number;
 	readonly position: number;
-	readonly reps: number;
-	readonly weight_kg: number;
+	readonly reps: number | null;
+	readonly weight_kg: number | null;
+	readonly seconds: number | null;
+	readonly distance_m: number | null;
+	readonly grade: number | null;
+	readonly count: number | null;
 	readonly completed: number;
 };
 

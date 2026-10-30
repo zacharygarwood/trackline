@@ -1,52 +1,58 @@
 <script lang="ts">
-	/** Props for a thin progress bar toward a target. */
+	import { filledTicks } from './progress-ticks.ts';
+	import { TickSize } from './tick-size.constants.ts';
+
+	/** Props for a row of 40 ticks filling toward a target. Decorative when inside a labelled control. */
 	interface Props {
 		/** The amount so far. */
 		value: number;
-		/** The target; the bar is full at or past it. */
+		/** The target; every tick is filled at or past it. */
 		max: number;
-		/** What the bar shows, in words, for screen readers. */
-		label: string;
+		/** Defaults to `regular`. */
+		size?: TickSize;
 	}
 
-	const { value, max, label }: Props = $props();
+	const { value, max, size = TickSize.regular }: Props = $props();
 
-	const FULL = 100;
-	const percent = $derived(max <= 0 ? 0 : Math.min(FULL, (value / max) * FULL));
-	const over = $derived(max > 0 && value > max);
+	const TICKS = 40;
+	const filled = $derived(filledTicks({ value, max, ticks: TICKS }));
 </script>
 
-<svg
-	class="bar"
-	class:over
-	viewBox="0 0 100 4"
-	preserveAspectRatio="none"
-	role="meter"
-	aria-label={label}
-	aria-valuenow={value}
-	aria-valuemin="0"
-	aria-valuemax={max}
->
-	<rect class="track" x="0" y="0" width="100" height="4" rx="2" />
-	<rect class="fill" x="0" y="0" width={percent} height="4" rx="2" />
-</svg>
+<span class="bar {size}" aria-hidden="true">
+	{#each { length: TICKS }, tick (tick)}
+		<span class:filled={tick < filled}></span>
+	{/each}
+</span>
 
 <style>
 	.bar {
-		display: block;
+		display: grid;
+		grid-template-columns: repeat(40, minmax(0, 1fr));
+		gap: var(--tick-gap);
 		width: 100%;
-		height: var(--space-1);
 	}
 
-	.track {
-		fill: var(--color-surface);
+	.hero {
+		height: var(--tick-height-hero);
 	}
 
-	.fill {
-		fill: var(--color-accent);
+	.food {
+		height: var(--tick-height-food);
 	}
 
-	.over .fill {
-		fill: var(--color-text-muted);
+	.regular {
+		height: var(--tick-height);
+	}
+
+	.small {
+		height: var(--tick-height-small);
+	}
+
+	span span {
+		background: var(--color-empty);
+	}
+
+	span .filled {
+		background: var(--color-accent);
 	}
 </style>

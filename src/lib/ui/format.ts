@@ -3,11 +3,21 @@ import type { LocalDate } from '../shared/local-date.ts';
 import { MassUnit } from '../shared/mass-unit.constants.ts';
 import { Mass } from '../shared/mass.ts';
 import { err, ok, type Result } from '../shared/result.ts';
-import { DATE_FORMAT, INSTANT_DATE_FORMAT, WEIGHT_FORMAT } from './format.constants.ts';
+import {
+	DATE_FORMAT,
+	INSTANT_DATE_FORMAT,
+	MONTH_DAY_FORMAT,
+	MONTH_FORMAT,
+	WEEKDAY_LETTER_FORMAT,
+	WEIGHT_FORMAT
+} from './format.constants.ts';
 
 const weightNumber = new Intl.NumberFormat(undefined, WEIGHT_FORMAT);
 const dateFormat = new Intl.DateTimeFormat(undefined, DATE_FORMAT);
 const instantDateFormat = new Intl.DateTimeFormat(undefined, INSTANT_DATE_FORMAT);
+const weekdayLetterFormat = new Intl.DateTimeFormat(undefined, WEEKDAY_LETTER_FORMAT);
+const monthDayFormat = new Intl.DateTimeFormat(undefined, MONTH_DAY_FORMAT);
+const monthFormat = new Intl.DateTimeFormat(undefined, MONTH_FORMAT);
 const ENTRY_FRACTION_DIGITS = 1;
 const ONE_DAY_BACK = -1;
 
@@ -27,7 +37,17 @@ export function unitLabel(unit: MassUnit): string {
  * @param unit - The unit to show it in.
  */
 export function formatMass(mass: Mass, unit: MassUnit): string {
-	return `${weightNumber.format(mass.toUnit(unit))} ${unitLabel(unit)}`;
+	return `${formatMassNumber(mass, unit)} ${unitLabel(unit)}`;
+}
+
+/**
+ * A weight's number without its unit, for a large number: "80.4".
+ *
+ * @param mass - The weight.
+ * @param unit - The unit to show it in.
+ */
+export function formatMassNumber(mass: Mass, unit: MassUnit): string {
+	return weightNumber.format(mass.toUnit(unit));
 }
 
 /**
@@ -89,7 +109,68 @@ export function parseDecimal(text: string): number | undefined {
 export function formatDate(date: LocalDate, today: LocalDate): string {
 	if (date.equals(today)) return messages.dates.today;
 	if (date.equals(today.addDays(ONE_DAY_BACK))) return messages.dates.yesterday;
-	return dateFormat.format(new Date(Date.UTC(date.year, date.month - 1, date.day)));
+	return formatShortDate(date);
+}
+
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 3600;
+const CLOCK_DIGITS = 2;
+const PAD = '0';
+const CLOCK_SEPARATOR = ':';
+
+/**
+ * A duration as a clock, for example "4:05" or "1:02:09".
+ *
+ * @param totalSeconds - The duration; rounded, and never below zero.
+ */
+export function formatClock(totalSeconds: number): string {
+	const seconds = Math.max(0, Math.round(totalSeconds));
+	const hours = Math.floor(seconds / SECONDS_PER_HOUR);
+	const minutes = Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+	const rest = String(seconds % SECONDS_PER_MINUTE).padStart(CLOCK_DIGITS, PAD);
+	return hours > 0
+		? [String(hours), String(minutes).padStart(CLOCK_DIGITS, PAD), rest].join(CLOCK_SEPARATOR)
+		: [String(minutes), rest].join(CLOCK_SEPARATOR);
+}
+
+/**
+ * A date as a short weekday and day, for example "Thu, Oct 29".
+ *
+ * @param date - The date.
+ */
+export function formatShortDate(date: LocalDate): string {
+	return dateFormat.format(utcDate(date));
+}
+
+/**
+ * A date as month and day, for example "Oct 22".
+ *
+ * @param date - The date.
+ */
+export function formatMonthDay(date: LocalDate): string {
+	return monthDayFormat.format(utcDate(date));
+}
+
+/**
+ * A date's month, short, for example "Oct".
+ *
+ * @param date - Any day of the month.
+ */
+export function formatMonth(date: LocalDate): string {
+	return monthFormat.format(utcDate(date));
+}
+
+/**
+ * The weekday of a date as one letter, for example "W".
+ *
+ * @param date - The date.
+ */
+export function formatWeekdayLetter(date: LocalDate): string {
+	return weekdayLetterFormat.format(utcDate(date));
+}
+
+function utcDate(date: LocalDate): Date {
+	return new Date(Date.UTC(date.year, date.month - 1, date.day));
 }
 
 /**

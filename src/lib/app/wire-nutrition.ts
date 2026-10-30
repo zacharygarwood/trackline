@@ -1,6 +1,7 @@
 import { ChangeLogAmount } from '../nutrition/application/change-log-amount.ts';
 import { CreateFood } from '../nutrition/application/create-food.ts';
 import { DeleteLogEntry } from '../nutrition/application/delete-log-entry.ts';
+import { RestoreLogEntry } from '../nutrition/application/restore-log-entry.ts';
 import { DeleteSavedMeal } from '../nutrition/application/delete-saved-meal.ts';
 import { GetDailyGoals } from '../nutrition/application/get-daily-goals.ts';
 import { GetDayNutrition } from '../nutrition/application/get-day-nutrition.ts';
@@ -38,6 +39,7 @@ export function wireNutrition(infrastructure: Infrastructure) {
 		logFood: new LogFood({ foods, log, clock, ids }),
 		changeLogAmount: new ChangeLogAmount(log),
 		deleteLogEntry: new DeleteLogEntry(log),
+		restoreLogEntry: new RestoreLogEntry(log),
 		getDayNutrition: new GetDayNutrition(log, goals),
 		getLastAmount: new GetLastAmount(log),
 		saveMealFromSlot: new SaveMealFromSlot({ log, meals, ids }),

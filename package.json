@@ -28,7 +28,7 @@
 	"devDependencies": {
 		"@axe-core/playwright": "^4.14.0",
 		"@eslint/js": "^10.0.1",
-		"@fontsource-variable/ibm-plex-sans": "5.3.0",
+		"@fontsource-variable/inter-tight": "^5.3.0",
 		"@playwright/test": "^1.60.0",
 		"@stryker-mutator/core": "^10.1.1",
 		"@stryker-mutator/vitest-runner": "^10.1.1",

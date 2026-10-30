@@ -1,17 +1,8 @@
 import { messages } from '../../i18n/messages.en.ts';
 import type { Macros } from '../domain/macros.ts';
-import { MealSlot } from '../domain/meal-slot.constants.ts';
 
 const whole = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const oneDecimal = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
-
-/** The label of each meal slot. */
-export const SLOT_LABELS: Readonly<Record<MealSlot, string>> = {
-	[MealSlot.breakfast]: messages.nutrition.breakfast,
-	[MealSlot.lunch]: messages.nutrition.lunch,
-	[MealSlot.dinner]: messages.nutrition.dinner,
-	[MealSlot.snacks]: messages.nutrition.snacks
-};
 
 /**
  * Calories as shown in lists, for example "248 kcal".
@@ -29,30 +20,6 @@ export function formatCalories(calories: number): string {
  */
 export function formatGrams(grams: number): string {
 	return messages.nutrition.grams(oneDecimal.format(grams));
-}
-
-/**
- * An amount with its unit, for example "150 g" or "2 slice".
- *
- * @param amount - The amount.
- * @param unit - The food's unit.
- */
-export function formatAmount(amount: number, unit: string): string {
-	return messages.nutrition.amountWithUnit(oneDecimal.format(amount), unit);
-}
-
-/**
- * All four macros on one line, for example "248 kcal · P 46.5 g · C 0 g · F 5.4 g".
- *
- * @param macros - The macros.
- */
-export function formatMacroLine(macros: Macros): string {
-	return messages.nutrition.macroLine({
-		calories: whole.format(macros.calories),
-		protein: oneDecimal.format(macros.protein),
-		carbs: oneDecimal.format(macros.carbs),
-		fat: oneDecimal.format(macros.fat)
-	});
 }
 
 /** The label of each macro. */
@@ -81,6 +48,25 @@ export const MACRO_UNITS: Readonly<Record<keyof Macros, string>> = {
 export function formatMacroProgress(key: keyof Macros, eaten: number, target: number): string {
 	const amount = key === 'calories' ? whole.format(eaten) : oneDecimal.format(eaten);
 	return messages.nutrition.ofTarget(amount, formatMacro(key, target));
+}
+
+/**
+ * A macro amount as a whole number without its unit, for a large number: "1,359" or "84".
+ *
+ * @param amount - Its amount.
+ */
+export function formatMacroNumber(amount: number): string {
+	return whole.format(amount);
+}
+
+/**
+ * The goal after a large number, for example "/ 2,200 kcal" or "/ 150 g".
+ *
+ * @param key - Which macro.
+ * @param target - The goal.
+ */
+export function formatMacroGoal(key: keyof Macros, target: number): string {
+	return messages.nutrition.outOf(formatMacro(key, target));
 }
 
 /**

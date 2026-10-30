@@ -4,31 +4,9 @@ import type { SqlRow } from '../../platform/db/sql.ts';
 import { parseId } from '../../shared/id.ts';
 import { LocalDate } from '../../shared/local-date.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
-import { createExercise, type Exercise } from '../domain/exercise.ts';
 import type { RestDay } from '../domain/rest-day.ts';
 import { TrainingTable } from './training.sql.ts';
-import type { ExerciseRow, RestDayRow } from './training.row.ts';
-
-/** Converts between exercises and `exercise` rows. */
-export const exerciseMapper = {
-	/** @param row - A row with the columns of {@link ExerciseRow}. */
-	toDomain(row: SqlRow): Result<Exercise, CorruptRow> {
-		const { id, name } = row;
-		const exerciseId = typeof id === 'string' ? parseId<'Exercise'>(id) : undefined;
-		const exercise =
-			exerciseId?.ok === true && typeof name === 'string'
-				? createExercise({ id: exerciseId.value, name })
-				: undefined;
-		return exercise?.ok === true
-			? exercise
-			: err(new CorruptRow(TrainingTable.exercise, CorruptReason.invalidValue));
-	},
-
-	/** @param exercise - The exercise to store. */
-	toRow(exercise: Exercise): ExerciseRow {
-		return { id: exercise.id, name: exercise.name };
-	}
-};
+import type { RestDayRow } from './training.row.ts';
 
 /** Converts between rest days and `rest_day` rows. */
 export const restDayMapper = {

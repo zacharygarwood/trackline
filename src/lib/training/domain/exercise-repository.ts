@@ -4,6 +4,11 @@ import type { Exercise } from './exercise.ts';
 export interface ExerciseReader {
 	/** Every exercise, sorted by name. */
 	findAll(): Promise<readonly Exercise[]>;
+	/**
+	 * Every exercise, most recently used in a workout first. Exercises never
+	 * used come first, newest first, so one just created is at the top.
+	 */
+	findAllByRecentUse(): Promise<readonly Exercise[]>;
 	/** The exercise with this name, ignoring case, if any. */
 	findByName(name: string): Promise<Exercise | undefined>;
 }

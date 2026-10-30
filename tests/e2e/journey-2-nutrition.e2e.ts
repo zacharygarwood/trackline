@@ -1,11 +1,8 @@
+import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
-import { typeOnNumberPad } from './helpers.ts';
 
-test('create a food, log a different amount, and see scaled macros and goal progress', async ({
-	page
-}) => {
-	await page.clock.setFixedTime(new Date('2026-10-27T12:30:00'));
+async function startWithGoals(page: Page): Promise<void> {
 	await page.goto('/app/welcome');
 	const goals = { calories: '2000', protein: '150', carbs: '250', fat: '70' };
 	await page.getByRole('textbox', { name: messages.nutrition.calories }).fill(goals.calories);
@@ -13,63 +10,64 @@ test('create a food, log a different amount, and see scaled macros and goal prog
 	await page.getByRole('textbox', { name: messages.nutrition.carbs }).fill(goals.carbs);
 	await page.getByRole('textbox', { name: messages.nutrition.fat }).fill(goals.fat);
 	await page.getByRole('button', { name: messages.welcome.start }).click();
-
 	await page.getByRole('link', { name: messages.navigation.eat }).click();
-	await page.getByRole('button', { name: messages.nutrition.logFood }).click();
-	const sheet = page.getByRole('dialog');
-	await sheet.getByRole('button', { name: messages.nutrition.newFood }).click();
-	await sheet.getByRole('textbox', { name: messages.nutrition.foodName }).fill('Chicken breast');
-	await sheet.getByRole('textbox', { name: messages.nutrition.calories }).fill('165');
-	await sheet.getByRole('textbox', { name: messages.nutrition.protein }).fill('31');
-	await sheet.getByRole('textbox', { name: messages.nutrition.carbs }).fill('0');
-	await sheet.getByRole('textbox', { name: messages.nutrition.fat }).fill('3.6');
-	await sheet.getByRole('button', { name: messages.nutrition.saveFood }).click();
+}
 
-	await expect(sheet.getByRole('status')).toHaveText(/100\s*g/);
-	await typeOnNumberPad(page, '150');
-	await expect(sheet.getByText('248 kcal · P 46.5 g · C 0 g · F 5.4 g')).toBeVisible();
-	await sheet.getByRole('button', { name: messages.nutrition.log }).click();
-	await expect(sheet).toBeHidden();
-
-	const lunch = page.getByRole('region', { name: messages.nutrition.lunch });
+async function createChicken(page: Page): Promise<void> {
+	await page.getByRole('searchbox', { name: messages.food.search }).fill('chicken breast');
+	await page.getByRole('spinbutton', { name: messages.food.amount }).fill('100');
+	await page.getByRole('button', { name: 'g', exact: true }).click();
+	await page.getByRole('spinbutton', { name: messages.food.calories }).fill('165');
+	await page.getByRole('spinbutton', { name: messages.food.proteinGrams }).fill('31');
+	await page.getByRole('button', { name: messages.food.add, exact: true }).click();
 	await expect(
-		lunch.getByRole('button', { name: 'Chicken breast, 150 g, 248 kcal' })
+		page.getByText(messages.food.added('Chicken breast', '100 g')).first()
 	).toBeVisible();
-	await expect(page.getByRole('meter', { name: 'Calories: 248 kcal of 2,000 kcal' })).toBeVisible();
-	await expect(page.getByText('248 / 2,000 kcal')).toBeVisible();
-	await expect(page.getByText('46.5 / 150 g')).toBeVisible();
+}
+
+test('create a food, log a different amount, and see the totals against the goals', async ({
+	page
+}) => {
+	await page.clock.setFixedTime(new Date('2026-10-27T12:30:00'));
+	await startWithGoals(page);
+	await createChicken(page);
+
+	await page.getByRole('button', { name: messages.food.chooseAmount('Chicken breast') }).click();
+	await page.getByRole('button', { name: messages.food.more }).click();
+	await expect(page.getByText('182 kcal, 34 g protein')).toBeVisible();
+	await page.getByRole('button', { name: messages.food.add, exact: true }).click();
+	await expect(
+		page.getByText(messages.food.added('Chicken breast', '110 g')).first()
+	).toBeVisible();
+
+	const eaten = page.getByRole('list', { name: messages.food.eatenToday });
+	await expect(eaten.getByRole('button', { name: 'Chicken breast, 100 g' })).toBeVisible();
+	await expect(eaten.getByRole('button', { name: 'Chicken breast, 110 g' })).toBeVisible();
+	await expect(page.getByText(/^347\s*\/ 2,000 kcal$/)).toBeVisible();
 
 	await page.getByRole('link', { name: messages.navigation.today }).click();
-	await expect(page.getByText('46.5 / 150 g')).toBeVisible();
+	await expect(page.getByText(/^347\s*\/ 2,000$/)).toBeVisible();
+	await expect(page.getByText(/^65\s*\/ 150 g$/)).toBeVisible();
 });
 
-test('a saved food is logged again in three taps with last time’s amount', async ({ page }) => {
+test('add a recent food with one tap, undo it, and remove and restore what was eaten', async ({
+	page
+}) => {
 	await page.clock.setFixedTime(new Date('2026-10-27T08:00:00'));
-	await page.goto('/app/welcome');
-	await page.getByRole('button', { name: messages.welcome.start }).click();
-	await page.getByRole('link', { name: messages.navigation.eat }).click();
-	await page.getByRole('button', { name: messages.nutrition.logFood }).click();
-	const sheet = page.getByRole('dialog');
-	await sheet.getByRole('button', { name: messages.nutrition.newFood }).click();
-	await sheet.getByRole('textbox', { name: messages.nutrition.foodName }).fill('Oats');
-	for (const [field, value] of [
-		[messages.nutrition.calories, '389'],
-		[messages.nutrition.protein, '17'],
-		[messages.nutrition.carbs, '66'],
-		[messages.nutrition.fat, '7']
-	] as const) {
-		await sheet.getByRole('textbox', { name: field }).fill(value);
-	}
-	await sheet.getByRole('button', { name: messages.nutrition.saveFood }).click();
-	await typeOnNumberPad(page, '60');
-	await sheet.getByRole('button', { name: messages.nutrition.log }).click();
-	await expect(sheet).toBeHidden();
+	await startWithGoals(page);
+	await createChicken(page);
+	const eaten = page.getByRole('list', { name: messages.food.eatenToday });
 
-	await page.getByRole('button', { name: messages.nutrition.logFood }).click();
-	await sheet.getByRole('button', { name: 'Oats', exact: true }).click();
-	await expect(sheet.getByRole('status')).toHaveText(/60\s*g/);
-	await sheet.getByRole('button', { name: messages.nutrition.log }).click();
+	await page
+		.getByRole('button', { name: messages.food.addBase('100 g', 'Chicken breast') })
+		.click();
+	await expect(eaten.getByRole('listitem')).toHaveCount(2);
+	await page.getByRole('button', { name: messages.shell.undo }).click();
+	await expect(eaten.getByRole('listitem')).toHaveCount(1);
 
-	const breakfast = page.getByRole('region', { name: messages.nutrition.breakfast });
-	await expect(breakfast.getByRole('button', { name: /^Oats, 60 g/ })).toHaveCount(2);
+	await eaten.getByRole('button', { name: 'Chicken breast, 100 g' }).click();
+	await page.getByRole('button', { name: messages.food.remove }).click();
+	await expect(page.getByText(messages.food.nothingYet)).toBeVisible();
+	await page.getByRole('button', { name: messages.shell.undo }).click();
+	await expect(eaten.getByRole('listitem')).toHaveCount(1);
 });

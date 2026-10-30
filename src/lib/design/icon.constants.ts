@@ -1,23 +1,44 @@
-/** SVG path data for each icon, drawn on a 24 × 24 grid with a 2 px round stroke. */
+/** SVG path data for each icon, drawn on a 24 × 24 grid with a square-capped stroke. */
 export const ICON_PATHS = {
-	today:
-		'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4',
-	train: 'M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12',
-	eat: 'M4 11h16a8 8 0 0 1-16 0zM9 7c0-1.5 1-2 1-3M14 7c0-1.5 1-2 1-3',
-	body: 'M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM8.5 10a4 4 0 0 1 7 0M12 10l1.5-2',
-	stats: 'M5 20v-7M12 20V5M19 20v-11',
-	settings:
-		'M19.21 10.34L21.51 10.66L21.51 13.34L19.21 13.66L18.28 15.92L19.67 17.78L17.78 19.67L15.92 18.28L13.66 19.21L13.34 21.51L10.66 21.51L10.34 19.21L8.08 18.28L6.22 19.67L4.33 17.78L5.72 15.92L4.79 13.66L2.49 13.34L2.49 10.66L4.79 10.34L5.72 8.08L4.33 6.22L6.22 4.33L8.08 5.72L10.34 4.79L10.66 2.49L13.34 2.49L13.66 4.79L15.92 5.72L17.78 4.33L19.67 6.22L18.28 8.08zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
+	today: 'M4 6h16v14H4zM4 10.5h16M9 3v4M15 3v4',
+	train: 'M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11',
+	eat: 'M7 3v18M4.5 3v5.5a2.5 2.5 0 0 0 5 0V3M17 21V3c-2.2 1.2-3.5 3.6-3.5 7 0 2 1.4 3 3.5 3',
+	body: 'M4 4h16v16H4zM8 11.5a4 4 0 0 1 8 0M12 11.5l2-3',
+	stats: 'M5 20v-7M10 20V5M15 20v-10M20 20V8',
+	settings: 'M3 7h10M19 7h2M3 17h4M13 17h8M13 4.5h6v5h-6zM7 14.5h6v5H7z',
 	close: 'M6 6l12 12M18 6L6 18',
 	backspace: 'M9 6h11v12H9l-5-6zM12.5 10l4 4M16.5 10l-4 4',
 	minus: 'M6 12h12',
 	check: 'M5 12.5l4.5 4.5L19 7.5',
 	more: 'M6 12h.01M12 12h.01M18 12h.01',
-	plus: 'M12 6v12M6 12h12',
+	plus: 'M12 4v16M4 12h16',
 	moon: 'M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z',
-	back: 'M15 6l-6 6 6 6',
+	back: 'M15 5l-7 7 7 7',
+	search: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4',
+	chevronDown: 'M6 9l6 6 6-6',
+	trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
+	camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 9.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7z',
 	forward: 'M9 6l6 6-6 6'
 } as const;
 
 /** The name of an available icon. */
 export type IconName = keyof typeof ICON_PATHS;
+
+/** How heavy an icon's stroke is. */
+export const IconWeight = {
+	regular: 'regular',
+	medium: 'medium',
+	bold: 'bold',
+	heavy: 'heavy'
+} as const;
+
+/** One of the {@link IconWeight} values. */
+export type IconWeight = (typeof IconWeight)[keyof typeof IconWeight];
+
+/** The stroke width of each icon weight, in grid units. */
+export const ICON_STROKE: Readonly<Record<IconWeight, number>> = {
+	regular: 1.8,
+	medium: 2,
+	bold: 2.5,
+	heavy: 3
+};

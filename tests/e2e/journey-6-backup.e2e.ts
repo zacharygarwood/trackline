@@ -1,7 +1,7 @@
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
 import path from 'node:path';
-import { addPhoto, finishFirstRun, storedPhotoFiles, weighIn } from './helpers.ts';
+import { checkIn, finishFirstRun, storedPhotoFiles } from './helpers.ts';
 
 const PHOTO = path.join(import.meta.dirname, 'assets', 'photo-with-gps.jpg');
 
@@ -9,8 +9,7 @@ test('export a backup, delete all data, and restore everything, photos included,
 	page
 }, testInfo) => {
 	await finishFirstRun(page);
-	await weighIn(page, '80.4');
-	await addPhoto(page, PHOTO, messages.body.side);
+	await checkIn(page, '80.4', PHOTO);
 
 	await page.getByRole('link', { name: messages.navigation.settings }).click();
 	const download = page.waitForEvent('download');
@@ -33,7 +32,7 @@ test('export a backup, delete all data, and restore everything, photos included,
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.welcome.title);
 	await finishFirstRun(page);
 	await page.goto('/app/body');
-	await expect(page.getByRole('region', { name: messages.body.history })).toHaveCount(0);
+	await expect(page.getByRole('button', { name: messages.checkIn.checkIn })).toBeVisible();
 	expect(await storedPhotoFiles(page)).toEqual([]);
 
 	await page.goto('/app/settings');
@@ -45,10 +44,8 @@ test('export a backup, delete all data, and restore everything, photos included,
 	await reloaded;
 
 	await page.goto('/app/body');
-	await expect(page.getByRole('button', { name: /^Today, 80\.4 kg/ })).toBeVisible();
-	await expect(
-		page.getByRole('button', { name: messages.body.photoOf(messages.body.side, 'Today') })
-	).toBeVisible();
+	await expect(page.getByRole('button', { name: messages.checkIn.update })).toBeVisible();
+	await expect(page.getByRole('img', { name: /^Photo from .*, 80\.4 kg$/ })).toBeVisible();
 	expect(await storedPhotoFiles(page)).toHaveLength(2);
 });
 

@@ -16,9 +16,11 @@ import type {
 	WorkoutTemplateWriter
 } from '../../src/lib/training/domain/workout-template-repository.ts';
 import type { WorkoutTemplate } from '../../src/lib/training/domain/workout-template.ts';
+import { Distance } from '../../src/lib/shared/distance.ts';
 import { LocalDate } from '../../src/lib/shared/local-date.ts';
 import { anId, aSet, aTemplateId, aWorkout } from '../builders/training.builder.ts';
 import { expectOk } from '../support/result.ts';
+import { exerciseContract, withExercises } from './exercise-repository.contract.ts';
 
 /** Repositories that store training data, sharing one database where it matters. */
 export interface TrainingRepositories {
@@ -29,36 +31,6 @@ export interface TrainingRepositories {
 }
 
 const date = (text: string) => expectOk(LocalDate.parse(text));
-
-async function withExercises(repositories: TrainingRepositories, ...names: string[]) {
-	const exercises = names.map((name) => ({ id: anId<'Exercise'>(), name }));
-	for (const exercise of exercises) await repositories.exercises.save(exercise);
-	return exercises.map((exercise) => exercise.id);
-}
-
-function exerciseContract(create: () => Promise<TrainingRepositories>) {
-	describe('exercise repository contract', () => {
-		it('lists exercises by name and finds them ignoring case', async () => {
-			const repositories = await create();
-			await withExercises(repositories, 'Squat', 'Bench press');
-
-			expect((await repositories.exercises.findAll()).map((exercise) => exercise.name)).toEqual([
-				'Bench press',
-				'Squat'
-			]);
-			expect((await repositories.exercises.findByName('bench PRESS'))?.name).toBe('Bench press');
-		});
-
-		it('refuses a second exercise with the same name in different case', async () => {
-			const repositories = await create();
-			await withExercises(repositories, 'Squat');
-
-			await expect(
-				repositories.exercises.save({ id: anId<'Exercise'>(), name: 'SQUAT' })
-			).rejects.toThrow();
-		});
-	});
-}
 
 function workoutContract(create: () => Promise<TrainingRepositories>) {
 	describe('workout repository contract', () => {
@@ -77,6 +49,31 @@ function workoutContract(create: () => Promise<TrainingRepositories>) {
 				...workout,
 				note: 'Felt good'
 			});
+		});
+
+		it('round-trips sets with a time, distance, grade, or count', async () => {
+			const repositories = await create();
+			const [run] = await withExercises(repositories, 'Run');
+			const fiveK = expectOk(Distance.fromMeters(5000));
+			const workout = aWorkout()
+				.with(
+					run ?? anId(),
+					{ seconds: 1500, distance: fiveK, completed: true },
+					{ grade: 4, completed: true },
+					{ count: 12, reps: 3, completed: true }
+				)
+				.active();
+
+			await repositories.workouts.save(workout);
+
+			const sets = (await repositories.workouts.findActive())?.exercises.at(0)?.sets;
+			expect(
+				sets?.map((set) => [set.seconds, set.distance?.meters, set.grade, set.count, set.reps])
+			).toEqual([
+				[1500, 5000, undefined, undefined, undefined],
+				[undefined, undefined, 4, undefined, undefined],
+				[undefined, undefined, undefined, 12, 3]
+			]);
 		});
 
 		it('keeps only one workout in progress', async () => {

@@ -3,8 +3,13 @@ import type { SqlDriver } from '../../platform/db/sql-driver.ts';
 import { first } from '../../shared/collections.ts';
 import type { ExerciseReader, ExerciseWriter } from '../domain/exercise-repository.ts';
 import type { Exercise } from '../domain/exercise.ts';
-import { exerciseMapper } from './simple.mapper.ts';
-import { FIND_ALL_EXERCISES, findExerciseByName, saveExercise } from './training.sql.ts';
+import { exerciseMapper } from './exercise.mapper.ts';
+import {
+	FIND_ALL_EXERCISES,
+	FIND_EXERCISES_BY_RECENT_USE,
+	findExerciseByName,
+	saveExercise
+} from './training.sql.ts';
 
 /** The exercise library in the `exercise` table. */
 export class SqliteExerciseRepository implements ExerciseReader, ExerciseWriter {
@@ -13,6 +18,12 @@ export class SqliteExerciseRepository implements ExerciseReader, ExerciseWriter 
 	/** {@inheritDoc ExerciseReader.findAll} */
 	async findAll(): Promise<readonly Exercise[]> {
 		const rows = await this.database.query(FIND_ALL_EXERCISES);
+		return rows.map((row) => requireValidRow(exerciseMapper.toDomain(row)));
+	}
+
+	/** {@inheritDoc ExerciseReader.findAllByRecentUse} */
+	async findAllByRecentUse(): Promise<readonly Exercise[]> {
+		const rows = await this.database.query(FIND_EXERCISES_BY_RECENT_USE);
 		return rows.map((row) => requireValidRow(exerciseMapper.toDomain(row)));
 	}
 

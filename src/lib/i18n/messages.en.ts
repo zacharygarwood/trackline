@@ -24,8 +24,10 @@ export const messages = {
 	},
 	landing: {
 		openApp: 'Open the app',
-		todayScreenshot: 'The Today screen: food goals, today’s weigh-in, and the training streak.',
-		statsScreenshot: 'The Stats screen: streaks and heatmaps of the last 52 weeks.',
+		todayScreenshot:
+			'The Today screen: calories and protein against the goals, this week’s workouts, and weight.',
+		statsScreenshot:
+			'The Stats screen: workout days, weight, calories, and progress for each exercise.',
 		promise: 'Everything you log stays on your device. No account, no tracking, no cloud.',
 		installTitle: 'Install it like an app',
 		installIphone: 'iPhone: open it in Safari, tap Share, then Add to Home Screen.',
@@ -100,10 +102,11 @@ export const messages = {
 		tabs: 'Sections',
 		today: 'Today',
 		train: 'Train',
-		eat: 'Eat',
+		eat: 'Food',
 		body: 'Body',
 		stats: 'Stats',
 		settings: 'Settings',
+		workout: 'Workout',
 		welcome: 'Welcome'
 	},
 	placeholder: {
@@ -291,6 +294,7 @@ export const messages = {
 		amountWithUnit: (amount: string, unit: string) => `${amount} ${unit}`,
 		kcal: (calories: string) => `${calories} kcal`,
 		ofTarget: (eaten: string, target: string) => `${eaten} / ${target}`,
+		outOf: (target: string) => `/ ${target}`,
 		grams: (grams: string) => `${grams} g`,
 		macroLine: (amounts: {
 			readonly calories: string;
@@ -358,22 +362,300 @@ export const messages = {
 			`${summary.name}: ${countOf(summary.sessions, 'session', 'sessions')}. Heaviest set ${summary.heaviest}, best estimated one-rep max ${summary.best}.`
 	},
 	today: {
-		lastWorkout: 'Last workout',
-		workoutsLastSevenDays: 'Workouts, last 7 days',
-		latest: 'Latest',
+		thisWeek: 'This week',
 		none: '—',
 		weighedIn: (weight: string) => `Weighed in: ${weight}`,
 		workoutDone: 'Workout done.',
 		restDayMarked: 'Rest day.',
 		noTraining: 'No workout yet today.',
-		food: 'Food',
-		weight: 'Weight',
-		training: 'Training'
+		weight: 'Weight'
 	},
 	welcome: {
 		title: 'Welcome',
 		optional: (label: string) => `${label} (optional)`,
 		start: 'Get started'
+	},
+	shell: {
+		resume: (name: string, time: string) => `Resume ${name}, ${time}`,
+		resumeTime: (time: string) => `${time} →`,
+		back: (section: string) => `← ${section}`,
+		undo: 'Undo',
+		undone: 'Undone'
+	},
+	food: {
+		totals: 'Totals',
+		search: 'Search or add food',
+		recent: 'Recent foods',
+		results: 'Results',
+		chooseAmount: (name: string) => `${name}. Choose amount`,
+		addBase: (amount: string, name: string) => `Add ${amount} of ${name}`,
+		less: 'Less',
+		more: 'More',
+		amountOf: (name: string, unit: string) => `Amount of ${name} in ${unit}`,
+		add: 'Add',
+		remove: 'Remove',
+		preview: (calories: string, protein: string) => `${calories} kcal, ${protein} g protein`,
+		createTitle: (name: string) => `Add “${name}”`,
+		per: 'Per',
+		amount: 'Amount',
+		calories: 'Calories',
+		proteinGrams: 'Protein, g',
+		carbsGrams: 'Carbs, g',
+		fatGrams: 'Fat, g',
+		computedCalories: 'kcal',
+		eatenToday: 'Eaten today',
+		nothingYet: 'Nothing yet',
+		entryLabel: (name: string, amount: string, unit: string) => `${name}, ${amount} ${unit}`,
+		added: (name: string, amount: string) =>
+			amount === '' ? `${name} added` : `${name} ${amount} added`,
+		removed: (name: string) => `${name} removed`,
+		times: (amount: string) => `×${amount}`,
+		over: (amount: string) => `+${amount} over`,
+		goal: (amount: string) => `/ ${amount}`,
+		unitNames: {
+			serving: { one: 'serving', many: 'servings' },
+			piece: { one: 'piece', many: 'pieces' },
+			cup: { one: 'cup', many: 'cups' }
+		}
+	},
+	train: {
+		search: 'Search or add exercise',
+		workouts: 'Workouts',
+		newWorkout: 'New workout',
+		start: 'Start',
+		add: 'Add',
+		addTo: (workout: string) => `Add to ${workout}`,
+		exercises: 'Exercises',
+		startExercise: (name: string) => `Start ${name}`,
+		addExercise: (name: string) => `Add ${name}`,
+		addExerciseTo: (name: string, workout: string) => `Add ${name} to ${workout}`,
+		saved: (name: string) => `${name} saved`,
+		builderBack: '← Train',
+		save: 'Save',
+		name: 'Name',
+		namePlaceholder: 'Push day',
+		inThisWorkout: 'Exercises in this workout',
+		toAdd: 'Exercises to add',
+		addToThisWorkout: (name: string) => `Add ${name} to this workout`,
+		remove: (name: string) => `Remove ${name}`
+	},
+	exercise: {
+		createTitle: (name: string) => `Add “${name}”`,
+		track: 'Track',
+		fields: {
+			weight: 'Weight',
+			reps: 'Reps',
+			time: 'Time',
+			distance: 'Distance',
+			grade: 'Grade',
+			count: 'Number'
+		},
+		grades: 'Grades',
+		scales: {
+			v: 'V scale',
+			yds: 'YDS',
+			font: 'Font',
+			one_to_ten: '1 to 10',
+			custom: 'Custom'
+		},
+		scalePreview: (easiest: string, hardest: string) => `${easiest} to ${hardest}`,
+		customGrades: 'Your grades, easiest first',
+		customPlaceholder: 'White, Yellow, Orange, Green',
+		countLabel: 'What you’re counting',
+		countPlaceholder: 'Laps, rounds, floors',
+		defaultCountLabel: 'Count',
+		gradeSeparator: ',',
+		saveToWorkout: 'Add to workout',
+		saveToBuilder: 'Add to this workout',
+		saveToLibrary: 'Save exercise'
+	},
+	workout: {
+		backToTrain: 'Back to Train',
+		time: 'Workout time',
+		finish: 'Finish',
+		chipDone: (name: string) => `${name}, done`,
+		addExercise: 'Add exercise',
+		grade: 'Grade',
+		clockOf: (name: string) => `${name} time`,
+		startClock: 'Start',
+		pause: 'Pause',
+		resume: 'Resume',
+		pace: (time: string, unit: string) => `${time} per ${unit}`,
+		reps: 'reps',
+		less: (step: string, unit: string) => `${step} ${unit} less`,
+		more: (step: string, unit: string) => `${step} ${unit} more`,
+		oneRepLess: '1 rep less',
+		oneRepMore: '1 rep more',
+		oneLess: '1 less',
+		oneMore: '1 more',
+		sets: 'Sets',
+		setLogged: (number: number, text: string) => `Set ${String(number)}, ${text}. Remove`,
+		setOpen: (number: number) => `Set ${String(number)} not logged`,
+		logged: 'Logged',
+		removeEntry: (text: string) => `Remove ${text}`,
+		logSet: 'Log set',
+		done: 'Done',
+		log: 'Log',
+		rest: (time: string) => `Rest ${time}`,
+		skip: 'Skip',
+		doneWith: (name: string) => `Done with ${name}`,
+		allDone: 'All done',
+		finishWorkout: 'Finish workout',
+		discard: 'Discard workout',
+		saved: 'Workout saved',
+		nothingLogged: 'Nothing logged',
+		discarded: 'Workout discarded',
+		loggedAnnouncement: (text: string) => `${text} logged`,
+		restOver: 'Rest over',
+		exerciseDone: (name: string) => `${name} done`,
+		repsText: (reps: number) => `${String(reps)} reps`,
+		weightTimesReps: (weight: string, reps: number) => `${weight} × ${String(reps)}`,
+		compactWeightTimesReps: (weight: string, reps: number) => `${weight}×${String(reps)}`,
+		withUnit: (amount: string, unit: string) => `${amount} ${unit}`,
+		setsAt: ({
+			sets,
+			reps,
+			weight,
+			unit
+		}: {
+			sets: number;
+			reps: number;
+			weight: string;
+			unit: string;
+		}) => `${String(sets)} × ${String(reps)} at ${weight} ${unit}`,
+		setsTop: (sets: number, weight: string, unit: string) =>
+			`${String(sets)} sets, top ${weight} ${unit}`,
+		topGrade: (grade: string, logged: number) => `Top ${grade}, ${String(logged)} logged`,
+		partsSeparator: ', ',
+		durationLabel: 'Time'
+	},
+	checkIn: {
+		weightIn: (unit: string) => `Weight, ${unit}`,
+		tenthMore: '0.1 more',
+		tenthLess: '0.1 less',
+		checkNumber: 'Check the number',
+		takePhoto: 'Take photo',
+		changePhoto: 'Change photo',
+		checkIn: 'Check in',
+		update: 'Update',
+		checkedIn: 'Checked in',
+		updated: 'Updated',
+		lastNinetyDays: 'Last 90 days',
+		chart: ({
+			direction,
+			change,
+			unit,
+			latest
+		}: {
+			direction: 'down' | 'up';
+			change: string;
+			unit: string;
+			latest: string;
+		}) => `Weight over 90 days, ${direction} ${change} ${unit} to ${latest}`,
+		photos: 'Photos',
+		compare: 'Compare →',
+		photoAlt: (date: string, weight: string) => `Photo from ${date}, ${weight}`,
+		comparePhotoAlt: (date: string) => `Photo from ${date}`,
+		backToBody: '← Body'
+	},
+	trends: {
+		timeRange: 'Time range',
+		ranges: {
+			'one-month': '1M',
+			'three-months': '3M',
+			'six-months': '6M',
+			'one-year': '1Y',
+			all: 'All'
+		},
+		rangeWords: {
+			'one-month': 'the past month',
+			'three-months': 'the past 3 months',
+			'six-months': 'the past 6 months',
+			'one-year': 'the past year',
+			all: 'all time'
+		},
+		workoutDays: 'Workout days',
+		heatmap: (days: number, range: string) =>
+			`${String(days)} workout days in ${range}. Brighter squares mean longer workouts`,
+		weekdayLetters: ['', 'M', '', 'W', '', 'F', ''],
+		weight: 'Weight',
+		weightChart: ({
+			range,
+			direction,
+			change,
+			unit
+		}: {
+			range: string;
+			direction: 'down' | 'up';
+			change: string;
+			unit: string;
+		}) => `Weight over ${range}, ${direction} ${change} ${unit}`,
+		dailyCalories: 'Daily calories',
+		goal: (calories: string) => `goal ${calories}`,
+		average: 'avg',
+		caloriesChart: (range: string, goal: string, weeks: string) =>
+			`Average daily calories over ${range}, goal ${goal}: ${weeks}`,
+		bestOver: ({
+			name,
+			range,
+			from,
+			to
+		}: {
+			name: string;
+			range: string;
+			from: string;
+			to: string;
+		}) => `${name} best over ${range}, from ${from} to ${to}`,
+		bestGradeOver: ({
+			name,
+			range,
+			from,
+			to
+		}: {
+			name: string;
+			range: string;
+			from: string;
+			to: string;
+		}) => `${name} best grade over ${range}, from ${from} to ${to}`,
+		totalOver: ({
+			name,
+			total,
+			unit,
+			range
+		}: {
+			name: string;
+			total: string;
+			unit: string;
+			range: string;
+		}) => `${name}, ${total} ${unit} over ${range}`,
+		grades: (change: string, count: number) => `${change} ${count === 1 ? 'grade' : 'grades'}`,
+		hours: 'h',
+		minutes: 'min',
+		reps: 'reps',
+		recentWorkouts: 'Recent workouts',
+		saveToWorkouts: 'Save to Workouts',
+		savedToWorkouts: 'Saved to Workouts'
+	},
+	preferences: {
+		appearance: 'Appearance',
+		mode: 'Mode',
+		themes: { dark: 'Dark', light: 'Light' },
+		color: 'Color',
+		accents: { sky: 'Blue', jade: 'Green', clay: 'Orange', violet: 'Violet', rose: 'Pink' },
+		dailyGoals: 'Daily goals',
+		workoutsPerWeek: 'Workouts per week',
+		tracking: 'Tracking',
+		carbsAndFat: 'Carbs and fat',
+		units: 'Units',
+		weight: 'Weight',
+		distance: 'Distance',
+		newFoods: 'New foods',
+		workouts: 'Workouts',
+		restTimer: 'Rest timer',
+		weekStarts: 'Week starts',
+		monday: 'Mon',
+		sunday: 'Sun',
+		unitNames: { kcal: 'kcal', grams: 'g' }
 	},
 	design: {
 		close: 'Close',

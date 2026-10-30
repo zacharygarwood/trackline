@@ -59,6 +59,7 @@
 	}
 </script>
 
+<h1>{messages.welcome.title}</h1>
 {#if ready !== undefined}
 	{@const screen = ready}
 	<div class="welcome">
@@ -100,6 +101,13 @@
 {/if}
 
 <style>
+	h1 {
+		margin: var(--space-2) 0 var(--space-4);
+		font-size: var(--font-size-34);
+		font-weight: var(--font-weight-bold);
+		letter-spacing: var(--letter-spacing-title);
+	}
+
 	.welcome {
 		display: flex;
 		flex-direction: column;

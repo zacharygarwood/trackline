@@ -1,99 +1,89 @@
 import { describe, expect, it } from 'vitest';
-import { macros } from '../../../../tests/builders/nutrition.builder.ts';
 import { nutritionApp } from '../../../../tests/support/nutrition-app.ts';
-import { first } from '../../shared/collections.ts';
-import { MealSlot } from '../domain/meal-slot.constants.ts';
-
+import { FoodUnit } from '../../shared/food-unit.constants.ts';
+import { hourOf } from '../../ui/format.ts';
+import { mealSlotAt } from '../domain/meal-slot.ts';
 import { DailyGoalsEditor } from './daily-goals-editor.svelte.ts';
-import { NutritionDay } from './nutrition-day.svelte.ts';
-import { formatMacroLine } from './nutrition-format.ts';
-
-const chickenForm = {
-	name: 'Chicken breast',
-	amount: '100',
-	unit: 'g',
-	calories: '165',
-	protein: '31',
-	carbs: '0',
-	fat: '3,6'
-};
+import { FoodScreen } from './food-screen.svelte.ts';
+import { caloriesFrom } from './new-food-form.svelte.ts';
 
 async function setUp() {
 	const app = nutritionApp();
-	const day = new NutritionDay(app, app.clock);
-	await day.load();
-	const chicken = await day.createFood(chickenForm);
-	if (typeof chicken === 'string') throw new Error(chicken);
-	return { app, day, chicken };
+	const screen = new FoodScreen(app, app.clock);
+	await screen.load();
+	screen.search('chicken breast');
+	screen.form.base = '100';
+	screen.form.unit = FoodUnit.g;
+	screen.form.calories = '165';
+	screen.form.protein = '31';
+	const entry = await screen.create(false, FoodUnit.serving);
+	if (entry === undefined) throw new Error('expected an entry');
+	return { app, screen, entry };
 }
 
-describe('NutritionDay', () => {
-	it('creates a food from typed text and previews scaled macros live', async () => {
-		const { day, chicken } = await setUp();
+describe('FoodScreen', () => {
+	it('creates a typed food and logs one portion of it in the slot of the hour', async () => {
+		const { app, screen, entry } = await setUp();
 
-		expect(chicken.macrosPerReference).toEqual(macros(165, 31, 0, 3.6));
-		expect(day.preview(chicken, '150')).toEqual(macros(247.5, 46.5, 0, 5.4));
-		expect(day.preview(chicken, '')).toBeUndefined();
+		expect(entry).toMatchObject({
+			foodNameSnapshot: 'Chicken breast',
+			amount: 100,
+			slot: mealSlotAt(hourOf(app.clock.now()))
+		});
+		expect(entry.macrosSnapshot).toEqual({ calories: 165, protein: 31, carbs: 0, fat: 0 });
+		expect(screen.query).toBe('');
+		expect(screen.day.summary.eaten.calories).toBe(165);
 	});
 
-	it('logs a food and shows it under its slot with the day totals', async () => {
-		const { day, chicken } = await setUp();
+	it('offers recent foods and matches, and only creates new names', async () => {
+		const { screen } = await setUp();
 
-		expect(await day.log(chicken, '150', MealSlot.dinner)).toBeUndefined();
-
-		expect(day.entriesIn(MealSlot.dinner).map((entry) => entry.amount)).toEqual([150]);
-		expect(formatMacroLine(day.day.summary.eaten)).toBe('248 kcal · P 46.5 g · C 0 g · F 5.4 g');
+		expect(screen.visibleFoods.map((food) => food.name)).toEqual(['Chicken breast']);
+		screen.search('CHICKEN BREAST');
+		expect(screen.canCreate).toBe(false);
+		screen.search('rice');
+		expect([screen.visibleFoods.length, screen.canCreate]).toEqual([0, true]);
 	});
 
-	it('pre-fills last time’s amount, or the reference amount for a new food', async () => {
-		const { day, chicken } = await setUp();
-		expect(await day.suggestedAmount(chicken)).toBe('100');
+	it('steps and logs a typed amount', async () => {
+		const { screen } = await setUp();
+		const [chicken] = screen.foods;
+		if (chicken === undefined) throw new Error('expected chicken');
 
-		await day.log(chicken, '180', MealSlot.lunch);
+		screen.toggleFood(chicken);
+		screen.stepFoodAmount(chicken, 1);
+		expect(screen.amount).toBe('110');
+		const entry = await screen.addTyped(chicken);
 
-		expect(await day.suggestedAmount(chicken)).toBe('180');
+		expect(entry?.amount).toBe(110);
+		expect(screen.openFood).toBeUndefined();
 	});
 
-	it('explains rejected input', async () => {
-		const { day, chicken } = await setUp();
+	it('changes, removes, and restores what was eaten', async () => {
+		const { screen, entry } = await setUp();
 
-		expect(await day.log(chicken, '0', MealSlot.lunch)).toBe('Enter an amount greater than zero.');
-		expect(await day.createFood({ ...chickenForm, calories: 'lots' })).toBe(
-			'Check the food: it needs a name, a positive amount, a unit, and macros of zero or more.'
-		);
+		await screen.stepEntry(entry, -1);
+		expect(screen.day.entries.at(0)?.amount).toBe(90);
+		const changed = screen.day.entries.at(0);
+		if (changed === undefined) throw new Error('expected the entry');
+		await screen.remove(changed);
+		expect(screen.day.entries).toEqual([]);
+		await screen.restore(changed);
+		expect(screen.day.entries).toEqual([changed]);
 	});
 
-	it('adjusts and removes entries', async () => {
-		const { day, chicken } = await setUp();
-		await day.log(chicken, '100', MealSlot.lunch);
-		const entry = first(day.day.entries);
-		if (entry === undefined) throw new Error('expected an entry');
+	it('works out calories from protein, carbs, and fat when those are tracked', async () => {
+		expect(caloriesFrom({ protein: '30', carbs: '10', fat: '5' })).toBe(205);
+		const { screen } = await setUp();
+		screen.search('shake');
+		screen.form.protein = '30';
+		screen.form.carbs = '6';
+		screen.form.fat = '3';
 
-		await day.changeAmount(entry.id, '200');
-		expect(day.day.summary.eaten.calories).toBe(330);
+		const shake = await screen.create(true, FoodUnit.serving);
 
-		await day.remove(entry.id);
-		expect(day.day.entries).toEqual([]);
-	});
-
-	it('saves a slot as a meal and logs it on another day', async () => {
-		const { day, chicken } = await setUp();
-		await day.log(chicken, '100', MealSlot.lunch);
-		expect(await day.saveSlotAsMeal(MealSlot.lunch, 'Lunch box')).toBeUndefined();
-		const meal = first(day.meals);
-		if (meal === undefined) throw new Error('expected a meal');
-
-		await day.moveBy(1);
-		await day.logMeal(meal.id, MealSlot.lunch);
-
-		expect(day.date.toString()).toBe('2026-10-28');
-		expect(day.entriesIn(MealSlot.lunch)).toHaveLength(1);
-	});
-
-	it('suggests the meal slot for the time of day', async () => {
-		const { day } = await setUp();
-
-		expect(Object.values(MealSlot)).toContain(day.suggestedSlot);
+		expect(shake?.macrosSnapshot).toEqual({ calories: 171, protein: 30, carbs: 6, fat: 3 });
+		expect(shake?.unitSnapshot).toBe('serving');
 	});
 });
 

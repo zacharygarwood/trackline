@@ -24,7 +24,11 @@ CREATE TABLE daily_goals (
 CREATE TABLE exercise (
 	id TEXT PRIMARY KEY NOT NULL,
 	name TEXT NOT NULL COLLATE NOCASE UNIQUE CHECK (length(name) BETWEEN 1 AND 60)
-) STRICT;
+, tracked_fields TEXT NOT NULL DEFAULT 'weight,reps'
+	CHECK (length(tracked_fields) BETWEEN 1 AND 60), grade_scale TEXT
+	CHECK (grade_scale IN ('v', 'yds', 'font', 'one_to_ten', 'custom')), custom_grades TEXT
+	CHECK ((grade_scale = 'custom') = (custom_grades IS NOT NULL)), count_label TEXT
+	CHECK (count_label IS NULL OR length(count_label) BETWEEN 1 AND 30)) STRICT;
 
 CREATE TABLE food (
 	id TEXT PRIMARY KEY NOT NULL,
@@ -114,13 +118,18 @@ CREATE TABLE workout_exercise (
 	PRIMARY KEY (workout_id, position)
 ) STRICT;
 
-CREATE TABLE workout_set (
+CREATE TABLE "workout_set" (
 	workout_id TEXT NOT NULL,
 	exercise_position INTEGER NOT NULL,
 	position INTEGER NOT NULL CHECK (position >= 0),
-	reps INTEGER NOT NULL CHECK (reps BETWEEN 1 AND 999),
-	weight_kg REAL NOT NULL CHECK (weight_kg >= 0),
+	reps INTEGER CHECK (reps IS NULL OR reps BETWEEN 1 AND 999),
+	weight_kg REAL CHECK (weight_kg IS NULL OR weight_kg >= 0),
+	seconds REAL CHECK (seconds IS NULL OR seconds >= 0),
+	distance_m REAL CHECK (distance_m IS NULL OR distance_m >= 0),
+	grade INTEGER CHECK (grade IS NULL OR grade >= 0),
+	count REAL CHECK (count IS NULL OR count >= 0),
 	completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
+	CHECK (coalesce(reps, weight_kg, seconds, distance_m, grade, count) IS NOT NULL),
 	PRIMARY KEY (workout_id, exercise_position, position),
 	FOREIGN KEY (workout_id, exercise_position)
 		REFERENCES workout_exercise (workout_id, position) ON DELETE CASCADE

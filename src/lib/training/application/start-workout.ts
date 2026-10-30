@@ -1,10 +1,7 @@
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { WorkoutTemplateId } from '../domain/ids.ts';
-import { prefillSets } from '../domain/set-suggestion.ts';
 import type { WorkoutTemplateReader } from '../domain/workout-template-repository.ts';
-import type { TemplateExercise } from '../domain/workout-template.ts';
-import { startWorkout, type ActiveWorkout, type WorkoutExercise } from '../domain/workout.ts';
-import { lastSessionOf } from './last-session.ts';
+import { startWorkout, type ActiveWorkout } from '../domain/workout.ts';
 import type { Creation, Workouts } from './training-ports.ts';
 
 /** Which template to start from, if any. */
@@ -25,8 +22,7 @@ export interface StartWorkoutPorts extends Creation {
 }
 
 /**
- * Starts a workout, empty or from a template. From a template, every set is
- * pre-filled with the weights and reps of the exercise's most recent session.
+ * Starts a workout, empty or with a template's exercises and no sets yet.
  * If a workout is already in progress, that one is returned instead.
  */
 export class StartWorkout {
@@ -47,16 +43,12 @@ export class StartWorkout {
 			date: clock.today(),
 			startedAt: clock.now(),
 			sourceTemplateId: template?.id,
-			exercises: await Promise.all(
-				(template?.exercises ?? []).map((planned) => this.prefill(planned))
-			)
+			exercises: (template?.exercises ?? []).map((planned) => ({
+				exerciseId: planned.exerciseId,
+				sets: []
+			}))
 		});
 		await workouts.save(workout);
 		return ok(workout);
-	}
-
-	private async prefill(planned: TemplateExercise): Promise<WorkoutExercise> {
-		const lastSession = await lastSessionOf(this.ports.workouts, planned.exerciseId);
-		return { exerciseId: planned.exerciseId, sets: prefillSets(lastSession, planned.targetSets) };
 	}
 }

@@ -2,8 +2,36 @@ import type { SqlDriver } from '../../src/lib/platform/db/sql-driver.ts';
 import type { ExerciseId } from '../../src/lib/training/domain/ids.ts';
 import { anId } from '../builders/training.builder.ts';
 
-/** A set to seed: reps, kilograms, and whether it was completed (default yes). */
-type SeedSet = readonly [reps: number, kilograms: number, completed?: boolean];
+/** A set to seed: reps, kilograms, and whether it was completed (default yes), or other measures. */
+type SeedSet =
+	| readonly [reps: number, kilograms: number, completed?: boolean]
+	| {
+			readonly seconds?: number;
+			readonly meters?: number;
+			readonly grade?: number;
+			readonly count?: number;
+	  };
+
+/** How a seeded workout went. */
+interface SeedWorkout {
+	readonly minutes?: number;
+	readonly finished?: boolean;
+}
+
+const MS_PER_MINUTE = 60_000;
+
+type WeightedSet = readonly [reps: number, kilograms: number, completed?: boolean];
+
+const isWeighted = (set: SeedSet): set is WeightedSet => Array.isArray(set);
+
+function setColumns(set: SeedSet): (number | null)[] {
+	if (isWeighted(set)) {
+		const [reps, kilograms, completed = true] = set;
+		return [reps, kilograms, null, null, null, null, completed ? 1 : 0];
+	}
+	const { seconds, meters, grade, count } = set;
+	return [null, null, seconds ?? null, meters ?? null, grade ?? null, count ?? null, 1];
+}
 
 /**
  * Writes rows straight into a migrated database, the way the other contexts
@@ -32,22 +60,23 @@ export class StatsSeed {
 	async workout(
 		date: string,
 		exercises: readonly (readonly [ExerciseId, readonly SeedSet[]])[],
-		finished = true
+		{ minutes = 60, finished = true }: SeedWorkout = {}
 	): Promise<void> {
 		const id = anId();
 		await this.run(
 			'INSERT INTO workout (id, date, started_at, finished_at, note, source_template_id) VALUES (?, ?, 0, ?, ?, NULL)',
-			[id, date, finished ? 1 : null, '']
+			[id, date, finished ? minutes * MS_PER_MINUTE : null, '']
 		);
 		for (const [position, [exerciseId, sets]] of exercises.entries()) {
 			await this.run(
 				'INSERT INTO workout_exercise (workout_id, position, exercise_id) VALUES (?, ?, ?)',
 				[id, position, exerciseId]
 			);
-			for (const [setPosition, [reps, kilograms, completed = true]] of sets.entries()) {
+			for (const [setPosition, set] of sets.entries()) {
 				await this.run(
-					'INSERT INTO workout_set (workout_id, exercise_position, position, reps, weight_kg, completed) VALUES (?, ?, ?, ?, ?, ?)',
-					[id, position, setPosition, reps, kilograms, completed ? 1 : 0]
+					`INSERT INTO workout_set (workout_id, exercise_position, position, reps, weight_kg, seconds,
+						distance_m, grade, count, completed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					[id, position, setPosition, ...setColumns(set)]
 				);
 			}
 		}

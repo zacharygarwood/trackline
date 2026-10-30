@@ -1,9 +1,15 @@
-/** How strongly a heatmap day is filled: nothing, a muted shade, or the accent. */
-export const HeatmapShade = {
-	empty: 'empty',
-	muted: 'muted',
-	full: 'full'
-} as const;
+/** Opacity of each workout heatmap shade inside the chosen range, from no workout to the longest. */
+export const IN_RANGE_OPACITY: readonly number[] = Object.values({
+	none: 1,
+	short: 0.3,
+	medium: 0.55,
+	long: 0.8,
+	longest: 1
+});
 
-/** One of the heatmap fills. */
-export type HeatmapShade = (typeof HeatmapShade)[keyof typeof HeatmapShade];
+/** The weekdays the heatmap labels with a letter, as days after Monday: Monday, Wednesday, and Friday. */
+export const LETTERED_WEEKDAYS: readonly number[] = Object.values({
+	monday: 0,
+	wednesday: 2,
+	friday: 4
+});

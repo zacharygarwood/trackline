@@ -1,7 +1,6 @@
-import { GetActivity } from '../insights/application/get-activity.ts';
-import { GetExerciseProgress } from '../insights/application/get-exercise-progress.ts';
+import { GetExerciseHistory } from '../insights/application/get-exercise-history.ts';
 import { GetTrends } from '../insights/application/get-trends.ts';
-import { ListTrackedExercises } from '../insights/application/list-tracked-exercises.ts';
+import { GetWorkoutDays } from '../insights/application/get-workout-days.ts';
 import { SqliteInsightsQueries } from '../insights/infrastructure/sqlite-insights-queries.ts';
 import type { Infrastructure } from './infrastructure.ts';
 
@@ -14,9 +13,8 @@ export function wireInsights(infrastructure: Infrastructure) {
 	const { database, clock } = infrastructure;
 	const queries = new SqliteInsightsQueries(database);
 	return {
-		getActivity: new GetActivity(queries, clock),
 		getTrends: new GetTrends({ weight: queries, nutrition: queries, clock }),
-		listTrackedExercises: new ListTrackedExercises(queries),
-		getExerciseProgress: new GetExerciseProgress(queries, clock)
+		getWorkoutDays: new GetWorkoutDays(queries, clock),
+		getExerciseHistory: new GetExerciseHistory(queries, clock)
 	};
 }

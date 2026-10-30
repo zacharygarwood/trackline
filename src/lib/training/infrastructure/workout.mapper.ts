@@ -3,6 +3,7 @@ import { CorruptRow } from '../../platform/db/corrupt-row.ts';
 import type { SqlRow } from '../../platform/db/sql.ts';
 import { parseId } from '../../shared/id.ts';
 import { LocalDate } from '../../shared/local-date.ts';
+import { Distance } from '../../shared/distance.ts';
 import { Mass } from '../../shared/mass.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import type { WorkoutTemplateId } from '../domain/ids.ts';
@@ -52,14 +53,65 @@ function exerciseRow(row: SqlRow): WorkoutExerciseRow | undefined {
 		: undefined;
 }
 
+const amount = (value: unknown): number | undefined =>
+	typeof value === 'number' ? value : undefined;
+
+const isNullableAmount = (value: unknown): value is number | null =>
+	value === null || typeof value === 'number';
+
+/** The weight in a row: undefined when not recorded, null when invalid. */
+function massOf(value: unknown): Mass | undefined | null {
+	const kilograms = amount(value);
+	if (kilograms === undefined) return undefined;
+	const mass = Mass.fromKg(kilograms);
+	return mass.ok ? mass.value : null;
+}
+
+/** The distance in a row: undefined when not recorded, null when invalid. */
+function distanceOf(value: unknown): Distance | undefined | null {
+	const meters = amount(value);
+	if (meters === undefined) return undefined;
+	const distance = Distance.fromMeters(meters);
+	return distance.ok ? distance.value : null;
+}
+
+function objectsOf(row: SqlRow): Pick<WorkoutSet, 'weight' | 'distance'> | undefined {
+	const weight = massOf(row.weight_kg);
+	const distance = distanceOf(row.distance_m);
+	return weight === null || distance === null ? undefined : { weight, distance };
+}
+
 function setOf(row: SqlRow): WorkoutSet | undefined {
-	const { reps, weight_kg, completed } = row;
-	if (typeof reps !== 'number' || typeof weight_kg !== 'number') return undefined;
-	const weight = Mass.fromKg(weight_kg);
-	const set = weight.ok
-		? createWorkoutSet({ reps, weight: weight.value, completed: completed === 1 })
-		: undefined;
-	return set?.ok === true ? set.value : undefined;
+	const { reps, weight_kg, seconds, distance_m, grade, count } = row;
+	if (![reps, weight_kg, seconds, distance_m, grade, count].every(isNullableAmount))
+		return undefined;
+	const objects = objectsOf(row);
+	if (objects === undefined) return undefined;
+	const set = createWorkoutSet({
+		...objects,
+		reps: amount(reps),
+		seconds: amount(seconds),
+		grade: amount(grade),
+		count: amount(count),
+		completed: row.completed === 1
+	});
+	return set.ok ? set.value : undefined;
+}
+
+function measureColumns(set: WorkoutSet) {
+	return {
+		reps: set.reps ?? null,
+		weight_kg: set.weight?.kilograms ?? null,
+		seconds: set.seconds ?? null
+	};
+}
+
+function moreMeasureColumns(set: WorkoutSet) {
+	return {
+		distance_m: set.distance?.meters ?? null,
+		grade: set.grade ?? null,
+		count: set.count ?? null
+	};
 }
 
 function exercisesOf(stored: StoredWorkout): readonly WorkoutExercise[] | undefined {
@@ -131,8 +183,8 @@ export const workoutMapper = {
 					workout_id: workout.id,
 					exercise_position: exercisePosition,
 					position,
-					reps: set.reps,
-					weight_kg: set.weight.kilograms,
+					...measureColumns(set),
+					...moreMeasureColumns(set),
 					completed: set.completed ? 1 : 0
 				}))
 			)

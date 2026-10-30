@@ -16,6 +16,7 @@ export interface SetSuggestionContext {
 /**
  * Suggests the next set: a copy of the previous set in this workout,
  * otherwise the same set from last session, otherwise 10 reps at bodyweight.
+ * Screens use only the measures the exercise tracks.
  *
  * @param context - This workout's and last session's sets for the exercise.
  * @returns An uncompleted set ready to adjust and check off.
@@ -25,30 +26,6 @@ export function suggestNextSet(context: SetSuggestionContext): WorkoutSet {
 		last(context.current) ??
 		elementAt(context.lastSession, context.current.length) ??
 		last(context.lastSession);
-	return {
-		reps: base?.reps ?? DEFAULT_REPS,
-		weight: base?.weight ?? Mass.zero,
-		completed: false
-	};
-}
-
-/**
- * The sets a template exercise starts with: each position copies the same
- * set from last session, or the set before it when last session had fewer.
- *
- * @param lastSession - The exercise's sets from its most recent finished workout.
- * @param count - How many sets the template asks for.
- * @returns `count` uncompleted sets.
- */
-export function prefillSets(
-	lastSession: readonly WorkoutSet[],
-	count: number
-): readonly WorkoutSet[] {
-	const sets: WorkoutSet[] = [];
-	while (sets.length < count) {
-		const base =
-			elementAt(lastSession, sets.length) ?? suggestNextSet({ current: sets, lastSession });
-		sets.push({ ...base, completed: false });
-	}
-	return sets;
+	if (base === undefined) return { reps: DEFAULT_REPS, weight: Mass.zero, completed: false };
+	return { ...base, completed: false };
 }

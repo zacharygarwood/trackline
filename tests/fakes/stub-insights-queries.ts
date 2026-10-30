@@ -1,15 +1,12 @@
 import type {
-	ActivityDays,
-	ActivityQuery,
-	ExerciseProgressQuery,
-	ExerciseSession,
+	ExerciseDay,
+	ExerciseHistoryQuery,
 	NutritionDay,
 	NutritionTrendQuery,
-	StreakSummary,
-	TrackedExercise,
-	TrackedExerciseId,
 	WeightTrendPoint,
-	WeightTrendQuery
+	WeightTrendQuery,
+	WorkoutDay,
+	WorkoutDaysQuery
 } from '../../src/lib/insights/application/insights-queries.ts';
 import type { LocalDate } from '../../src/lib/shared/local-date.ts';
 
@@ -19,15 +16,13 @@ import type { LocalDate } from '../../src/lib/shared/local-date.ts';
  * behind each query is tested against seeded SQLite instead.
  */
 export class StubInsightsQueries
-	implements WeightTrendQuery, NutritionTrendQuery, ExerciseProgressQuery, ActivityQuery
+	implements WeightTrendQuery, NutritionTrendQuery, WorkoutDaysQuery, ExerciseHistoryQuery
 {
 	readonly calls: string[] = [];
 	weight: readonly WeightTrendPoint[] = [];
 	nutrition: readonly NutritionDay[] = [];
-	exercises: readonly TrackedExercise[] = [];
-	sessions: readonly ExerciseSession[] = [];
-	activity: ActivityDays = { trained: [], rested: [], foodLogged: [], proteinGoalMet: [] };
-	streak: StreakSummary = { current: 0, longest: 0 };
+	workouts: readonly WorkoutDay[] = [];
+	exercises: readonly ExerciseDay[] = [];
 
 	weightTrend(since: LocalDate | undefined): Promise<readonly WeightTrendPoint[]> {
 		this.calls.push(`weightTrend ${since?.toString() ?? 'all'}`);
@@ -39,25 +34,13 @@ export class StubInsightsQueries
 		return Promise.resolve(this.nutrition);
 	}
 
-	trackedExercises(): Promise<readonly TrackedExercise[]> {
+	workoutDays(since: LocalDate): Promise<readonly WorkoutDay[]> {
+		this.calls.push(`workoutDays ${since.toString()}`);
+		return Promise.resolve(this.workouts);
+	}
+
+	exerciseDays(since: LocalDate | undefined): Promise<readonly ExerciseDay[]> {
+		this.calls.push(`exerciseDays ${since?.toString() ?? 'all'}`);
 		return Promise.resolve(this.exercises);
-	}
-
-	exerciseSessions(
-		exercise: TrackedExerciseId,
-		since: LocalDate | undefined
-	): Promise<readonly ExerciseSession[]> {
-		this.calls.push(`exerciseSessions ${exercise} ${since?.toString() ?? 'all'}`);
-		return Promise.resolve(this.sessions);
-	}
-
-	activityDays(since: LocalDate): Promise<ActivityDays> {
-		this.calls.push(`activityDays ${since.toString()}`);
-		return Promise.resolve(this.activity);
-	}
-
-	trainingStreak(today: LocalDate): Promise<StreakSummary> {
-		this.calls.push(`trainingStreak ${today.toString()}`);
-		return Promise.resolve(this.streak);
 	}
 }

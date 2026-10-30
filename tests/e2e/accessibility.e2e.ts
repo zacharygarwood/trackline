@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
-import { addPhoto, finishFirstRun, weighIn } from './helpers.ts';
+import { checkIn, expectOnTab, finishFirstRun } from './helpers.ts';
 
 const PHOTO = path.join(import.meta.dirname, 'assets', 'photo-with-gps.jpg');
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -13,6 +13,7 @@ const SCREENS = [
 	'/faq',
 	'/app',
 	'/app/train',
+	'/app/train/new',
 	'/app/eat',
 	'/app/body',
 	'/app/body/photos',
@@ -27,6 +28,7 @@ const SCREENS = [
  * never hidden behind the bar is tested on its own below.
  */
 async function violations(page: Page): Promise<string[]> {
+	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.evaluate(() => {
 		window.scrollTo(0, document.documentElement.scrollHeight);
 	});
@@ -36,14 +38,26 @@ async function violations(page: Page): Promise<string[]> {
 	);
 }
 
-for (const colorScheme of ['light', 'dark'] as const) {
-	test(`every screen meets WCAG 2.2 AA in the ${colorScheme} theme`, async ({ page }) => {
-		await page.emulateMedia({ colorScheme });
+/** Starts a workout of one new exercise and opens the workout screen. */
+async function startWorkout(page: Page): Promise<void> {
+	await page.goto('/app/train');
+	await page.getByRole('searchbox', { name: messages.train.search }).fill('Squat');
+	await page.getByRole('button', { name: messages.exercise.fields.weight, exact: true }).click();
+	await page.getByRole('button', { name: messages.exercise.fields.reps, exact: true }).click();
+	await page.getByRole('button', { name: messages.exercise.saveToLibrary }).click();
+	await page.getByRole('button', { name: messages.train.startExercise('Squat') }).click();
+	await expect(page.getByRole('button', { name: messages.workout.logSet })).toBeVisible();
+}
+
+for (const theme of [messages.preferences.themes.light, messages.preferences.themes.dark]) {
+	test(`every screen meets WCAG 2.2 AA in the ${theme.toLowerCase()} theme`, async ({ page }) => {
 		await finishFirstRun(page);
-		await weighIn(page, '80.4');
-		await addPhoto(page, PHOTO, messages.body.front);
+		await page.goto('/app/settings');
+		await page.getByRole('button', { name: theme, exact: true }).click();
+		await checkIn(page, '80.4', PHOTO);
+		await startWorkout(page);
 		const found: string[] = [];
-		for (const screen of SCREENS) {
+		for (const screen of [...SCREENS, '/app/train/workout']) {
 			await page.goto(screen);
 			await page.waitForFunction(
 				() => (document.querySelector('main')?.childElementCount ?? 0) > 0
@@ -54,20 +68,21 @@ for (const colorScheme of ['light', 'dark'] as const) {
 	});
 }
 
-test('open sheets meet WCAG 2.2 AA', async ({ page }) => {
+test('the inline forms meet WCAG 2.2 AA', async ({ page }) => {
 	await finishFirstRun(page);
-	await page.goto('/app/body');
-	await page.getByRole('button', { name: messages.body.weighIn }).click();
-	await expect(page.getByRole('dialog')).toBeVisible();
-	const weighInSheet = await violations(page);
-	await page.keyboard.press('Escape');
-
 	await page.goto('/app/eat');
-	await page.getByRole('button', { name: messages.nutrition.logFood }).click();
-	await expect(page.getByRole('dialog')).toBeVisible();
-	const logFoodSheet = await violations(page);
+	await page.getByRole('searchbox', { name: messages.food.search }).fill('Mango');
+	await expect(
+		page.getByRole('heading', { name: messages.food.createTitle('Mango') })
+	).toBeVisible();
+	const newFood = await violations(page);
 
-	expect([...weighInSheet, ...logFoodSheet]).toEqual([]);
+	await page.goto('/app/train');
+	await page.getByRole('searchbox', { name: messages.train.search }).fill('Climb');
+	await page.getByRole('button', { name: messages.exercise.fields.grade, exact: true }).click();
+	const newExercise = await violations(page);
+
+	expect([...newFood, ...newExercise]).toEqual([]);
 });
 
 test('the main flows work from the keyboard alone', async ({ page }) => {
@@ -76,48 +91,31 @@ test('the main flows work from the keyboard alone', async ({ page }) => {
 
 	await tabs.getByRole('link', { name: messages.navigation.body }).focus();
 	await page.keyboard.press('Enter');
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.body);
+	await expectOnTab(page, messages.navigation.body);
 
-	const weighInButton = page.getByRole('button', { name: messages.body.weighIn });
-	await weighInButton.focus();
-	await expect(weighInButton).toBeFocused();
+	const field = page.getByRole('spinbutton', { name: messages.checkIn.weightIn('kg') });
+	await field.focus();
+	await page.keyboard.type('80.4');
+	await page.getByRole('button', { name: messages.checkIn.checkIn }).focus();
 	await page.keyboard.press('Enter');
-	const sheet = page.getByRole('dialog', { name: messages.body.weighIn });
-	await expect(sheet).toBeVisible();
-	for (const key of '80.4') {
-		const name = key === '.' ? messages.design.decimalSeparator : key;
-		await sheet.getByRole('button', { name, exact: true }).focus();
-		await page.keyboard.press('Enter');
-	}
-	await sheet.getByRole('button', { name: messages.body.save }).focus();
-	await page.keyboard.press('Enter');
-	await expect(sheet).toBeHidden();
-	await expect(page.getByRole('button', { name: /^Today, 80\.4 kg/ })).toBeVisible();
-
-	await page.getByRole('button', { name: messages.body.weighIn }).click();
-	await expect(sheet).toBeVisible();
-	await page.keyboard.press('Escape');
-	await expect(sheet).toBeHidden();
+	await expect(page.getByRole('button', { name: messages.checkIn.update })).toBeVisible();
 
 	await tabs.getByRole('link', { name: messages.navigation.stats }).focus();
 	await page.keyboard.press('Enter');
-	const range = page.getByRole('radio', { name: messages.stats.all });
-	await page.getByRole('radio', { name: messages.stats.fourWeeks }).focus();
-	await page.keyboard.press('ArrowRight');
-	await page.keyboard.press('ArrowRight');
-	await page.keyboard.press('ArrowRight');
-	await expect(range).toBeChecked();
+	const all = page.getByRole('button', { name: messages.trends.ranges.all });
+	await all.focus();
+	await page.keyboard.press('Enter');
+	await expect(all).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('a focused control is never hidden behind the tab bar', async ({ page }) => {
 	await finishFirstRun(page);
-	await page.goto('/app/body');
-	await addPhoto(page, PHOTO, messages.body.front);
+	await checkIn(page, '80.4');
 	const controls = [
-		{ screen: '/app/body', control: page.getByRole('button', { name: messages.body.addPhoto }) },
+		{ screen: '/app/body', control: page.getByRole('button', { name: messages.checkIn.update }) },
 		{
-			screen: '/app/train',
-			control: page.getByRole('switch', { name: messages.training.restDay })
+			screen: '/app/settings',
+			control: page.getByRole('button', { name: messages.settings.exportBackup })
 		}
 	];
 	for (const { screen, control } of controls) {

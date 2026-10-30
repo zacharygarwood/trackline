@@ -6,7 +6,14 @@ export const SettingKey = {
 	lastExportAt: 'last_export_at',
 	setupComplete: 'setup_complete',
 	weekStart: 'week_start',
-	installHintDismissed: 'install_hint_dismissed'
+	installHintDismissed: 'install_hint_dismissed',
+	theme: 'theme',
+	accent: 'accent',
+	trackCarbsAndFat: 'track_carbs_and_fat',
+	distanceUnit: 'distance_unit',
+	newFoodUnit: 'new_food_unit',
+	restSeconds: 'rest_seconds',
+	weeklyWorkoutGoal: 'weekly_workout_goal'
 } as const;
 
 /** One of the {@link SettingKey} values. */
@@ -27,6 +34,19 @@ export function writeSetting(key: SettingKey, value: string): SqlStatement {
 		name: 'write setting',
 		sql: 'INSERT OR REPLACE INTO app_setting (key, value) VALUES (?, ?)',
 		params: [key, value]
+	};
+}
+
+/**
+ * Reads several settings at once.
+ *
+ * @param keys - The settings to read; missing ones return no row.
+ */
+export function readSettings(keys: readonly SettingKey[]): SqlStatement {
+	return {
+		name: 'read settings',
+		sql: `SELECT key, value FROM app_setting WHERE key IN (${keys.map(() => '?').join(', ')})`,
+		params: keys
 	};
 }
 

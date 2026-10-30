@@ -65,7 +65,7 @@
 		padding-top: var(--space-6);
 		border-top: var(--border-hairline) solid var(--color-divider);
 		color: var(--color-text-muted);
-		font-size: var(--font-size-label);
+		font-size: var(--font-size-15);
 	}
 
 	ul {

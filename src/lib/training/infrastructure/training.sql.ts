@@ -18,12 +18,33 @@ export const TrainingTable = {
 } as const;
 
 const WORKOUT_COLUMNS = 'id, date, started_at, finished_at, note, source_template_id';
+const SET_COLUMNS =
+	'workout_id, exercise_position, position, reps, weight_kg, seconds, distance_m, grade, count, completed';
 const FINISHED_NEWEST_FIRST = 'finished_at IS NOT NULL ORDER BY date DESC, started_at DESC';
+
+const EXERCISE_COLUMNS = 'id, name, tracked_fields, grade_scale, custom_grades, count_label';
 
 /** Lists the exercise library by name. */
 export const FIND_ALL_EXERCISES: SqlStatement = {
 	name: 'find all exercises',
-	sql: 'SELECT id, name FROM exercise ORDER BY name',
+	sql: `SELECT ${EXERCISE_COLUMNS} FROM exercise ORDER BY name`,
+	params: []
+};
+
+/**
+ * Lists the exercise library, most recently started first. Exercises never
+ * used yet come before all others, newest first, so a just-created one shows.
+ */
+export const FIND_EXERCISES_BY_RECENT_USE: SqlStatement = {
+	name: 'find exercises by recent use',
+	sql: `SELECT ${EXERCISE_COLUMNS.split(', ')
+		.map((column) => `e.${column}`)
+		.join(', ')}
+		FROM exercise e
+		LEFT JOIN workout_exercise we ON we.exercise_id = e.id
+		LEFT JOIN workout w ON w.id = we.workout_id
+		GROUP BY e.id
+		ORDER BY max(w.started_at) IS NOT NULL, max(w.started_at) DESC, e.id DESC`,
 	params: []
 };
 
@@ -31,17 +52,27 @@ export const FIND_ALL_EXERCISES: SqlStatement = {
 export function findExerciseByName(name: string): SqlStatement {
 	return {
 		name: 'find exercise by name',
-		sql: 'SELECT id, name FROM exercise WHERE name = ?',
+		sql: `SELECT ${EXERCISE_COLUMNS} FROM exercise WHERE name = ?`,
 		params: [name]
 	};
 }
 
-/** Inserts or renames an exercise. */
+/** Inserts an exercise, or updates its name and tracking. */
 export function saveExercise(row: ExerciseRow): SqlStatement {
 	return {
 		name: 'save exercise',
-		sql: 'INSERT INTO exercise (id, name) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name',
-		params: [row.id, row.name]
+		sql: `INSERT INTO exercise (${EXERCISE_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?)
+			ON CONFLICT (id) DO UPDATE SET name = excluded.name, tracked_fields = excluded.tracked_fields,
+			grade_scale = excluded.grade_scale, custom_grades = excluded.custom_grades,
+			count_label = excluded.count_label`,
+		params: [
+			row.id,
+			row.name,
+			row.tracked_fields,
+			row.grade_scale,
+			row.custom_grades,
+			row.count_label
+		]
 	};
 }
 
@@ -101,7 +132,7 @@ export function findWorkoutExercises(workoutId: string): SqlStatement {
 export function findWorkoutSets(workoutId: string): SqlStatement {
 	return {
 		name: 'find workout sets',
-		sql: `SELECT workout_id, exercise_position, position, reps, weight_kg, completed FROM workout_set
+		sql: `SELECT ${SET_COLUMNS} FROM workout_set
 			WHERE workout_id = ? ORDER BY exercise_position, position`,
 		params: [workoutId]
 	};
@@ -140,14 +171,17 @@ export function insertWorkoutExercise(row: WorkoutExerciseRow): SqlStatement {
 export function insertWorkoutSet(row: WorkoutSetRow): SqlStatement {
 	return {
 		name: 'insert workout set',
-		sql: `INSERT INTO workout_set (workout_id, exercise_position, position, reps, weight_kg, completed)
-			VALUES (?, ?, ?, ?, ?, ?)`,
+		sql: `INSERT INTO workout_set (${SET_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		params: [
 			row.workout_id,
 			row.exercise_position,
 			row.position,
 			row.reps,
 			row.weight_kg,
+			row.seconds,
+			row.distance_m,
+			row.grade,
+			row.count,
 			row.completed
 		]
 	};

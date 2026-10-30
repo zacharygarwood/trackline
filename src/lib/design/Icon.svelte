@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { ICON_PATHS, type IconName } from './icon.constants.ts';
+	import { ICON_PATHS, ICON_STROKE, IconWeight, type IconName } from './icon.constants.ts';
 
 	/** Props for an icon. Icons are decorative; label the control that contains them. */
 	interface Props {
 		/** Which icon to draw. */
 		name: IconName;
+		/** The stroke; defaults to `regular`. */
+		weight?: IconWeight;
 	}
 
-	const { name }: Props = $props();
+	const { name, weight = IconWeight.regular }: Props = $props();
 </script>
 
 <svg
@@ -16,9 +18,9 @@
 	aria-hidden="true"
 	fill="none"
 	stroke="currentColor"
-	stroke-width="2"
-	stroke-linecap="round"
-	stroke-linejoin="round"
+	stroke-width={ICON_STROKE[weight]}
+	stroke-linecap="square"
+	stroke-linejoin="miter"
 >
 	<path d={ICON_PATHS[name]} />
 </svg>

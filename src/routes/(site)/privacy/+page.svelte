@@ -23,7 +23,7 @@
 	}
 
 	h1 {
-		font-size: var(--font-size-title);
+		font-size: var(--font-size-22);
 	}
 
 	.summary {

@@ -4,17 +4,22 @@
 	import { page } from '$app/state';
 	import { setAppContext } from '#lib/app/app-context.ts';
 	import { startApp, type App } from '#lib/app/container.ts';
-	import { ARIA_CURRENT_PAGE } from '#lib/design/html.constants.ts';
 	import Icon from '#lib/design/Icon.svelte';
 	import Notice from '#lib/design/Notice.svelte';
 	import TabBar from '#lib/design/TabBar.svelte';
+	import Toast from '#lib/design/Toast.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { watchForUpdates } from '#lib/platform/pwa/app-updates.ts';
 	import { canAddToHomeScreen } from '#lib/platform/pwa/home-screen.ts';
+	import { AppPreferences, setPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
 	import { first } from '#lib/shared/collections.ts';
+	import type { LocalDate } from '#lib/shared/local-date.ts';
+	import { formatShortDate } from '#lib/ui/format.ts';
+	import { setToaster, Toaster } from '#lib/ui/toast.svelte.ts';
 	import type { LayoutProps } from './$types';
+	import { AppRoute } from './app-route.constants.ts';
 	import {
-		PHOTOS_SECTION,
+		SCREEN_SECTIONS,
 		SETTINGS_SECTION,
 		TAB_SECTIONS,
 		WELCOME_SECTION
@@ -22,33 +27,51 @@
 
 	const { children }: LayoutProps = $props();
 
+	const preferences = new AppPreferences();
+	const toaster = new Toaster();
+	setPreferences(preferences);
+	setToaster(toaster);
+
 	let storageFailed = $state(false);
 	let applyUpdate: (() => void) | undefined = $state();
 	let installHint: (() => Promise<void>) | undefined = $state();
+	let today: LocalDate | undefined = $state();
 
 	const tabs = TAB_SECTIONS.map((section) => ({
 		href: resolve(section.route),
 		label: section.title,
 		icon: section.icon
 	}));
+	const todayHref = resolve(AppRoute.today);
 	const settingsHref = resolve(SETTINGS_SECTION.route);
 	const welcomeHref = resolve(WELCOME_SECTION.route);
 	const onWelcome = $derived(page.url.pathname === welcomeHref);
-
+	const onTab = $derived(tabs.some((tab) => tab.href === page.url.pathname));
 	const currentHref = $derived(currentTab(page.url.pathname));
 
 	const title = $derived(
-		[...TAB_SECTIONS, PHOTOS_SECTION, SETTINGS_SECTION, WELCOME_SECTION].find(
+		[...TAB_SECTIONS, ...SCREEN_SECTIONS, SETTINGS_SECTION, WELCOME_SECTION].find(
 			(section) => resolve(section.route) === page.url.pathname
 		)?.title
 	);
+	const heading = $derived(
+		page.url.pathname === todayHref && today !== undefined ? formatShortDate(today) : title
+	);
 
-	/** The tab a path belongs to: the longest tab path it starts with, so the gallery marks Body. */
+	$effect(() => {
+		document.documentElement.dataset.theme = preferences.current.theme;
+		document.documentElement.dataset.accent = preferences.current.accent;
+	});
+
+	/** The tab a path belongs to: the longest tab path it starts with, Today only on its own path. */
 	function currentTab(pathname: string): string | undefined {
+		if (pathname === settingsHref) return undefined;
 		return first(
 			tabs
 				.map((tab) => tab.href)
-				.filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+				.filter(
+					(href) => pathname === href || (href !== todayHref && pathname.startsWith(`${href}/`))
+				)
 				.toSorted((a, b) => b.length - a.length)
 		);
 	}
@@ -91,6 +114,8 @@
 
 	setAppContext(startApp())
 		.then(async (app) => {
+			today = app.clock.today();
+			await preferences.load(app.settings);
 			await welcomeNewUser(app);
 			await offerInstallHint(app);
 		})
@@ -104,18 +129,14 @@
 </svelte:head>
 
 <div class="shell">
-	<header>
-		<h1>{title}</h1>
-		{#if !onWelcome}
-			<a
-				href={settingsHref}
-				aria-label={messages.navigation.settings}
-				aria-current={page.url.pathname === settingsHref ? ARIA_CURRENT_PAGE : undefined}
-			>
+	{#if onTab}
+		<header>
+			<h1>{heading}</h1>
+			<a href={settingsHref} aria-label={messages.navigation.settings}>
 				<Icon name="settings" />
 			</a>
-		{/if}
-	</header>
+		</header>
+	{/if}
 
 	{#if storageFailed}
 		<p class="alert" role="alert">{messages.app.storageUnavailable}</p>
@@ -135,7 +156,7 @@
 		</div>
 	{/if}
 
-	<main>
+	<main class:headless={!onTab}>
 		{@render children()}
 	</main>
 
@@ -146,11 +167,24 @@
 		</div>
 	{/if}
 
+	{#if toaster.current !== undefined}
+		{@const toast = toaster.current}
+		<div class="toast">
+			<Toast
+				text={toast.text}
+				undo={toast.undo === undefined ? undefined : messages.shell.undo}
+				onundo={() => toaster.undo(messages.shell.undone)}
+			/>
+		</div>
+	{/if}
+
 	{#if !onWelcome}
 		<div class="tab-bar">
 			<TabBar {tabs} {currentHref} label={messages.navigation.tabs} />
 		</div>
 	{/if}
+
+	<div class="visually-hidden" role="status" aria-live="polite">{toaster.announcement}</div>
 </div>
 
 <style>
@@ -166,15 +200,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-2) var(--space-2)
-			var(--space-4);
-		border-bottom: var(--border-hairline) solid var(--color-divider);
+		margin-bottom: var(--space-3);
+		padding: calc(var(--space-11) + env(safe-area-inset-top)) var(--space-2) 0 var(--gutter);
 		view-transition-name: header;
 	}
 
 	h1 {
-		font-size: var(--font-size-title);
-		letter-spacing: -0.01em;
+		color: var(--color-text-muted);
+		font-size: var(--font-size-17);
+		font-weight: var(--font-weight-medium);
 	}
 
 	header a {
@@ -182,19 +216,23 @@
 		place-items: center;
 		width: var(--tap-target);
 		height: var(--tap-target);
-		color: var(--color-text-muted);
+		color: var(--color-text);
+		--icon-size: var(--icon-size-header);
 	}
 
 	.alert {
-		margin: 0 var(--space-4);
+		margin: 0 var(--gutter);
 		padding: var(--space-3) var(--space-4);
-		border-radius: var(--radius-medium);
 		background: var(--color-surface);
 	}
 
 	main {
 		flex: 1;
-		padding: 0 var(--space-4) calc(var(--fab-size) + var(--space-6));
+		padding: 0 var(--gutter) var(--space-12);
+	}
+
+	main.headless {
+		padding-top: calc(var(--space-9) + env(safe-area-inset-top));
 	}
 
 	.tab-bar {
@@ -204,14 +242,20 @@
 		view-transition-name: tab-bar;
 	}
 
+	.toast {
+		position: sticky;
+		bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
+		z-index: 2;
+	}
+
 	.notice {
-		margin: var(--space-4);
+		margin: var(--space-4) var(--gutter);
 	}
 
 	.update {
 		position: sticky;
 		bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
 		z-index: 1;
-		margin: var(--space-2) var(--space-4);
+		margin: var(--space-2) var(--gutter);
 	}
 </style>

@@ -26,8 +26,8 @@
 
 <style>
 	.card {
-		margin: 0 calc(-1 * var(--space-4));
-		padding: var(--space-2) var(--space-4);
+		margin: 0 calc(-1 * var(--gutter));
+		padding: var(--space-4) var(--gutter) var(--space-6);
 		border-bottom: var(--border-hairline) solid var(--color-divider);
 	}
 
@@ -36,12 +36,9 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-3);
-		height: var(--label-row-height);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-label);
+		min-height: var(--tap-target);
+		font-size: var(--font-size-15);
 		font-weight: var(--font-weight-semibold);
-		letter-spacing: var(--letter-spacing-label);
-		text-transform: uppercase;
 	}
 
 	h2 {

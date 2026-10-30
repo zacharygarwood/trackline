@@ -1,98 +1,123 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import { BodyScreen } from '#lib/body/ui/body-screen.svelte.ts';
-	import LatestPhotos from '#lib/body/ui/LatestPhotos.svelte';
+	import { CheckIn, type CheckInResult } from '#lib/body/ui/check-in.svelte.ts';
+	import CheckInForm from '#lib/body/ui/CheckInForm.svelte';
 	import { ObjectUrls } from '#lib/body/ui/object-urls.ts';
 	import { PhotoGallery } from '#lib/body/ui/photo-gallery.svelte.ts';
-	import WeighInHistory from '#lib/body/ui/WeighInHistory.svelte';
-	import WeighInSheet from '#lib/body/ui/WeighInSheet.svelte';
-	import WeightChart from '#lib/body/ui/WeightChart.svelte';
-	import type { WeighIn } from '#lib/body/domain/weigh-in.ts';
-	import Card from '#lib/design/Card.svelte';
-	import Fab from '#lib/design/Fab.svelte';
+	import PhotoTiles from '#lib/body/ui/PhotoTiles.svelte';
+	import { photoTiles, weightChange, weightsSince } from '#lib/body/ui/body-trends.ts';
+	import BigNumber from '#lib/design/BigNumber.svelte';
+	import { ChartSize } from '#lib/design/chart.constants.ts';
+	import TrendLine from '#lib/design/TrendLine.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
-	import { first } from '#lib/shared/collections.ts';
-	import type { LocalDate } from '#lib/shared/local-date.ts';
-	import { formatDate } from '#lib/ui/format.ts';
+	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
+	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
+	import { unitLabel } from '#lib/ui/format.ts';
+	import { getToaster } from '#lib/ui/toast.svelte.ts';
 	import { AppRoute } from '../app-route.constants.ts';
 
-	/** The weigh-in being entered: a new one for today, or an existing one being edited. */
-	interface Editing {
-		readonly date: LocalDate;
-		readonly existing: WeighIn | undefined;
-	}
+	const CHART_DAYS = 90;
+	const KG_PADDING = 0.15;
+	const LB_PADDING = 0.3;
 
-	let screen: BodyScreen | undefined = $state();
+	const preferences = getPreferences();
+	const toaster = getToaster();
+	let body: BodyScreen | undefined = $state();
 	let gallery: PhotoGallery | undefined = $state();
-	let editing: Editing | undefined = $state();
+	let checkIn: CheckIn | undefined = $state();
 
 	void getAppContext().then(async (app) => {
-		const next = new BodyScreen({ ...app.body, getMassUnit: app.settings.getMassUnit }, app.clock);
+		const nextBody = new BodyScreen(
+			{ ...app.body, getMassUnit: app.settings.getMassUnit },
+			app.clock
+		);
 		const photos = new PhotoGallery(app.body, app.clock, new ObjectUrls());
-		await Promise.all([next.load(), photos.load()]);
-		screen = next;
+		await Promise.all([nextBody.load(), photos.load()]);
+		const next = new CheckIn(nextBody, photos);
+		next.prefill();
+		body = nextBody;
 		gallery = photos;
+		checkIn = next;
 	});
 
 	$effect(() => () => {
 		void gallery?.dispose();
 	});
 
-	function weighInToday(today: LocalDate): void {
-		editing = { date: today, existing: undefined };
+	function saved(result: CheckInResult): void {
+		toaster.show(result.message, result.undo);
 	}
 </script>
 
-{#if screen !== undefined}
-	{@const ready = screen}
-	{@const latest = first(ready.weighIns)}
-	{#if latest !== undefined}
-		<Card title={messages.stats.weight}>
-			<WeightChart weighIns={ready.weighIns} goal={ready.goal} unit={ready.unit} />
-		</Card>
-	{/if}
-	{#if gallery !== undefined}
-		<LatestPhotos {gallery} onopen={() => goto(resolve(AppRoute.photos))}>
-			{#snippet allPhotos()}
-				<a class="all-photos" href={resolve(AppRoute.photos)}>{messages.body.allPhotos}</a>
-			{/snippet}
-		</LatestPhotos>
-	{/if}
-	{#if ready.weighIns.length > 0}
-		<WeighInHistory
-			weighIns={ready.weighIns}
-			unit={ready.unit}
-			today={ready.today}
-			onselect={(weighIn: WeighIn) => (editing = { date: weighIn.date, existing: weighIn })}
-		/>
-	{/if}
-	<Fab
-		label={messages.body.weighIn}
-		onclick={() => {
-			weighInToday(ready.today);
-		}}
-	/>
+{#if body !== undefined && gallery !== undefined && checkIn !== undefined}
+	{@const unit = preferences.massUnit}
+	{@const weights = weightsSince(body.weighIns, body.today.addDays(1 - CHART_DAYS), unit)}
+	{@const change = weightChange(weights)}
+	<CheckInForm {checkIn} unit={unitLabel(unit)} onsaved={saved} />
 
-	{#if editing !== undefined}
-		{@const current = editing}
-		{@const existing = current.existing}
-		<WeighInSheet
-			title={current.date.equals(ready.today)
-				? messages.body.weighIn
-				: formatDate(current.date, ready.today)}
-			suggestion={ready.suggestionFor(current.date)}
-			unit={ready.unit}
-			onsave={(entry: string) => ready.record(current.date, entry)}
-			ondelete={existing === undefined ? undefined : () => ready.remove(existing)}
-			onclose={() => (editing = undefined)}
-		/>
-	{/if}
+	<section class="section" aria-labelledby="last-days">
+		<h2 id="last-days">{messages.checkIn.lastNinetyDays}</h2>
+		<BigNumber value={change.text} suffix={unitLabel(unit)} />
+		{#if weights.length > 0}
+			<TrendLine
+				values={weights}
+				padding={unit === MassUnit.kg ? KG_PADDING : LB_PADDING}
+				size={ChartSize.tall}
+				summary={messages.checkIn.chart({
+					direction: change.direction,
+					change: change.amount,
+					unit: unitLabel(unit),
+					latest: change.latest
+				})}
+			/>
+		{/if}
+	</section>
+
+	<section class="section photos" aria-labelledby="photos">
+		<div class="photos-heading">
+			<h2 id="photos">{messages.checkIn.photos}</h2>
+			{#if gallery.photos.length > 1}
+				<a href={resolve(AppRoute.photos)}>{messages.checkIn.compare}</a>
+			{/if}
+		</div>
+		<PhotoTiles {gallery} tiles={photoTiles(gallery.photos, body.weighIns, unit)} />
+	</section>
 {/if}
 
 <style>
-	.all-photos {
+	.section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gap-14);
+		margin: 0 calc(-1 * var(--gutter));
+		padding: var(--space-6) var(--gutter);
+		border-top: var(--border-hairline) solid var(--color-divider);
+	}
+
+	.photos {
+		padding-bottom: 0;
+	}
+
+	h2 {
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-semibold);
+	}
+
+	.photos-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.photos-heading a {
+		display: flex;
+		align-items: center;
+		min-height: var(--tap-target);
 		color: var(--color-accent);
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-semibold);
+		text-decoration: none;
 	}
 </style>

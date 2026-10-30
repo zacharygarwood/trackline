@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { FixedClock } from '../../../../tests/fakes/fixed-clock.ts';
 import { StubInsightsQueries } from '../../../../tests/fakes/stub-insights-queries.ts';
-import { anExerciseId } from '../../../../tests/builders/training.builder.ts';
-import { GetActivity } from './get-activity.ts';
-import { GetExerciseProgress } from './get-exercise-progress.ts';
+import { GetExerciseHistory } from './get-exercise-history.ts';
 import { GetTrends } from './get-trends.ts';
-import { ListTrackedExercises } from './list-tracked-exercises.ts';
+import { GetWorkoutDays } from './get-workout-days.ts';
 import { StatsRange } from './stats-range.constants.ts';
 import { rangeStart } from './stats-range.ts';
 
@@ -13,9 +11,10 @@ const clock = new FixedClock(0, '2026-10-28');
 
 describe('rangeStart', () => {
 	it.each([
-		[StatsRange.fourWeeks, '2026-10-01'],
+		[StatsRange.oneMonth, '2026-10-01'],
 		[StatsRange.threeMonths, '2026-07-30'],
-		[StatsRange.oneYear, '2025-10-29']
+		[StatsRange.sixMonths, '2026-04-30'],
+		[StatsRange.oneYear, '2025-10-30']
 	])('counts %s back from today, including today', (range, start) => {
 		expect(rangeStart(range, clock.today())?.toString()).toBe(start);
 	});
@@ -30,7 +29,7 @@ describe('GetTrends', () => {
 		const queries = new StubInsightsQueries();
 
 		await new GetTrends({ weight: queries, nutrition: queries, clock }).execute({
-			range: StatsRange.fourWeeks
+			range: StatsRange.oneMonth
 		});
 
 		expect(queries.calls).toEqual(['weightTrend 2026-10-01', 'nutritionDays 2026-10-01']);
@@ -48,36 +47,24 @@ describe('GetTrends', () => {
 	});
 });
 
-describe('GetExerciseProgress', () => {
-	it('reads one exercise from the start of the range', async () => {
+describe('GetExerciseHistory', () => {
+	it('reads every exercise from the start of the range', async () => {
 		const queries = new StubInsightsQueries();
-		const exercise = anExerciseId();
 
-		const sessions = await new GetExerciseProgress(queries, clock).execute({
-			exercise,
+		const days = await new GetExerciseHistory(queries, clock).execute({
 			range: StatsRange.oneYear
 		});
 
-		expect(sessions).toBe(queries.sessions);
-		expect(queries.calls).toEqual([`exerciseSessions ${exercise} 2025-10-29`]);
+		expect(days).toBe(queries.exercises);
+		expect(queries.calls).toEqual(['exerciseDays 2025-10-30']);
 	});
 });
 
-describe('ListTrackedExercises', () => {
-	it('lists exercises with history', async () => {
+describe('GetWorkoutDays', () => {
+	it('reads 104 weeks of workout days', async () => {
 		const queries = new StubInsightsQueries();
 
-		expect(await new ListTrackedExercises(queries).execute()).toBe(queries.exercises);
-	});
-});
-
-describe('GetActivity', () => {
-	it('reads 52 weeks of activity and the streak as of today', async () => {
-		const queries = new StubInsightsQueries();
-
-		const activity = await new GetActivity(queries, clock).execute();
-
-		expect(activity).toEqual({ days: queries.activity, streak: queries.streak });
-		expect(queries.calls).toEqual(['activityDays 2025-10-30', 'trainingStreak 2026-10-28']);
+		expect(await new GetWorkoutDays(queries, clock).execute()).toBe(queries.workouts);
+		expect(queries.calls).toEqual(['workoutDays 2024-10-31']);
 	});
 });

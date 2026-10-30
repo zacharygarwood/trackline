@@ -22,8 +22,10 @@
 		justify-content: space-between;
 		gap: var(--space-3);
 		padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-		border-radius: var(--radius-medium);
-		background: var(--color-surface);
+		background: var(--color-accent);
+		color: var(--color-on-accent);
+		font-size: var(--font-size-15);
+		font-weight: var(--font-weight-semibold);
 	}
 
 	button {
@@ -31,10 +33,11 @@
 		min-height: var(--tap-target);
 		padding: 0 var(--space-3);
 		border: none;
-		border-radius: var(--radius-round);
-		background: var(--color-background);
-		color: var(--color-accent);
-		font-weight: var(--font-weight-semibold);
+		background: transparent;
+		color: inherit;
+		font-weight: var(--font-weight-bold);
+		text-decoration: underline;
+		text-underline-offset: 3px;
 		cursor: pointer;
 	}
 </style>
