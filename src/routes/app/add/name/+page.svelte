@@ -61,6 +61,15 @@
 			placeholder={messages.tracking.add.examples[next.basic.key]}
 			bind:value={next.name}
 		/>
+		{#if next.unitField !== undefined}
+			<div class="unit">
+				<TextField
+					label={messages.tracking.add.unit}
+					placeholder={messages.tracking.add.unitExample}
+					bind:value={next.unit}
+				/>
+			</div>
+		{/if}
 		<div class="goal">
 			<GoalInput editor={next.goal} {units} />
 		</div>
@@ -85,6 +94,7 @@
 		font-size: var(--font-size-15);
 	}
 
+	.unit,
 	.goal {
 		margin-top: var(--space-6);
 	}

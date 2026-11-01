@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { anId } from '../../../../tests/builders/id.builder.ts';
 import { aChoiceField, aNumberField, aField } from '../../../../tests/builders/tracking.builder.ts';
 import { expectErr, expectOk } from '../../../../tests/support/result.ts';
-import { checkValue, createField, type FieldDraft, type FieldValue } from './field.ts';
+import {
+	checkValue,
+	createField,
+	renameFields,
+	type FieldDraft,
+	type FieldValue
+} from './field.ts';
 import { Dimension, EntryProblem, FieldProblem, FieldType } from './tracking.constants.ts';
 
 describe('createField', () => {
@@ -36,6 +42,28 @@ describe('createField', () => {
 		[aChoiceField({ options: ['1', '2', '3', '4', '5', '6', '7', '8', '9'] }), FieldProblem.options]
 	])('rejects %o', (field, problem) => {
 		expect(expectErr(createField(field)).problem).toBe(problem);
+	});
+});
+
+describe('renameFields', () => {
+	it('gives a plain number field a new label and unit, such as Water in oz', () => {
+		const glasses = aNumberField({ key: 'glasses', label: 'Glasses', unit: 'glasses' });
+		const note = aField({ key: 'note', label: 'Note' });
+
+		expect(renameFields([glasses, note], [{ key: 'glasses', label: 'Water', unit: 'oz' }])).toEqual(
+			[{ ...glasses, label: 'Water', unit: 'oz' }, note]
+		);
+	});
+
+	it('leaves masses, distances, and other fields as they are', () => {
+		const weight = aNumberField({ key: 'weight', dimension: Dimension.mass, unit: '' });
+		const note = aField({ key: 'note' });
+		const renames = [
+			{ key: 'weight', label: 'Load', unit: 'stone' },
+			{ key: 'note', label: 'Thoughts', unit: 'words' }
+		];
+
+		expect(renameFields([weight, note], renames)).toEqual([weight, note]);
 	});
 });
 

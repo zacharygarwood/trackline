@@ -165,6 +165,37 @@ export function createField(field: FieldDraft): Result<Field, InvalidField> {
 	return tidyByType({ ...field, key, label });
 }
 
+/** A plain number field's new label and unit, such as Water in oz instead of Glasses in glasses. */
+export interface FieldRename {
+	readonly key: string;
+	readonly label: string;
+	readonly unit: string;
+}
+
+function isPlainNumber(field: FieldDraft): boolean {
+	return field.type === FieldType.number && field.dimension === Dimension.plain;
+}
+
+/**
+ * Gives plain number fields new labels and units. Masses, distances, and other
+ * fields stay as they are. Logged numbers keep their values under the new unit;
+ * pass the result to `createTracker` to check it.
+ *
+ * @param fields - A tracker's fields.
+ * @param renames - The new label and unit of each field to change, by key.
+ */
+export function renameFields<Each extends FieldDraft>(
+	fields: readonly Each[],
+	renames: readonly FieldRename[]
+): readonly Each[] {
+	return fields.map((field) => {
+		const rename = renames.find((candidate) => candidate.key === field.key);
+		return rename !== undefined && isPlainNumber(field)
+			? { ...field, label: rename.label, unit: rename.unit }
+			: field;
+	});
+}
+
 function inRange(amount: number, low: number, high: number): boolean {
 	return Number.isFinite(amount) && amount >= low && amount <= high;
 }
