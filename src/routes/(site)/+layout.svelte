@@ -12,7 +12,7 @@
 	const onHome = $derived(page.url.pathname === resolve(SiteRoute.home));
 </script>
 
-<div class="site">
+<div class="site" data-site>
 	{#if !onHome}
 		<header>
 			<a href={resolve(SiteRoute.home)}>{messages.site.home}</a>

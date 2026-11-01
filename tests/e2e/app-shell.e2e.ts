@@ -136,6 +136,26 @@ test('the landing page links to the app', async ({ page }) => {
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(onboarding.title);
 });
 
+test('the site follows the device’s light or dark mode, and the app keeps the chosen theme', async ({
+	page
+}) => {
+	const LIGHT_BACKGROUND = 'rgb(246, 246, 243)';
+	const DARK_BACKGROUND = 'rgb(11, 11, 12)';
+	const body = page.locator('body');
+	await page.emulateMedia({ colorScheme: 'light' });
+	await finishFirstRun(page);
+
+	await expect(body).toHaveCSS('background-color', DARK_BACKGROUND);
+	await page.goto('/');
+	await expect(body).toHaveCSS('background-color', LIGHT_BACKGROUND);
+
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await expect(body).toHaveCSS('background-color', DARK_BACKGROUND);
+	await page.goto('/app/settings/theme');
+	await page.getByRole('button', { name: messages.preferences.themes.light, exact: true }).click();
+	await expect(body).toHaveCSS('background-color', LIGHT_BACKGROUND);
+});
+
 test('iPhone Safari users see how to add the app to the home screen until they dismiss it', async ({
 	page
 }) => {
