@@ -1,4 +1,3 @@
-import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
 import { finishFirstRun } from './helpers.ts';
 
@@ -10,9 +9,27 @@ const SCREENS = [
 	'/app/train',
 	'/app/eat',
 	'/app/body',
+	'/app/eat/today',
+	'/app/train/exercises',
+	'/app/train/start',
+	'/app/train/workouts',
+	'/app/eat/add',
+	'/app/eat/foods',
 	'/app/body/photos',
+	'/app/body/compare',
 	'/app/stats',
+	'/app/train/history',
+	'/app/eat/days',
+	'/app/tracker',
 	'/app/settings',
+	'/app/settings/home',
+	'/app/settings/theme',
+	'/app/tracker/add',
+	'/app/tracker',
+	'/app/settings/tracking',
+	'/app/settings/data',
+	'/app/settings/support',
+	'/app/settings/about',
 	'/app/welcome'
 ];
 
@@ -24,5 +41,4 @@ test('no screen is wider than the phone', async ({ page }) => {
 		const width = await page.evaluate(() => document.documentElement.scrollWidth);
 		expect(width, screen).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
 	}
-	await expect(page.getByRole('navigation', { name: messages.navigation.tabs })).toBeHidden();
 });

@@ -3,7 +3,7 @@ import { CorruptRow } from '../../platform/db/corrupt-row.ts';
 import type { SqlRow } from '../../platform/db/sql.ts';
 import { DistanceUnit } from '../../shared/distance-unit.constants.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
-import { Accent, Theme } from '../domain/preferences.constants.ts';
+import { HOME_TRACKERS, Theme, type HomeTracker } from '../domain/preferences.constants.ts';
 import {
 	NEW_FOOD_UNITS,
 	parseWeeklyWorkoutGoal,
@@ -16,16 +16,17 @@ import type { PreferenceRow } from './preference.row.ts';
 const TABLE = 'app_setting';
 const TRUE = '1';
 const FALSE = '0';
+const LIST_SEPARATOR = ',';
 
 /** The `app_setting` keys that hold preferences. */
 export const PREFERENCE_SETTINGS = [
 	SettingKey.theme,
-	SettingKey.accent,
 	SettingKey.trackCarbsAndFat,
 	SettingKey.distanceUnit,
 	SettingKey.newFoodUnit,
 	SettingKey.restSeconds,
-	SettingKey.weeklyWorkoutGoal
+	SettingKey.weeklyWorkoutGoal,
+	SettingKey.homeTrackers
 ] as const;
 
 const oneOf =
@@ -36,6 +37,12 @@ const oneOf =
 function parseFlag(text: string): boolean | undefined {
 	if (text === TRUE) return true;
 	return text === FALSE ? false : undefined;
+}
+
+function parseTrackers(text: string): readonly HomeTracker[] | undefined {
+	if (text === '') return [];
+	const trackers = text.split(LIST_SEPARATOR).map(oneOf(HOME_TRACKERS));
+	return trackers.every((tracker) => tracker !== undefined) ? trackers : undefined;
 }
 
 function parseGoal(text: string): number | undefined {
@@ -62,15 +69,16 @@ function field<K extends keyof Preferences>(
 
 const SETTING_OF: Readonly<Record<keyof Preferences, SettingKey>> = {
 	theme: SettingKey.theme,
-	accent: SettingKey.accent,
 	trackCarbsAndFat: SettingKey.trackCarbsAndFat,
 	distanceUnit: SettingKey.distanceUnit,
 	newFoodUnit: SettingKey.newFoodUnit,
 	restSeconds: SettingKey.restSeconds,
-	weeklyWorkoutGoal: SettingKey.weeklyWorkoutGoal
+	weeklyWorkoutGoal: SettingKey.weeklyWorkoutGoal,
+	homeTrackers: SettingKey.homeTrackers
 };
 
 function text(value: Preferences[keyof Preferences]): string {
+	if (Array.isArray(value)) return value.join(LIST_SEPARATOR);
 	if (typeof value !== 'boolean') return String(value);
 	return value ? TRUE : FALSE;
 }
@@ -85,12 +93,12 @@ export const PreferencesMapper = {
 	toDomain(rows: readonly SqlRow[]): Result<Partial<Preferences>, CorruptRow> {
 		const fields = [
 			field(rows, 'theme', oneOf(Object.values(Theme))),
-			field(rows, 'accent', oneOf(Object.values(Accent))),
 			field(rows, 'trackCarbsAndFat', parseFlag),
 			field(rows, 'distanceUnit', oneOf(Object.values(DistanceUnit))),
 			field(rows, 'newFoodUnit', oneOf(NEW_FOOD_UNITS)),
 			field(rows, 'restSeconds', oneOf(REST_TIMER_SECONDS)),
-			field(rows, 'weeklyWorkoutGoal', parseGoal)
+			field(rows, 'weeklyWorkoutGoal', parseGoal),
+			field(rows, 'homeTrackers', parseTrackers)
 		];
 		let preferences: Partial<Preferences> = {};
 		for (const parsed of fields) {

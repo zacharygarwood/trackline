@@ -1,5 +1,6 @@
 import { ChangeLogAmount } from '../nutrition/application/change-log-amount.ts';
 import { CreateFood } from '../nutrition/application/create-food.ts';
+import { DeleteFood } from '../nutrition/application/delete-food.ts';
 import { DeleteLogEntry } from '../nutrition/application/delete-log-entry.ts';
 import { RestoreLogEntry } from '../nutrition/application/restore-log-entry.ts';
 import { DeleteSavedMeal } from '../nutrition/application/delete-saved-meal.ts';
@@ -12,6 +13,7 @@ import { LogFood } from '../nutrition/application/log-food.ts';
 import { LogSavedMeal } from '../nutrition/application/log-saved-meal.ts';
 import { SaveMealFromSlot } from '../nutrition/application/save-meal-from-slot.ts';
 import { SetDailyGoals } from '../nutrition/application/set-daily-goals.ts';
+import { UpdateFood } from '../nutrition/application/update-food.ts';
 import {
 	SqliteDailyGoalsRepository,
 	SqliteFoodLogRepository,
@@ -35,6 +37,8 @@ export function wireNutrition(infrastructure: Infrastructure) {
 	const goals = new SqliteDailyGoalsRepository(database);
 	return {
 		createFood: new CreateFood(foods, ids),
+		updateFood: new UpdateFood(foods),
+		deleteFood: new DeleteFood(foods),
 		listFoods: new ListFoods(foods),
 		logFood: new LogFood({ foods, log, clock, ids }),
 		changeLogAmount: new ChangeLogAmount(log),

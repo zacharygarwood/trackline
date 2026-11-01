@@ -11,7 +11,7 @@ test('export a backup, delete all data, and restore everything, photos included,
 	await finishFirstRun(page);
 	await checkIn(page, '80.4', PHOTO);
 
-	await page.getByRole('link', { name: messages.navigation.settings }).click();
+	await page.goto('/app/settings/data');
 	const download = page.waitForEvent('download');
 	await page.getByRole('button', { name: messages.settings.exportBackup }).click();
 	const backup = await download;
@@ -35,7 +35,7 @@ test('export a backup, delete all data, and restore everything, photos included,
 	await expect(page.getByRole('button', { name: messages.checkIn.checkIn })).toBeVisible();
 	expect(await storedPhotoFiles(page)).toEqual([]);
 
-	await page.goto('/app/settings');
+	await page.goto('/app/settings/data');
 	await page.locator('input[type="file"]').setInputFiles(backupPath);
 	const restoreSheet = page.getByRole('dialog', { name: messages.settings.restoreTitle });
 	await expect(restoreSheet).toContainText('(0 weigh-ins, 0 workouts, 0 food entries, 0 photos)');
@@ -45,13 +45,14 @@ test('export a backup, delete all data, and restore everything, photos included,
 
 	await page.goto('/app/body');
 	await expect(page.getByRole('button', { name: messages.checkIn.update })).toBeVisible();
+	await page.goto('/app/body/photos');
 	await expect(page.getByRole('img', { name: /^Photo from .*, 80\.4 kg$/ })).toBeVisible();
 	expect(await storedPhotoFiles(page)).toHaveLength(2);
 });
 
 test('a file that is not a backup is refused without changing anything', async ({ page }) => {
 	await finishFirstRun(page);
-	await page.goto('/app/settings');
+	await page.goto('/app/settings/data');
 
 	await page.locator('input[type="file"]').setInputFiles({
 		name: 'notes.zip',

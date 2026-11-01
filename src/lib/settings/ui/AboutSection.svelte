@@ -21,5 +21,4 @@
 		href={ExternalUrl.license}
 	/>
 	<Row label={messages.settings.sourceCode} action href={ExternalUrl.source} />
-	<Row label={messages.settings.donate} action href={ExternalUrl.donate} />
 </Card>

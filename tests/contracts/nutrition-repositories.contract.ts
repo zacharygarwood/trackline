@@ -59,6 +59,20 @@ export function describeNutritionRepositories(create: () => Promise<NutritionRep
 			]);
 		});
 
+		it('hides a deleted food from the list but still finds it, even after an edit', async () => {
+			const repositories = await create();
+			const oats = aFood('Oats').build();
+			const apple = aFood('Apple').build();
+			for (const food of [oats, apple]) await repositories.foods.save(food);
+			await repositories.log.save([entry(oats, '2026-10-26', 50, 1)]);
+
+			await repositories.foods.archive(oats.id);
+			await repositories.foods.save({ ...oats, name: 'Rolled oats' });
+
+			expect((await repositories.foods.findAll()).map((food) => food.name)).toEqual(['Apple']);
+			expect((await repositories.foods.findById(oats.id))?.name).toBe('Rolled oats');
+		});
+
 		it('lists a day of the log in order and finds the last entry for a food', async () => {
 			const repositories = await create();
 			const oats = aFood('Oats').build();

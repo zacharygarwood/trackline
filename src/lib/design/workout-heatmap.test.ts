@@ -51,5 +51,17 @@ describe('layoutWorkoutHeatmap', () => {
 			minutesOf: () => 0
 		});
 		expect(long.months.map((month) => month.date.toString())).toEqual(['2026-09-01', '2026-10-01']);
+
+		const year = layoutWorkoutHeatmap({
+			today: thursday,
+			weeks: 52,
+			rangeWeeks: 52,
+			weekStart: WeekStart.sunday,
+			minutesOf: () => 0
+		});
+		const gaps = year.months
+			.slice(1)
+			.map((month, index) => month.column - (year.months.at(index)?.column ?? 0));
+		expect(Math.min(...gaps)).toBeGreaterThanOrEqual(8);
 	});
 });

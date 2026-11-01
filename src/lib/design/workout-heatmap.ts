@@ -6,6 +6,8 @@ import { startOfWeek } from '../shared/week.ts';
 const DAYS_PER_WEEK = 7;
 /** Month labels closer than this many columns would overlap. */
 const MIN_LABEL_COLUMNS = 3;
+/** The most month labels that fit across the grid however many weeks it shows. */
+const MAX_LABELS = 7;
 const SHORT = 30;
 const MEDIUM = 50;
 const LONG = 70;
@@ -60,14 +62,15 @@ export interface WorkoutHeatmapLayout {
 	readonly months: readonly MonthLabel[];
 }
 
-function monthLabels(cells: readonly WorkoutHeatCell[]): readonly MonthLabel[] {
+function monthLabels(cells: readonly WorkoutHeatCell[], weeks: number): readonly MonthLabel[] {
+	const spacing = Math.max(MIN_LABEL_COLUMNS, Math.ceil(weeks / MAX_LABELS));
 	const labels: MonthLabel[] = [];
 	for (const cell of cells) {
 		const first = cell.date.day === 1;
 		if (!(first || (cell.column === 0 && cell.row === 0))) continue;
 		const previous = last(labels);
-		if (previous !== undefined && cell.column - previous.column < MIN_LABEL_COLUMNS) {
-			if (!first) continue;
+		if (previous !== undefined && cell.column - previous.column < spacing) {
+			if (previous.date.day === 1) continue;
 			labels.pop();
 		}
 		labels.push({ column: cell.column, date: cell.date });
@@ -100,5 +103,5 @@ export function layoutWorkoutHeatmap(input: WorkoutHeatmapInput): WorkoutHeatmap
 			future
 		};
 	});
-	return { cells, months: monthLabels(cells) };
+	return { cells, months: monthLabels(cells, input.weeks) };
 }

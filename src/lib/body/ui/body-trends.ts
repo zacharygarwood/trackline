@@ -1,6 +1,5 @@
 import { messages } from '../../i18n/messages.en.ts';
 import { last } from '../../shared/collections.ts';
-import type { LocalDate } from '../../shared/local-date.ts';
 import type { MassUnit } from '../../shared/mass-unit.constants.ts';
 import { formatMassNumber, formatMass, formatMonthDay } from '../../ui/format.ts';
 import type { ProgressPhoto } from '../domain/progress-photo.ts';
@@ -24,24 +23,6 @@ export interface WeightChange {
 	readonly direction: 'down' | 'up';
 	/** The latest weight, one decimal. */
 	readonly latest: string;
-}
-
-/**
- * Weigh-ins from a day on, oldest first, in a unit.
- *
- * @param weighIns - Weigh-ins in any order.
- * @param since - The first day to include.
- * @param unit - The unit to show them in.
- */
-export function weightsSince(
-	weighIns: readonly WeighIn[],
-	since: LocalDate,
-	unit: MassUnit
-): readonly number[] {
-	return weighIns
-		.filter((weighIn) => !weighIn.date.isBefore(since))
-		.toSorted((a, b) => a.date.compareTo(b.date))
-		.map((weighIn) => weighIn.weight.toUnit(unit));
 }
 
 /**

@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
-import { checkIn, expectOnTab, finishFirstRun } from './helpers.ts';
+import { checkIn, finishFirstRun, homeBar, tab } from './helpers.ts';
 
 const PHOTO = path.join(import.meta.dirname, 'assets', 'photo-with-gps.jpg');
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -16,9 +16,27 @@ const SCREENS = [
 	'/app/train/new',
 	'/app/eat',
 	'/app/body',
+	'/app/eat/today',
+	'/app/train/exercises',
+	'/app/train/start',
+	'/app/train/workouts',
+	'/app/eat/add',
+	'/app/eat/foods',
 	'/app/body/photos',
+	'/app/body/compare',
 	'/app/stats',
-	'/app/settings'
+	'/app/train/history',
+	'/app/eat/days',
+	'/app/tracker',
+	'/app/settings',
+	'/app/settings/home',
+	'/app/settings/theme',
+	'/app/tracker/add',
+	'/app/tracker',
+	'/app/settings/tracking',
+	'/app/settings/data',
+	'/app/settings/support',
+	'/app/settings/about'
 ];
 
 /**
@@ -40,8 +58,9 @@ async function violations(page: Page): Promise<string[]> {
 
 /** Starts a workout of one new exercise and opens the workout screen. */
 async function startWorkout(page: Page): Promise<void> {
-	await page.goto('/app/train');
+	await page.goto('/app/train/start');
 	await page.getByRole('searchbox', { name: messages.train.search }).fill('Squat');
+	await page.getByRole('button', { name: messages.exercise.createTitle('Squat') }).click();
 	await page.getByRole('button', { name: messages.exercise.fields.weight, exact: true }).click();
 	await page.getByRole('button', { name: messages.exercise.fields.reps, exact: true }).click();
 	await page.getByRole('button', { name: messages.exercise.saveToLibrary }).click();
@@ -52,7 +71,7 @@ async function startWorkout(page: Page): Promise<void> {
 for (const theme of [messages.preferences.themes.light, messages.preferences.themes.dark]) {
 	test(`every screen meets WCAG 2.2 AA in the ${theme.toLowerCase()} theme`, async ({ page }) => {
 		await finishFirstRun(page);
-		await page.goto('/app/settings');
+		await page.goto('/app/settings/theme');
 		await page.getByRole('button', { name: theme, exact: true }).click();
 		await checkIn(page, '80.4', PHOTO);
 		await startWorkout(page);
@@ -68,17 +87,19 @@ for (const theme of [messages.preferences.themes.light, messages.preferences.the
 	});
 }
 
-test('the inline forms meet WCAG 2.2 AA', async ({ page }) => {
+test('the create forms meet WCAG 2.2 AA', async ({ page }) => {
 	await finishFirstRun(page);
-	await page.goto('/app/eat');
+	await page.goto('/app/eat/add');
 	await page.getByRole('searchbox', { name: messages.food.search }).fill('Mango');
+	await page.getByRole('button', { name: messages.food.createTitle('Mango') }).click();
 	await expect(
 		page.getByRole('heading', { name: messages.food.createTitle('Mango') })
 	).toBeVisible();
 	const newFood = await violations(page);
 
-	await page.goto('/app/train');
+	await page.goto('/app/train/start');
 	await page.getByRole('searchbox', { name: messages.train.search }).fill('Climb');
+	await page.getByRole('button', { name: messages.exercise.createTitle('Climb') }).click();
 	await page.getByRole('button', { name: messages.exercise.fields.grade, exact: true }).click();
 	const newExercise = await violations(page);
 
@@ -87,11 +108,12 @@ test('the inline forms meet WCAG 2.2 AA', async ({ page }) => {
 
 test('the main flows work from the keyboard alone', async ({ page }) => {
 	await finishFirstRun(page);
-	const tabs = page.getByRole('navigation', { name: messages.navigation.tabs });
-
-	await tabs.getByRole('link', { name: messages.navigation.body }).focus();
+	await homeBar(page, messages.home.workouts).focus();
 	await page.keyboard.press('Enter');
-	await expectOnTab(page, messages.navigation.body);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.home.workouts);
+	await tab(page, messages.home.weight).focus();
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.home.weight);
 
 	const field = page.getByRole('spinbutton', { name: messages.checkIn.weightIn('kg') });
 	await field.focus();
@@ -100,12 +122,30 @@ test('the main flows work from the keyboard alone', async ({ page }) => {
 	await page.keyboard.press('Enter');
 	await expect(page.getByRole('button', { name: messages.checkIn.update })).toBeVisible();
 
-	await tabs.getByRole('link', { name: messages.navigation.stats }).focus();
+	await tab(page, messages.navigation.stats).focus();
 	await page.keyboard.press('Enter');
 	const all = page.getByRole('button', { name: messages.trends.ranges.all });
 	await all.focus();
 	await page.keyboard.press('Enter');
 	await expect(all).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('every named theme meets WCAG 2.2 AA on the main screens', async ({ page }) => {
+	await finishFirstRun(page);
+	await checkIn(page, '80.4');
+	const found: string[] = [];
+	for (const theme of Object.values(messages.preferences.themes)) {
+		await page.goto('/app/settings/theme');
+		await page.getByRole('button', { name: theme, exact: true }).click();
+		for (const screen of ['/app', '/app/eat', '/app/train', '/app/settings/theme']) {
+			await page.goto(screen);
+			await page.waitForFunction(
+				() => (document.querySelector('main')?.childElementCount ?? 0) > 0
+			);
+			found.push(...(await violations(page)).map((violation) => `${theme} ${screen} ${violation}`));
+		}
+	}
+	expect(found).toEqual([]);
 });
 
 test('a focused control is never hidden behind the tab bar', async ({ page }) => {
@@ -114,7 +154,7 @@ test('a focused control is never hidden behind the tab bar', async ({ page }) =>
 	const controls = [
 		{ screen: '/app/body', control: page.getByRole('button', { name: messages.checkIn.update }) },
 		{
-			screen: '/app/settings',
+			screen: '/app/settings/data',
 			control: page.getByRole('button', { name: messages.settings.exportBackup })
 		}
 	];

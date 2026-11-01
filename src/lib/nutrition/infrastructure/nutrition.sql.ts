@@ -26,6 +26,7 @@ export const FIND_ALL_FOODS: SqlStatement = {
 	sql: `SELECT ${FOOD_COLUMNS} FROM food
 		LEFT JOIN (SELECT food_id, max(logged_at) AS last_logged FROM food_log_entry GROUP BY food_id)
 		ON food_id = id
+		WHERE archived = 0
 		ORDER BY last_logged IS NULL, last_logged DESC, name COLLATE NOCASE`,
 	params: []
 };
@@ -35,11 +36,20 @@ export function findFoodById(id: string): SqlStatement {
 	return { name: 'find food', sql: `SELECT ${FOOD_COLUMNS} FROM food WHERE id = ?`, params: [id] };
 }
 
+/** Hides a food from the library; the log keeps its entries. */
+export function archiveFood(id: string): SqlStatement {
+	return { name: 'archive food', sql: 'UPDATE food SET archived = 1 WHERE id = ?', params: [id] };
+}
+
 /** Inserts or updates a food. */
 export function saveFood(row: FoodRow): SqlStatement {
 	return {
 		name: 'save food',
-		sql: `INSERT OR REPLACE INTO food (${FOOD_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		sql: `INSERT INTO food (${FOOD_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT (id) DO UPDATE SET name = excluded.name,
+			reference_amount = excluded.reference_amount, reference_unit = excluded.reference_unit,
+			calories = excluded.calories, protein_g = excluded.protein_g, carbs_g = excluded.carbs_g,
+			fat_g = excluded.fat_g`,
 		params: [
 			row.id,
 			row.name,

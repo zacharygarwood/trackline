@@ -3,11 +3,14 @@ import type { SqlDriver } from '../../platform/db/sql-driver.ts';
 import { first } from '../../shared/collections.ts';
 import type { ExerciseReader, ExerciseWriter } from '../domain/exercise-repository.ts';
 import type { Exercise } from '../domain/exercise.ts';
+import type { ExerciseId } from '../domain/ids.ts';
 import { exerciseMapper } from './exercise.mapper.ts';
 import {
 	FIND_ALL_EXERCISES,
 	FIND_EXERCISES_BY_RECENT_USE,
+	archiveExercise,
 	findExerciseByName,
+	isExerciseArchived,
 	saveExercise
 } from './training.sql.ts';
 
@@ -36,5 +39,17 @@ export class SqliteExerciseRepository implements ExerciseReader, ExerciseWriter 
 	/** {@inheritDoc ExerciseWriter.save} */
 	async save(exercise: Exercise): Promise<void> {
 		await this.database.execute(saveExercise(exerciseMapper.toRow(exercise)));
+	}
+
+	/** {@inheritDoc ExerciseWriter.archive} */
+	async archive(id: ExerciseId): Promise<void> {
+		await this.database.execute(archiveExercise(id, true));
+	}
+
+	/** {@inheritDoc ExerciseWriter.restore} */
+	async restore(id: ExerciseId): Promise<boolean> {
+		const archived = (await this.database.query(isExerciseArchived(id))).length > 0;
+		if (archived) await this.database.execute(archiveExercise(id, false));
+		return archived;
 	}
 }

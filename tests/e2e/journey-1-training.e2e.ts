@@ -1,10 +1,12 @@
 import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
-import { finishFirstRun } from './helpers.ts';
+import { finishFirstRun, homeBar } from './helpers.ts';
 
 async function createExercise(page: Page, name: string, fields: readonly string[]): Promise<void> {
+	await page.getByRole('button', { name: messages.navigation.startWorkout }).click();
 	await page.getByRole('searchbox', { name: messages.train.search }).fill(name);
+	await page.getByRole('button', { name: messages.exercise.createTitle(name) }).click();
 	for (const field of fields) {
 		await page.getByRole('button', { name: field, exact: true }).click();
 	}
@@ -12,12 +14,12 @@ async function createExercise(page: Page, name: string, fields: readonly string[
 	await expect(page.getByText(messages.train.saved(name)).first()).toBeVisible();
 }
 
-test('create an exercise, log sets, finish, see it in Stats, and repeat it from Workouts', async ({
+test('create an exercise, log sets, finish, see it in recent workouts, and repeat it', async ({
 	page
 }) => {
 	await page.clock.setFixedTime(new Date('2026-10-01T09:00:00'));
 	await finishFirstRun(page);
-	await page.getByRole('link', { name: messages.navigation.train }).click();
+	await homeBar(page, messages.home.workouts).click();
 	await createExercise(page, 'Squat', [
 		messages.exercise.fields.weight,
 		messages.exercise.fields.reps
@@ -37,15 +39,15 @@ test('create an exercise, log sets, finish, see it in Stats, and repeat it from 
 	await page.getByRole('button', { name: messages.workout.finish }).click();
 	await expect(page.getByText(messages.workout.saved).first()).toBeVisible();
 
-	await page.getByRole('link', { name: messages.navigation.stats }).click();
+	await page.getByRole('link', { name: messages.navigation.pastWorkouts }).click();
 	await page.getByRole('button', { name: /^Squat/ }).click();
 	await expect(page.getByText('2 × 5 at 100 kg')).toBeVisible();
 	await page.getByRole('button', { name: messages.trends.saveToWorkouts }).click();
 	await expect(page.getByText(messages.trends.savedToWorkouts).first()).toBeVisible();
 
-	await page.getByRole('link', { name: messages.navigation.train }).click();
-	await page.getByRole('button', { name: 'Squat', exact: true }).click();
-	await page.getByRole('button', { name: messages.train.start, exact: true }).click();
+	await page.goto('/app/train');
+	await page.getByRole('button', { name: messages.navigation.startWorkout }).click();
+	await page.getByRole('button', { name: messages.train.startOne('Squat') }).click();
 	await expect(page.getByRole('spinbutton', { name: 'kg' })).toHaveValue('100');
 
 	await page.getByRole('button', { name: messages.workout.discard }).click();
@@ -56,7 +58,7 @@ test('create an exercise, log sets, finish, see it in Stats, and repeat it from 
 
 test('time an effort with a distance, and log climbs by grade', async ({ page }) => {
 	await finishFirstRun(page);
-	await page.getByRole('link', { name: messages.navigation.train }).click();
+	await homeBar(page, messages.home.workouts).click();
 	await createExercise(page, 'Bouldering', [messages.exercise.fields.grade]);
 
 	await page.getByRole('button', { name: messages.train.startExercise('Bouldering') }).click();
@@ -67,6 +69,7 @@ test('time an effort with a distance, and log climbs by grade', async ({ page })
 
 	await page.getByRole('button', { name: messages.workout.addExercise }).click();
 	await page.getByRole('searchbox', { name: messages.train.search }).fill('Run');
+	await page.getByRole('button', { name: messages.exercise.createTitle('Run') }).click();
 	await page.getByRole('button', { name: messages.exercise.fields.time, exact: true }).click();
 	await page.getByRole('button', { name: messages.exercise.fields.distance, exact: true }).click();
 	await page.getByRole('button', { name: messages.exercise.saveToWorkout }).click();
@@ -81,4 +84,22 @@ test('time an effort with a distance, and log climbs by grade', async ({ page })
 	await expect(page.getByRole('heading', { name: messages.workout.allDone })).toBeVisible();
 	await page.getByRole('button', { name: messages.workout.finishWorkout }).click();
 	await expect(page.getByText(messages.workout.saved).first()).toBeVisible();
+});
+
+test('rename an exercise, and delete one only once no saved workout uses it', async ({ page }) => {
+	await finishFirstRun(page);
+	await homeBar(page, messages.home.workouts).click();
+	await createExercise(page, 'Squat', [messages.exercise.fields.reps]);
+	await page.goto('/app/train');
+
+	await page.getByRole('link', { name: messages.navigation.exercises, exact: true }).click();
+	await page.getByRole('button', { name: 'Squat' }).click();
+	await page.getByRole('textbox', { name: messages.train.name }).fill('Back squat');
+	await page.getByRole('button', { name: messages.train.save }).click();
+	await expect(page.getByRole('button', { name: 'Back squat' })).toBeVisible();
+
+	await page.getByRole('button', { name: 'Back squat' }).click();
+	await page.getByRole('button', { name: messages.train.delete }).click();
+	await expect(page.getByText(messages.train.deleted('Back squat')).first()).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Back squat' })).toBeHidden();
 });

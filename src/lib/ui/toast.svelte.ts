@@ -14,6 +14,8 @@ export class Toaster {
 	current: Toast | undefined = $state();
 	/** The latest announcement for the polite live region. */
 	announcement = $state('');
+	/** How many undos have run; a screen showing data an undo may change reloads when it grows. */
+	undoCount = $state(0);
 	private timer: ReturnType<typeof setTimeout> | undefined;
 
 	/**
@@ -49,7 +51,25 @@ export class Toaster {
 		this.current = undefined;
 		this.announcement = undone;
 		await undo?.();
+		this.undoCount += 1;
 	}
+}
+
+/**
+ * Reloads a screen's data whenever an undo runs while it is shown, such as
+ * undoing an add made on a page that has since closed. Call while a component
+ * is being set up.
+ *
+ * @param toaster - The app's toaster.
+ * @param reload - Loads the screen's data again.
+ */
+export function reloadOnUndo(toaster: Toaster, reload: () => Promise<void> | undefined): void {
+	let seen = toaster.undoCount;
+	$effect(() => {
+		if (toaster.undoCount === seen) return;
+		seen = toaster.undoCount;
+		void reload();
+	});
 }
 
 /** Shares the app's one toaster with every screen. */

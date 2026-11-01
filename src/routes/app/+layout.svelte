@@ -12,13 +12,12 @@
 	import { watchForUpdates } from '#lib/platform/pwa/app-updates.ts';
 	import { canAddToHomeScreen } from '#lib/platform/pwa/home-screen.ts';
 	import { AppPreferences, setPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
-	import { first } from '#lib/shared/collections.ts';
 	import type { LocalDate } from '#lib/shared/local-date.ts';
 	import { formatShortDate } from '#lib/ui/format.ts';
 	import { setToaster, Toaster } from '#lib/ui/toast.svelte.ts';
 	import type { LayoutProps } from './$types';
-	import { AppRoute } from './app-route.constants.ts';
 	import {
+		HOME_SECTION,
 		SCREEN_SECTIONS,
 		SETTINGS_SECTION,
 		TAB_SECTIONS,
@@ -37,44 +36,29 @@
 	let installHint: (() => Promise<void>) | undefined = $state();
 	let today: LocalDate | undefined = $state();
 
+	const homeHref = resolve(HOME_SECTION.route);
+	const settingsHref = resolve(SETTINGS_SECTION.route);
+	const welcomeHref = resolve(WELCOME_SECTION.route);
+	const onWelcome = $derived(page.url.pathname === welcomeHref);
+	const onHome = $derived(page.url.pathname === homeHref);
+
 	const tabs = TAB_SECTIONS.map((section) => ({
 		href: resolve(section.route),
 		label: section.title,
 		icon: section.icon
 	}));
-	const todayHref = resolve(AppRoute.today);
-	const settingsHref = resolve(SETTINGS_SECTION.route);
-	const welcomeHref = resolve(WELCOME_SECTION.route);
-	const onWelcome = $derived(page.url.pathname === welcomeHref);
-	const onTab = $derived(tabs.some((tab) => tab.href === page.url.pathname));
-	const currentHref = $derived(currentTab(page.url.pathname));
-
-	const title = $derived(
+	const section = $derived(
 		[...TAB_SECTIONS, ...SCREEN_SECTIONS, SETTINGS_SECTION, WELCOME_SECTION].find(
-			(section) => resolve(section.route) === page.url.pathname
-		)?.title
+			(candidate) => candidate.route === page.route.id
+		)
 	);
-	const heading = $derived(
-		page.url.pathname === todayHref && today !== undefined ? formatShortDate(today) : title
-	);
+	const title = $derived(section?.title);
+	const currentHref = $derived(section?.tab === undefined ? undefined : resolve(section.tab));
+	const heading = $derived(onHome && today !== undefined ? formatShortDate(today) : title);
 
 	$effect(() => {
 		document.documentElement.dataset.theme = preferences.current.theme;
-		document.documentElement.dataset.accent = preferences.current.accent;
 	});
-
-	/** The tab a path belongs to: the longest tab path it starts with, Today only on its own path. */
-	function currentTab(pathname: string): string | undefined {
-		if (pathname === settingsHref) return undefined;
-		return first(
-			tabs
-				.map((tab) => tab.href)
-				.filter(
-					(href) => pathname === href || (href !== todayHref && pathname.startsWith(`${href}/`))
-				)
-				.toSorted((a, b) => b.length - a.length)
-		);
-	}
 
 	/** Sends a new user to the first-run screen before anything else. */
 	async function welcomeNewUser(app: App): Promise<void> {
@@ -129,7 +113,7 @@
 </svelte:head>
 
 <div class="shell">
-	{#if onTab}
+	{#if onHome}
 		<header>
 			<h1>{heading}</h1>
 			<a href={settingsHref} aria-label={messages.navigation.settings}>
@@ -156,7 +140,7 @@
 		</div>
 	{/if}
 
-	<main class:headless={!onTab}>
+	<main class:headless={!onHome}>
 		{@render children()}
 	</main>
 
@@ -164,6 +148,12 @@
 		{@const apply = applyUpdate}
 		<div class="update">
 			<Notice message={messages.app.updateReady} action={messages.app.reload} onaction={apply} />
+		</div>
+	{/if}
+
+	{#if !onWelcome}
+		<div class="tab-bar">
+			<TabBar {tabs} {currentHref} label={messages.navigation.tabs} />
 		</div>
 	{/if}
 
@@ -175,12 +165,6 @@
 				undo={toast.undo === undefined ? undefined : messages.shell.undo}
 				onundo={() => toaster.undo(messages.shell.undone)}
 			/>
-		</div>
-	{/if}
-
-	{#if !onWelcome}
-		<div class="tab-bar">
-			<TabBar {tabs} {currentHref} label={messages.navigation.tabs} />
 		</div>
 	{/if}
 

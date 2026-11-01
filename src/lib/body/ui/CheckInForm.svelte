@@ -125,7 +125,7 @@
 		border-bottom: var(--border-field) solid var(--color-field-line);
 		background: transparent;
 		color: var(--color-text);
-		font-size: var(--font-size-80);
+		font-size: var(--font-size-56);
 		font-weight: var(--font-weight-bold);
 		letter-spacing: var(--letter-spacing-display);
 		font-variant-numeric: tabular-nums;

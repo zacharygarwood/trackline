@@ -4,7 +4,7 @@
 	import StepButton from '../../design/StepButton.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 
-	/** Props for the − amount + row under a food, with an action after it and a line of detail below. */
+	/** Props for a food page's − amount + row, a line of detail under it, and an action below. */
 	interface Props {
 		/** The amount as typed; bind to it. */
 		value: string;
@@ -17,7 +17,7 @@
 		onstep: (direction: number) => void;
 		/** Called when the typed amount is committed. */
 		onchange?: () => void;
-		/** The action at the end of the row, such as Add or Remove. */
+		/** The action under the stepper, such as Add or Remove. */
 		action: Snippet;
 	}
 
@@ -56,9 +56,9 @@
 			}}
 		/>
 		<span class="unit">{unit}</span>
-		{@render action()}
 	</div>
 	<p aria-live="polite">{detail}</p>
+	{@render action()}
 </div>
 
 <style>
@@ -66,8 +66,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--gap-10);
-		padding: 0 var(--gutter) var(--gap-18);
-		animation: rise var(--duration-rise) ease-out;
 	}
 
 	.row {
@@ -97,6 +95,7 @@
 	}
 
 	p {
+		margin-bottom: var(--space-5);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-15);
 	}

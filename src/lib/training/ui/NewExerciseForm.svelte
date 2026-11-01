@@ -6,17 +6,15 @@
 	import { GradeScale, TrackedField } from '../domain/tracking.constants.ts';
 	import { ExerciseForm, FORM_FIELDS, GRADE_SCALES } from './exercise-form.svelte.ts';
 
-	/** Props for the inline form that turns a search into a new exercise. */
+	/** Props for the form that turns a typed name into a new exercise, on a page titled with that name. */
 	interface Props {
-		/** The new exercise's name. */
-		name: string;
 		/** The save button's label, which says where the exercise goes. */
 		saveLabel: string;
 		/** Saves the exercise; the form clears afterwards. */
 		onsave: (form: ExerciseForm) => Promise<void> | void;
 	}
 
-	const { name, saveLabel, onsave }: Props = $props();
+	const { saveLabel, onsave }: Props = $props();
 	const form = new ExerciseForm();
 	const id = $props.id();
 
@@ -26,8 +24,7 @@
 	}
 </script>
 
-<section class="new-exercise" aria-labelledby="{id}-title">
-	<h3 id="{id}-title">{messages.exercise.createTitle(name)}</h3>
+<div class="new-exercise">
 	<p id="{id}-track" class="label">{messages.exercise.track}</p>
 	<div class="choices" role="group" aria-labelledby="{id}-track">
 		{#each FORM_FIELDS as field (field)}
@@ -74,20 +71,13 @@
 		</label>
 	{/if}
 	<Button disabled={!form.ready} onclick={save}>{saveLabel}</Button>
-</section>
+</div>
 
 <style>
 	.new-exercise {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
-		padding-top: var(--space-6);
-		animation: rise var(--duration-sheet) ease-out;
-	}
-
-	h3 {
-		font-size: var(--font-size-22);
-		font-weight: var(--font-weight-semibold);
 	}
 
 	.label {

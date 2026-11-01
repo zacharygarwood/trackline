@@ -43,7 +43,7 @@ test('check in with photos, find them stripped of GPS metadata, and compare them
 		page.getByRole('img', { name: messages.checkIn.photoAlt('Oct 1', '82.0 kg') })
 	).toBeVisible();
 
-	await page.getByRole('link', { name: messages.checkIn.compare }).click();
+	await page.getByRole('link', { name: messages.navigation.compare }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('−2.0 kg');
 	await expect(
 		page.getByRole('img', { name: messages.checkIn.photoAlt('Oct 1', '82.0 kg') })

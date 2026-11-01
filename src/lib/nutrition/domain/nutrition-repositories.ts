@@ -7,9 +7,9 @@ import type { SavedMeal } from './saved-meal.ts';
 
 /** Reads the food library. */
 export interface FoodReader {
-	/** Every food: the most recently logged first, then never-logged foods by name. */
+	/** Every food not deleted: the most recently logged first, then never-logged foods by name. */
 	findAll(): Promise<readonly Food[]>;
-	/** A food by id. */
+	/** A food by id, even a deleted one. */
 	findById(id: FoodId): Promise<Food | undefined>;
 }
 
@@ -17,6 +17,8 @@ export interface FoodReader {
 export interface FoodWriter {
 	/** Stores a food, replacing an earlier version with the same id. */
 	save(food: Food): Promise<void>;
+	/** Hides a food from the library; logged entries keep it. */
+	archive(id: FoodId): Promise<void>;
 }
 
 /** Reads saved meals. */

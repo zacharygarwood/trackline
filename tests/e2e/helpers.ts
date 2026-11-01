@@ -2,24 +2,45 @@ import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect } from './fixtures.ts';
 
-/** Goes through the first-run screen with the defaults and lands on Today. */
+/** Goes through the first-run screen with the defaults and lands on Home. */
 export async function finishFirstRun(page: Page): Promise<void> {
 	await page.goto('/app/welcome');
 	await page.getByRole('button', { name: messages.welcome.start }).click();
-	await expectOnTab(page, messages.navigation.today);
+	await expectOnHome(page);
 }
 
-/** Checks that a tab is the one being shown. */
-export async function expectOnTab(page: Page, tab: string): Promise<void> {
+/** Checks that Home, with its progress bars and the Settings gear, is shown. */
+export async function expectOnHome(page: Page): Promise<void> {
+	await expect(page).toHaveURL(/\/app$/);
 	await expect(
-		page
-			.getByRole('navigation', { name: messages.navigation.tabs })
-			.getByRole('link', { name: tab })
-	).toHaveAttribute('aria-current', 'page');
+		page.getByRole('link', { name: messages.navigation.settings, exact: true })
+	).toBeVisible();
 }
 
 /**
- * Checks in from the Body tab: types today's weight, optionally adds a photo, and saves.
+ * A progress bar on Home, found by its label.
+ *
+ * @param page - Home.
+ * @param label - The bar's label, such as "Calories".
+ */
+export function homeBar(page: Page, label: string) {
+	return page.getByRole('main').getByRole('button', { name: new RegExp(`^${label}`) });
+}
+
+/**
+ * A link in the tab bar.
+ *
+ * @param page - Any page with the tab bar.
+ * @param label - The tab's label, such as "Home".
+ */
+export function tab(page: Page, label: string) {
+	return page
+		.getByRole('navigation', { name: messages.navigation.tabs })
+		.getByRole('link', { name: label, exact: true });
+}
+
+/**
+ * Checks in from the Weight page: types today's weight, optionally adds a photo, and saves.
  *
  * @param page - Any page of the app.
  * @param entry - The weight as typed, for example "80.4"; empty to leave it.

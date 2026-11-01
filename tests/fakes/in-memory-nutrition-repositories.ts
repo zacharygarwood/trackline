@@ -54,6 +54,7 @@ export class InMemoryFoodLog implements FoodLogReader, FoodLogWriter {
 /** The food library in memory; sorts by the food log's recency like the SQL query. */
 export class InMemoryFoods implements FoodReader, FoodWriter {
 	private readonly foods = new Map<FoodId, Food>();
+	private readonly archived = new Set<FoodId>();
 
 	constructor(private readonly log: InMemoryFoodLog) {}
 
@@ -66,10 +67,12 @@ export class InMemoryFoods implements FoodReader, FoodWriter {
 					.map((entry) => entry.loggedAt)
 			);
 		return Promise.resolve(
-			[...this.foods.values()].toSorted((a, b) => {
-				const byRecency = lastLogged(b) - lastLogged(a);
-				return byRecency === 0 ? a.name.localeCompare(b.name) : byRecency;
-			})
+			[...this.foods.values()]
+				.filter((food) => !this.archived.has(food.id))
+				.toSorted((a, b) => {
+					const byRecency = lastLogged(b) - lastLogged(a);
+					return byRecency === 0 ? a.name.localeCompare(b.name) : byRecency;
+				})
 		);
 	}
 
@@ -79,6 +82,11 @@ export class InMemoryFoods implements FoodReader, FoodWriter {
 
 	save(food: Food): Promise<void> {
 		this.foods.set(food.id, food);
+		return Promise.resolve();
+	}
+
+	archive(id: FoodId): Promise<void> {
+		this.archived.add(id);
 		return Promise.resolve();
 	}
 }

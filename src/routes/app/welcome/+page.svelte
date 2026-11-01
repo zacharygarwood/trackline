@@ -11,6 +11,7 @@
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import DailyGoalsFields from '#lib/nutrition/ui/DailyGoalsFields.svelte';
 	import { DailyGoalsEditor, type GoalsForm } from '#lib/nutrition/ui/daily-goals-editor.svelte.ts';
+	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
 	import { UnitsSetting } from '#lib/settings/ui/units-setting.svelte.ts';
 	import { WelcomeSetup } from '#lib/settings/ui/welcome-setup.svelte.ts';
 	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
@@ -23,6 +24,8 @@
 		readonly goal: WeightGoalEditor;
 		readonly dailyGoals: DailyGoalsEditor;
 		readonly setup: WelcomeSetup;
+		/** Reloads the app's preferences, so pages after Welcome read the units chosen here. */
+		readonly reloadPreferences: () => Promise<void>;
 	}
 
 	const unitOptions = [
@@ -34,6 +37,7 @@
 		label: DIRECTION_LABELS[value]
 	}));
 
+	const preferences = getPreferences();
 	let ready: Ready | undefined = $state();
 	let goalEntry = $state('');
 	let direction: GoalDirection = $state(GoalDirection.lose);
@@ -46,7 +50,8 @@
 			units,
 			goal: new WeightGoalEditor(app.body),
 			dailyGoals: new DailyGoalsEditor(app.nutrition, app.clock),
-			setup: new WelcomeSetup(app.settings.completeSetup)
+			setup: new WelcomeSetup(app.settings.completeSetup),
+			reloadPreferences: () => preferences.load(app.settings)
 		};
 	});
 
@@ -55,7 +60,9 @@
 			() => screen.goal.saveIfFilled(goalEntry, direction, screen.units.unit),
 			() => screen.dailyGoals.saveIfFilled(dailyGoals)
 		]);
-		if (finished) await goto(resolve(AppRoute.today), { replaceState: true });
+		if (!finished) return;
+		await screen.reloadPreferences();
+		await goto(resolve(AppRoute.today), { replaceState: true });
 	}
 </script>
 

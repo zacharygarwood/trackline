@@ -1,55 +1,121 @@
 import { expect, test } from './fixtures.ts';
-import { expectOnTab, finishFirstRun } from './helpers.ts';
+import { expectOnHome, finishFirstRun, homeBar, tab } from './helpers.ts';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 
-const tabs = [
-	messages.navigation.today,
-	messages.navigation.eat,
-	messages.navigation.train,
-	messages.navigation.body,
-	messages.navigation.stats
-];
+const bars = [messages.nutrition.calories, messages.nutrition.protein, messages.home.workouts];
 
-test('a new user starts on the welcome screen, then lands on Today', async ({ page }) => {
+test('a new user starts on the welcome screen, then lands on Home', async ({ page }) => {
 	await page.goto('/app');
 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.welcome.title);
 	await expect(page.getByRole('radio', { name: messages.units.kgLong })).toBeChecked();
-	await expect(page.getByRole('navigation', { name: messages.navigation.tabs })).toBeHidden();
 	await page.getByRole('button', { name: messages.welcome.start }).click();
 
-	await expectOnTab(page, messages.navigation.today);
+	await expectOnHome(page);
 });
 
-test('the app opens on Today with five tabs', async ({ page }) => {
+test('Home starts with the bars it always had, and weight once there is a goal weight', async ({
+	page
+}) => {
 	await finishFirstRun(page);
-	await page.goto('/app');
 
-	await expectOnTab(page, messages.navigation.today);
-	const navigation = page.getByRole('navigation', { name: messages.navigation.tabs });
-	for (const tab of tabs) {
-		await expect(navigation.getByRole('link', { name: tab })).toBeVisible();
+	for (const bar of bars) {
+		await expect(homeBar(page, bar)).toBeVisible();
+	}
+	await expect(homeBar(page, messages.home.weight)).toBeHidden();
+});
+
+test('tapping a bar opens its tab, and the Home tab returns', async ({ page }) => {
+	await finishFirstRun(page);
+
+	await homeBar(page, messages.home.workouts).click();
+
+	await expect(page).toHaveURL(/\/app\/train$/);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.home.workouts);
+	await expect(tab(page, messages.home.workouts)).toHaveAttribute('aria-current', 'page');
+	await tab(page, messages.navigation.home).click();
+	await expectOnHome(page);
+});
+
+test('the tab bar opens each main page', async ({ page }) => {
+	await finishFirstRun(page);
+
+	for (const [label, url] of [
+		[messages.navigation.eat, /\/app\/eat$/],
+		[messages.home.workouts, /\/app\/train$/],
+		[messages.home.weight, /\/app\/body$/],
+		[messages.navigation.stats, /\/app\/stats$/]
+	] as const) {
+		await tab(page, label).click();
+		await expect(page).toHaveURL(url);
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText(label);
 	}
 });
 
-test('tapping a tab shows that section and marks it current', async ({ page }) => {
+test('Settings lists the trackers, and deleting one takes it off Home', async ({ page }) => {
 	await finishFirstRun(page);
-	const navigation = page.getByRole('navigation', { name: messages.navigation.tabs });
+	await page.getByRole('link', { name: messages.navigation.settings, exact: true }).click();
+	await page.getByRole('link', { name: messages.navigation.homeScreen }).click();
 
-	await navigation.getByRole('link', { name: messages.navigation.body }).click();
+	await page.getByRole('button', { name: /^Calories/ }).click();
+	await page.getByRole('button', { name: messages.trackers.delete }).click();
+	await tab(page, messages.navigation.home).click();
 
-	await expect(page).toHaveURL(/\/app\/body$/);
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.body);
-	await expect(navigation.getByRole('link', { name: messages.navigation.body })).toHaveAttribute(
-		'aria-current',
-		'page'
+	await expect(homeBar(page, messages.nutrition.calories)).toBeHidden();
+	await expect(homeBar(page, messages.home.workouts)).toBeVisible();
+});
+
+test('a tracker made from a preset is logged on its own page and fills its bar', async ({
+	page
+}) => {
+	await finishFirstRun(page);
+	await page.goto('/app/settings/home');
+
+	await page.getByRole('link', { name: messages.trackers.addTracker }).click();
+	await page.getByRole('button', { name: /^Water/ }).click();
+	await expect(page.getByRole('textbox', { name: messages.trackers.goal })).toHaveValue('8');
+	await page.getByRole('button', { name: messages.train.save }).click();
+	await tab(page, messages.navigation.home).click();
+
+	await homeBar(page, 'Water').click();
+	await page.getByRole('textbox', { name: 'glasses' }).fill('3');
+	await page.getByRole('button', { name: messages.trackers.log, exact: true }).click();
+	await expect(page.getByRole('list', { name: messages.trackers.history })).toContainText(
+		'3 glasses'
 	);
+	await tab(page, messages.navigation.home).click();
+	await expect(homeBar(page, 'Water')).toContainText('/ 8 glasses');
+	await expect(homeBar(page, 'Water')).toContainText('3');
+});
+
+test('a tracker can be built from an exercise', async ({ page }) => {
+	await finishFirstRun(page);
+	await page.goto('/app/train/exercises');
+	await page.getByRole('searchbox', { name: messages.train.search }).fill('Climbing');
+	await page.getByRole('button', { name: messages.train.addNewExercise('Climbing') }).click();
+	await page.getByRole('button', { name: messages.exercise.fields.grade, exact: true }).click();
+	await page.getByRole('button', { name: messages.exercise.saveToLibrary }).click();
+	await expect(page.getByText(messages.train.saved('Climbing')).first()).toBeVisible();
+
+	await page.goto('/app/tracker/add');
+	await page.getByRole('button', { name: messages.trackers.buildYourOwn }).click();
+	await page.getByRole('button', { name: messages.trackers.sources.workouts, exact: true }).click();
+	await page.getByRole('button', { name: messages.trackers.measures.sessions }).click();
+	await page.getByRole('combobox', { name: messages.trackers.which('workouts') }).selectOption({
+		label: 'Climbing'
+	});
+	await page.getByRole('textbox', { name: messages.trackers.goal }).fill('3');
+	await page.getByRole('button', { name: messages.trackers.periods.week }).click();
+	await page.getByRole('button', { name: messages.train.save }).click();
+
+	await tab(page, messages.navigation.home).click();
+	await expect(homeBar(page, 'Climbing')).toContainText('/ 3 sessions');
 });
 
 test('the gear opens Settings', async ({ page }) => {
 	await finishFirstRun(page);
 
-	await page.getByRole('link', { name: messages.navigation.settings }).click();
+	await page.getByRole('link', { name: messages.navigation.settings, exact: true }).click();
 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.settings);
 });
@@ -76,7 +142,7 @@ test('iPhone Safari users see how to add the app to the home screen until they d
 	await expect(hint).toBeHidden();
 
 	await page.reload();
-	await expectOnTab(page, messages.navigation.today);
+	await expectOnHome(page);
 	await expect(page.getByText(messages.app.installHint)).toBeHidden();
 });
 
@@ -101,12 +167,11 @@ test('first-run goals are saved with Get started, in the chosen units', async ({
 		await page.getByRole('textbox', { name: macro }).fill('100');
 	}
 	await page.getByRole('button', { name: messages.welcome.start }).click();
-	await expectOnTab(page, messages.navigation.today);
+	await expectOnHome(page);
 
-	await page.goto('/app/settings');
-	await expect(page.getByRole('spinbutton', { name: messages.nutrition.calories })).toHaveValue(
-		'2400'
-	);
+	await expect(homeBar(page, messages.nutrition.calories)).toContainText('/ 2,400 kcal');
+	await expect(homeBar(page, messages.home.weight)).toContainText('to 165 lb');
+	await page.goto('/app/settings/tracking');
 	await expect(
 		page.getByRole('group', { name: messages.preferences.weight }).getByRole('button', {
 			name: messages.units.lb

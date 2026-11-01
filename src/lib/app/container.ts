@@ -9,6 +9,7 @@ import { SystemClock } from '../platform/system/system-clock.ts';
 import type { Clock } from '../shared/clock.ts';
 import type { Infrastructure } from './infrastructure.ts';
 import { wireBody } from './wire-body.ts';
+import { wireTrackers } from './wire-trackers.ts';
 import { wireInsights } from './wire-insights.ts';
 import { wireNutrition } from './wire-nutrition.ts';
 import { wireSettings } from './wire-settings.ts';
@@ -22,6 +23,7 @@ export interface App {
 	readonly training: ReturnType<typeof wireTraining>;
 	readonly nutrition: ReturnType<typeof wireNutrition>;
 	readonly insights: ReturnType<typeof wireInsights>;
+	readonly trackers: ReturnType<typeof wireTrackers>;
 	/** Hands a file to the browser's download flow. */
 	readonly saveFile: (file: DownloadableFile) => void;
 }
@@ -41,6 +43,7 @@ export function wireApp(infrastructure: Infrastructure): App {
 		training: wireTraining(infrastructure),
 		nutrition: wireNutrition(infrastructure),
 		insights: wireInsights(infrastructure),
+		trackers: wireTrackers(infrastructure),
 		saveFile: downloadFile
 	};
 }

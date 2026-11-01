@@ -70,6 +70,23 @@ describe('TrainScreen', () => {
 		expect(train.activeName).toBe('Push day');
 		expect(train.active?.exercises).toHaveLength(1);
 	});
+
+	it('finds the saved workout a page was opened with, and names its exercises', async () => {
+		const { app, train, builder } = screens();
+		const bench = await withBench(app);
+		await builder.load();
+		builder.name = 'Push day';
+		builder.add(bench);
+		await builder.save();
+		await train.load();
+		const [push] = train.visibleTemplates;
+
+		const found = train.findTemplate(push?.id);
+
+		expect(found).toBe(push);
+		expect(found === undefined ? [] : train.exerciseNames(found)).toEqual(['Bench press']);
+		expect(train.findTemplate('unknown')).toBeUndefined();
+	});
 });
 
 describe('WorkoutBuilder', () => {

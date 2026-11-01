@@ -48,7 +48,7 @@
 	}
 
 	.hero {
-		font-size: var(--font-size-72);
+		font-size: var(--font-size-44);
 		letter-spacing: var(--letter-spacing-hero);
 	}
 
@@ -57,16 +57,16 @@
 	}
 
 	.large {
-		font-size: var(--font-size-56);
+		font-size: var(--font-size-40);
 		letter-spacing: var(--letter-spacing-hero);
 	}
 
 	.stat {
-		font-size: var(--font-size-44);
+		font-size: var(--font-size-34);
 	}
 
 	.macro {
-		font-size: var(--font-size-40);
+		font-size: var(--font-size-30);
 	}
 
 	.macro .suffix {

@@ -1,20 +1,23 @@
 <script lang="ts">
 	import { FieldEdges } from '../../design/button.constants.ts';
 	import Icon from '../../design/Icon.svelte';
+	import NavRow from '../../design/NavRow.svelte';
 	import { IconWeight } from '../../design/icon.constants.ts';
 	import SearchField from '../../design/SearchField.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
-	import type { ExerciseForm } from './exercise-form.svelte.ts';
+	import type { Exercise } from '../domain/exercise.ts';
 	import { canCreateExercise, capitalized, matchExercises } from './exercise-search.ts';
-	import NewExerciseForm from './NewExerciseForm.svelte';
 	import type { WorkoutSession } from './workout-session.svelte.ts';
 
-	/** Props for finding or creating an exercise to add to the workout in progress. */
+	/** Props for finding an exercise to add to the workout in progress, or naming a new one. */
 	interface Props {
 		session: WorkoutSession;
+		onpick: (exercise: Exercise) => void;
+		/** Opens the form for a new exercise with the typed name. */
+		oncreate: (name: string) => void;
 	}
 
-	const { session }: Props = $props();
+	const { session, onpick, oncreate }: Props = $props();
 	let input: HTMLInputElement | undefined = $state();
 
 	$effect(() => {
@@ -35,7 +38,9 @@
 				<button
 					type="button"
 					aria-label={messages.train.addExerciseTo(match.name, session.name)}
-					onclick={() => session.add(match)}
+					onclick={() => {
+						onpick(match);
+					}}
 				>
 					<span>{match.name}</span>
 					<span class="plus"><Icon name="plus" weight={IconWeight.bold} /></span>
@@ -44,19 +49,16 @@
 		{/each}
 	</ul>
 	{#if canCreateExercise(session.query, session.library)}
-		<NewExerciseForm
-			name={capitalized(session.query)}
-			saveLabel={messages.exercise.saveToWorkout}
-			onsave={(form: ExerciseForm) => session.create(form.tracking)}
+		<NavRow
+			label={messages.exercise.createTitle(capitalized(session.query))}
+			onclick={() => {
+				oncreate(capitalized(session.query));
+			}}
 		/>
 	{/if}
 </div>
 
 <style>
-	.adding {
-		animation: rise var(--duration-rise) ease-out;
-	}
-
 	ul {
 		margin: 0 calc(-1 * var(--gutter));
 	}

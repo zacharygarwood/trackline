@@ -2,6 +2,10 @@ CREATE INDEX food_log_entry_by_date ON food_log_entry (date, logged_at);
 
 CREATE INDEX food_log_entry_by_food ON food_log_entry (food_id, logged_at);
 
+CREATE INDEX tracker_entry_by_date ON tracker_entry (date);
+
+CREATE INDEX tracker_entry_by_tracker ON tracker_entry (tracker_id, date);
+
 CREATE INDEX workout_by_date ON workout (date, started_at);
 
 CREATE INDEX workout_exercise_by_exercise ON workout_exercise (exercise_id);
@@ -28,7 +32,7 @@ CREATE TABLE exercise (
 	CHECK (length(tracked_fields) BETWEEN 1 AND 60), grade_scale TEXT
 	CHECK (grade_scale IN ('v', 'yds', 'font', 'one_to_ten', 'custom')), custom_grades TEXT
 	CHECK ((grade_scale = 'custom') = (custom_grades IS NOT NULL)), count_label TEXT
-	CHECK (count_label IS NULL OR length(count_label) BETWEEN 1 AND 30)) STRICT;
+	CHECK (count_label IS NULL OR length(count_label) BETWEEN 1 AND 30), archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))) STRICT;
 
 CREATE TABLE food (
 	id TEXT PRIMARY KEY NOT NULL,
@@ -39,7 +43,7 @@ CREATE TABLE food (
 	protein_g REAL NOT NULL CHECK (protein_g >= 0),
 	carbs_g REAL NOT NULL CHECK (carbs_g >= 0),
 	fat_g REAL NOT NULL CHECK (fat_g >= 0)
-) STRICT;
+, archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))) STRICT;
 
 CREATE TABLE food_log_entry (
 	id TEXT PRIMARY KEY NOT NULL,
@@ -89,6 +93,29 @@ CREATE TABLE template_exercise (
 	target_sets INTEGER NOT NULL CHECK (target_sets BETWEEN 1 AND 20),
 	PRIMARY KEY (template_id, position)
 ) STRICT;
+
+CREATE TABLE tracker (
+	id TEXT PRIMARY KEY NOT NULL,
+	name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 40),
+	position INTEGER NOT NULL CHECK (position >= 0),
+	measure TEXT NOT NULL CHECK (measure IN ('calories', 'protein', 'carbs', 'fat', 'food', 'workouts',
+		'sessions', 'distance', 'time', 'reps', 'sets', 'weight', 'number', 'duration', 'rating', 'done')),
+	subject_id TEXT,
+	unit TEXT NOT NULL CHECK (length(unit) <= 20),
+	goal REAL NOT NULL CHECK (goal > 0),
+	direction TEXT NOT NULL CHECK (direction IN ('at_least', 'at_most')),
+	period TEXT NOT NULL CHECK (period IN ('day', 'week')),
+	combine TEXT NOT NULL CHECK (combine IN ('total', 'average', 'days'))
+) STRICT;
+
+CREATE TABLE tracker_entry (
+	id TEXT PRIMARY KEY NOT NULL,
+	tracker_id TEXT NOT NULL REFERENCES tracker (id) ON DELETE CASCADE,
+	date TEXT NOT NULL,
+	value REAL NOT NULL CHECK (value > 0)
+) STRICT;
+
+CREATE TABLE tracker_setup (id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1)) STRICT;
 
 CREATE TABLE weigh_in (
 	id TEXT PRIMARY KEY NOT NULL,

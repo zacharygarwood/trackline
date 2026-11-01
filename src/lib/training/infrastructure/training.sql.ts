@@ -27,7 +27,7 @@ const EXERCISE_COLUMNS = 'id, name, tracked_fields, grade_scale, custom_grades, 
 /** Lists the exercise library by name. */
 export const FIND_ALL_EXERCISES: SqlStatement = {
 	name: 'find all exercises',
-	sql: `SELECT ${EXERCISE_COLUMNS} FROM exercise ORDER BY name`,
+	sql: `SELECT ${EXERCISE_COLUMNS} FROM exercise WHERE archived = 0 ORDER BY name`,
 	params: []
 };
 
@@ -43,12 +43,36 @@ export const FIND_EXERCISES_BY_RECENT_USE: SqlStatement = {
 		FROM exercise e
 		LEFT JOIN workout_exercise we ON we.exercise_id = e.id
 		LEFT JOIN workout w ON w.id = we.workout_id
+		WHERE e.archived = 0
 		GROUP BY e.id
 		ORDER BY max(w.started_at) IS NOT NULL, max(w.started_at) DESC, e.id DESC`,
 	params: []
 };
 
-/** Finds an exercise by name, ignoring case. */
+/**
+ * Hides an exercise from the library, or shows it again.
+ *
+ * @param id - The exercise.
+ * @param archived - Whether to hide it.
+ */
+export function archiveExercise(id: string, archived: boolean): SqlStatement {
+	return {
+		name: 'archive exercise',
+		sql: 'UPDATE exercise SET archived = ? WHERE id = ?',
+		params: [archived ? 1 : 0, id]
+	};
+}
+
+/** Whether an exercise is hidden from the library. */
+export function isExerciseArchived(id: string): SqlStatement {
+	return {
+		name: 'is exercise archived',
+		sql: 'SELECT archived FROM exercise WHERE id = ? AND archived = 1',
+		params: [id]
+	};
+}
+
+/** Finds an exercise by name, ignoring case, including deleted ones. */
 export function findExerciseByName(name: string): SqlStatement {
 	return {
 		name: 'find exercise by name',

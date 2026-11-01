@@ -5,14 +5,14 @@ import { demoBackup, DEMO_TODAY } from './demo-backup.ts';
 
 const OUTPUT = 'static/screenshots';
 const SCREENS = [
-	{ name: 'today', path: '/app', ready: messages.today.thisWeek },
-	{ name: 'stats', path: '/app/stats', ready: messages.trends.workoutDays }
+	{ name: 'today', path: '/app', ready: messages.nutrition.calories },
+	{ name: 'stats', path: '/app/stats/workouts', ready: messages.trends.workoutDays }
 ] as const;
 
 test('capture the landing page screenshots', async ({ page }) => {
 	await page.clock.setFixedTime(new Date(`${DEMO_TODAY}T12:30:00`));
 	await finishFirstRun(page);
-	await page.goto('/app/settings');
+	await page.goto('/app/settings/data');
 	await page.locator('input[type="file"]').setInputFiles({
 		name: 'demo.zip',
 		mimeType: 'application/zip',
@@ -31,7 +31,7 @@ test('capture the landing page screenshots', async ({ page }) => {
 		dark: messages.preferences.themes.dark
 	};
 	for (const [scheme, theme] of Object.entries(themes)) {
-		await page.goto('/app/settings');
+		await page.goto('/app/settings/theme');
 		const choice = page.getByRole('button', { name: theme, exact: true });
 		await choice.click();
 		await expect(choice).toHaveAttribute('aria-pressed', 'true');

@@ -1,6 +1,8 @@
 import { FoodUnit } from '../../shared/food-unit.constants.ts';
 import { parseDecimal } from '../../ui/format.ts';
 import type { CreateFoodCommand } from '../application/create-food.ts';
+import type { Food } from '../domain/food.ts';
+import { amountText } from './food-portions.ts';
 
 const CALORIES_PER_GRAM_PROTEIN = 4;
 const CALORIES_PER_GRAM_CARBS = 4;
@@ -78,6 +80,20 @@ export class NewFoodForm {
 				fat: trackCarbsAndFat ? grams(this.fat) : 0
 			}
 		};
+	}
+
+	/**
+	 * Fills the form with a food's portion and macros, for editing it.
+	 *
+	 * @param food - The food.
+	 */
+	fill(food: Food): void {
+		this.base = amountText(food.reference.amount);
+		this.unit = food.reference.unit;
+		this.calories = String(food.macrosPerReference.calories);
+		this.protein = String(food.macrosPerReference.protein);
+		this.carbs = String(food.macrosPerReference.carbs);
+		this.fat = String(food.macrosPerReference.fat);
 	}
 
 	/** Clears the form. */

@@ -1,7 +1,7 @@
 import { DistanceUnit } from '../../shared/distance-unit.constants.ts';
 import { FoodUnit } from '../../shared/food-unit.constants.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
-import { Accent, Theme } from './preferences.constants.ts';
+import { HomeTracker, Theme } from './preferences.constants.ts';
 
 const ONE_MINUTE = 60;
 const MINUTE_AND_A_HALF = 90;
@@ -34,7 +34,6 @@ export const MAX_WEEKLY_WORKOUTS = 7;
 /** How the app looks and what it tracks, as the user set it. */
 export interface Preferences {
 	readonly theme: Theme;
-	readonly accent: Accent;
 	/** Whether carbs and fat are shown and asked for, beside calories and protein. */
 	readonly trackCarbsAndFat: boolean;
 	readonly distanceUnit: DistanceUnit;
@@ -44,17 +43,24 @@ export interface Preferences {
 	readonly restSeconds: RestTimerSeconds;
 	/** How many workouts a week the user aims for. */
 	readonly weeklyWorkoutGoal: number;
+	/** The progress bars Home shows, in order. */
+	readonly homeTrackers: readonly HomeTracker[];
 }
 
 /** What a new user starts with. */
 export const DEFAULT_PREFERENCES: Preferences = {
 	theme: Theme.dark,
-	accent: Accent.sky,
 	trackCarbsAndFat: false,
 	distanceUnit: DistanceUnit.mi,
 	newFoodUnit: FoodUnit.serving,
 	restSeconds: MINUTE_AND_A_HALF,
-	weeklyWorkoutGoal: 4
+	weeklyWorkoutGoal: 4,
+	homeTrackers: [
+		HomeTracker.calories,
+		HomeTracker.protein,
+		HomeTracker.workouts,
+		HomeTracker.weight
+	]
 };
 
 /** Raised when a weekly workout goal is not a whole number from 1 to 7. */

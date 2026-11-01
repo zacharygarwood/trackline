@@ -1,4 +1,5 @@
 import type { Clock } from '../../shared/clock.ts';
+import type { LocalDate } from '../../shared/local-date.ts';
 import { hourOf, parseDecimal } from '../../ui/format.ts';
 import type { ChangeLogAmount } from '../application/change-log-amount.ts';
 import type { CreateFood } from '../application/create-food.ts';
@@ -9,7 +10,6 @@ import type { LogFood } from '../application/log-food.ts';
 import type { RestoreLogEntry } from '../application/restore-log-entry.ts';
 import type { FoodLogEntry } from '../domain/food-log-entry.ts';
 import type { Food } from '../domain/food.ts';
-import type { FoodId, FoodLogEntryId } from '../domain/ids.ts';
 import { mealSlotAt } from '../domain/meal-slot.ts';
 import { amountText, stepAmount } from './food-portions.ts';
 import { NewFoodForm } from './new-food-form.svelte.ts';
@@ -37,17 +37,15 @@ const EMPTY_DAY: DayNutrition = {
 	}
 };
 
-/** State and actions of the Food tab: today's totals, finding and adding foods, and what was eaten. */
+/** State and actions of the Food tab and its pages: today's totals, finding and adding foods, and what was eaten. */
 export class FoodScreen {
 	day: DayNutrition = $state(EMPTY_DAY);
 	foods: readonly Food[] = $state([]);
 	query = $state('');
-	/** The food whose amount stepper is open. */
-	openFood: FoodId | undefined = $state();
-	/** The amount typed in the open food's stepper. */
+	/** The day shown, when it is not today. */
+	date: LocalDate | undefined = $state();
+	/** The amount typed on a food's page. */
 	amount = $state('');
-	/** The eaten entry whose stepper is open. */
-	openEntry: FoodLogEntryId | undefined = $state();
 	readonly form = new NewFoodForm();
 
 	constructor(
@@ -55,10 +53,10 @@ export class FoodScreen {
 		private readonly clock: Clock
 	) {}
 
-	/** Loads today's log and the food library. */
+	/** Loads the day's log (today unless another day is chosen) and the food library. */
 	async load(): Promise<void> {
 		[this.day, this.foods] = await Promise.all([
-			this.useCases.getDayNutrition.execute({ date: this.clock.today() }),
+			this.useCases.getDayNutrition.execute({ date: this.date ?? this.clock.today() }),
 			this.useCases.listFoods.execute()
 		]);
 	}
@@ -77,19 +75,35 @@ export class FoodScreen {
 		return typed !== '' && !this.foods.some((food) => food.name.toLowerCase() === typed);
 	}
 
-	/** Changes the search and closes any open stepper. */
+	/** Changes the search. */
 	search(text: string): void {
 		this.query = text;
-		this.openFood = undefined;
 	}
 
-	/** Opens or closes a food's amount stepper, starting at its reference amount. */
-	toggleFood(food: Food): void {
-		this.openFood = this.openFood === food.id ? undefined : food.id;
+	/**
+	 * The food a page was opened for.
+	 *
+	 * @param id - The id passed to the page, if any.
+	 */
+	findFood(id: string | undefined): Food | undefined {
+		return this.foods.find((food) => food.id === id);
+	}
+
+	/**
+	 * The eaten entry a page was opened for.
+	 *
+	 * @param id - The id passed to the page, if any.
+	 */
+	findEntry(id: string | undefined): FoodLogEntry | undefined {
+		return this.day.entries.find((entry) => entry.id === id);
+	}
+
+	/** Starts a food's amount at its usual portion. */
+	choose(food: Food): void {
 		this.amount = amountText(food.reference.amount);
 	}
 
-	/** Moves the open food's amount one step up (1) or down (-1). */
+	/** Moves the chosen food's amount one step up (1) or down (-1). */
 	stepFoodAmount(food: Food, direction: number): void {
 		const current = parseDecimal(this.amount) ?? 0;
 		this.amount = amountText(stepAmount(current, food.reference.unit, direction));
@@ -109,12 +123,11 @@ export class FoodScreen {
 			date: this.clock.today(),
 			slot: mealSlotAt(hourOf(this.clock.now()))
 		});
-		this.openFood = undefined;
 		await this.load();
 		return result.ok ? result.value : undefined;
 	}
 
-	/** Logs the open food's typed amount. */
+	/** Logs the chosen food's typed amount. */
 	addTyped(food: Food): Promise<FoodLogEntry | undefined> {
 		return this.add(food, parseDecimal(this.amount) ?? 0);
 	}
@@ -136,11 +149,6 @@ export class FoodScreen {
 		return this.add(created.value);
 	}
 
-	/** Opens or closes an eaten entry's stepper. */
-	toggleEntry(id: FoodLogEntryId): void {
-		this.openEntry = this.openEntry === id ? undefined : id;
-	}
-
 	/** Changes how much of an entry was eaten. */
 	async changeAmount(entry: FoodLogEntry, amount: number): Promise<void> {
 		if (Number.isNaN(amount) || amount <= 0) return;
@@ -156,7 +164,6 @@ export class FoodScreen {
 	/** Removes an entry. */
 	async remove(entry: FoodLogEntry): Promise<void> {
 		await this.useCases.deleteLogEntry.execute({ id: entry.id });
-		this.openEntry = undefined;
 		await this.load();
 	}
 

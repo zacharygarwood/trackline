@@ -2,8 +2,10 @@ import { UuidV7IdGenerator } from '../platform/system/uuid-v7-id-generator.ts';
 import { AddExerciseToWorkout } from '../training/application/add-exercise-to-workout.ts';
 import { CreateExercise } from '../training/application/create-exercise.ts';
 import { CreateTemplate } from '../training/application/create-template.ts';
+import { DeleteExercise } from '../training/application/delete-exercise.ts';
 import { DeleteTemplate } from '../training/application/delete-template.ts';
 import { DiscardWorkout } from '../training/application/discard-workout.ts';
+import { EditTemplate } from '../training/application/edit-template.ts';
 import { FinishWorkout } from '../training/application/finish-workout.ts';
 import { GetActiveWorkout } from '../training/application/get-active-workout.ts';
 import { GetLastPerformance } from '../training/application/get-last-performance.ts';
@@ -18,6 +20,7 @@ import { MoveTemplate } from '../training/application/move-template.ts';
 import { RemoveExerciseFromWorkout } from '../training/application/remove-exercise-from-workout.ts';
 import { RemoveRestDay } from '../training/application/remove-rest-day.ts';
 import { RemoveSet } from '../training/application/remove-set.ts';
+import { RenameExercise } from '../training/application/rename-exercise.ts';
 import { RenameTemplate } from '../training/application/rename-template.ts';
 import { RestoreWorkout } from '../training/application/restore-workout.ts';
 import { SaveWorkoutAsTemplate } from '../training/application/save-workout-as-template.ts';
@@ -29,11 +32,26 @@ import { SqliteWorkoutRepository } from '../training/infrastructure/sqlite-worko
 import { SqliteWorkoutTemplateRepository } from '../training/infrastructure/sqlite-workout-template-repository.ts';
 import type { Infrastructure } from './infrastructure.ts';
 
+function wireExercises(
+	exercises: SqliteExerciseRepository,
+	templates: SqliteWorkoutTemplateRepository,
+	ids: UuidV7IdGenerator
+) {
+	return {
+		listExercises: new ListExercises(exercises),
+		listRecentExercises: new ListRecentExercises(exercises),
+		createExercise: new CreateExercise({ exercises, ids }),
+		renameExercise: new RenameExercise(exercises),
+		deleteExercise: new DeleteExercise({ exercises, templates })
+	};
+}
+
 function wireTemplates(templates: SqliteWorkoutTemplateRepository, ids: UuidV7IdGenerator) {
 	return {
 		createTemplate: new CreateTemplate({ templates, ids }),
 		listTemplates: new ListTemplates(templates),
 		renameTemplate: new RenameTemplate(templates),
+		editTemplate: new EditTemplate(templates),
 		deleteTemplate: new DeleteTemplate(templates),
 		moveTemplate: new MoveTemplate(templates)
 	};
@@ -52,9 +70,7 @@ export function wireTraining(infrastructure: Infrastructure) {
 	const templates = new SqliteWorkoutTemplateRepository(database);
 	const restDays = new SqliteRestDayRepository(database);
 	return {
-		listExercises: new ListExercises(exercises),
-		listRecentExercises: new ListRecentExercises(exercises),
-		createExercise: new CreateExercise({ exercises, ids }),
+		...wireExercises(exercises, templates, ids),
 		startWorkout: new StartWorkout({ workouts, templates, clock, ids }),
 		getActiveWorkout: new GetActiveWorkout(workouts),
 		addExerciseToWorkout: new AddExerciseToWorkout({ workouts, exercises, ids }),

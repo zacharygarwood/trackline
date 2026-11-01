@@ -5,7 +5,7 @@ import type { MassUnit } from '../../shared/mass-unit.constants.ts';
 import type { GetExerciseHistory } from '../application/get-exercise-history.ts';
 import type { GetTrends, Trends } from '../application/get-trends.ts';
 import type { GetWorkoutDays } from '../application/get-workout-days.ts';
-import type { ExerciseDay, WorkoutDay } from '../application/insights-queries.ts';
+import type { ExerciseDay, NutritionDay, WorkoutDay } from '../application/insights-queries.ts';
 import { StatsRange } from '../application/stats-range.constants.ts';
 import { rangeWeeks, startOfDays } from '../application/stats-range.ts';
 import { mean, toBars, weeklyCalories } from './stats-math.ts';
@@ -60,6 +60,11 @@ export class StatsScreen {
 	async choose(range: StatsRange): Promise<void> {
 		this.range = range;
 		await this.load();
+	}
+
+	/** The days before today with food logged in the range, newest first. */
+	get pastDays(): readonly NutritionDay[] {
+		return this.trends.nutrition.filter((day) => day.date.isBefore(this.today)).toReversed();
 	}
 
 	/** Minutes of workouts on a day, for the heatmap. */

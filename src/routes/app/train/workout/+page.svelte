@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import Button from '#lib/design/Button.svelte';
 	import { ButtonSize } from '#lib/design/button.constants.ts';
@@ -9,7 +10,6 @@
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
 	import type { ActiveWorkout } from '#lib/training/domain/workout.ts';
-	import AddExercisePanel from '#lib/training/ui/AddExercisePanel.svelte';
 	import CurrentExercise from '#lib/training/ui/CurrentExercise.svelte';
 	import ExerciseChips from '#lib/training/ui/ExerciseChips.svelte';
 	import { elapsedClock } from '#lib/training/ui/workout-format.ts';
@@ -33,6 +33,14 @@
 			await goto(trainHref, { replaceState: true });
 			return;
 		}
+		if (next.adding) {
+			await goto(resolve(AppRoute.addExercise), { replaceState: true });
+			return;
+		}
+		const shown = next.workout?.exercises.findIndex(
+			(item) => item.exerciseId === page.state.selected
+		);
+		if (shown !== undefined && shown >= 0) next.select(shown);
 		session = next;
 		ticker = new Ticker(app.clock);
 	});
@@ -95,20 +103,15 @@
 		chips={workout.exercises.map((item, position) => ({
 			name: ready.exerciseOf(item.exerciseId)?.name ?? '',
 			done: ready.isDone(item),
-			current: position === ready.current && !ready.adding
+			current: position === ready.current
 		}))}
-		adding={ready.adding}
 		onselect={(position: number) => {
 			ready.select(position);
 		}}
-		onadd={() => {
-			ready.toggleAdding();
-		}}
+		onadd={() => goto(resolve(AppRoute.addExercise))}
 	/>
 
-	{#if ready.adding}
-		<AddExercisePanel session={ready} />
-	{:else if entry !== undefined && exercise !== undefined}
+	{#if entry !== undefined && exercise !== undefined}
 		<CurrentExercise
 			session={ready}
 			{entry}
@@ -126,12 +129,10 @@
 		</section>
 	{/if}
 
-	{#if !ready.adding}
-		<button type="button" class="discard" onclick={() => discard(ready)}>
-			{messages.workout.discard}
-			<Icon name="trash" />
-		</button>
-	{/if}
+	<button type="button" class="discard" onclick={() => discard(ready)}>
+		{messages.workout.discard}
+		<Icon name="trash" />
+	</button>
 {/if}
 
 <style>

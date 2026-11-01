@@ -1,5 +1,5 @@
 import type { IdGenerator } from '../../shared/id-generator.ts';
-import { err, type Result } from '../../shared/result.ts';
+import { err, ok, type Result } from '../../shared/result.ts';
 import { createExercise, type Exercise } from '../domain/exercise.ts';
 import type { InvalidName } from '../domain/name.ts';
 import type { InvalidTracking, Tracking } from '../domain/tracking.ts';
@@ -26,7 +26,7 @@ export interface CreateExercisePorts {
 	readonly ids: IdGenerator;
 }
 
-/** Adds an exercise to the library, choosing what it tracks. */
+/** Adds an exercise to the library, choosing what it tracks; a deleted one with the same name comes back instead. */
 export class CreateExercise {
 	constructor(private readonly ports: CreateExercisePorts) {}
 
@@ -35,7 +35,11 @@ export class CreateExercise {
 		const exercise = createExercise({ id: this.ports.ids.next(), ...command });
 		if (!exercise.ok) return exercise;
 		const existing = await this.ports.exercises.findByName(exercise.value.name);
-		if (existing !== undefined) return err(new ExerciseExists(existing));
+		if (existing !== undefined) {
+			return (await this.ports.exercises.restore(existing.id))
+				? ok(existing)
+				: err(new ExerciseExists(existing));
+		}
 		await this.ports.exercises.save(exercise.value);
 		return exercise;
 	}

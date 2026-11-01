@@ -14,12 +14,11 @@
 	/** Props for the row of exercise chips at the top of the workout, with + to add another. */
 	interface Props {
 		chips: readonly Chip[];
-		adding: boolean;
 		onselect: (position: number) => void;
 		onadd: () => void;
 	}
 
-	const { chips, adding, onselect, onadd }: Props = $props();
+	const { chips, onselect, onadd }: Props = $props();
 </script>
 
 <div class="chips" role="group" aria-label={messages.train.exercises}>
@@ -39,14 +38,7 @@
 			{chip.name}
 		</button>
 	{/each}
-	<button
-		type="button"
-		class="add"
-		class:adding
-		aria-label={messages.workout.addExercise}
-		aria-expanded={adding}
-		onclick={onadd}
-	>
+	<button type="button" class="add" aria-label={messages.workout.addExercise} onclick={onadd}>
 		<Icon name="plus" weight={IconWeight.bold} />
 	</button>
 </div>
@@ -107,9 +99,5 @@
 		background: transparent;
 		color: var(--color-text);
 		--icon-size: var(--icon-size-small);
-	}
-
-	.add.adding {
-		border-color: var(--color-accent);
 	}
 </style>

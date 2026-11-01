@@ -4,11 +4,11 @@
 	import { IN_RANGE_OPACITY } from './heatmap.constants.ts';
 	import { layoutWorkoutHeatmap } from './workout-heatmap.ts';
 
-	/** Props for two years of workout days, scrolled to the current week. */
+	/** Props for the workout days of the chosen range, drawn as week columns that fill the width. */
 	interface Props {
 		today: LocalDate;
-		/** How many of the latest weeks the chosen range covers; earlier weeks are dimmed. */
-		rangeWeeks: number;
+		/** How many weeks to draw, ending with the current week. */
+		weeks: number;
 		weekStart: WeekStart;
 		minutesOf: (date: LocalDate) => number;
 		/** The short month name of a date, for the labels above the columns. */
@@ -19,136 +19,109 @@
 		summary: string;
 	}
 
-	const { today, rangeWeeks, weekStart, minutesOf, monthLabel, weekdayLetters, summary }: Props =
+	const { today, weeks, weekStart, minutesOf, monthLabel, weekdayLetters, summary }: Props =
 		$props();
 
-	const WEEKS = 104;
 	const CELL = 14;
 	const STEP = 17;
 	const DAYS = 7;
-	const LABEL_HEIGHT = 20;
-	const LABEL_BASELINE = 12;
 	const RING = 1;
 	const HALF_RING = 0.5;
 	const TODAY_INSET = 2;
-	const OUT_OF_RANGE_EMPTY = 0.45;
-	const OUT_OF_RANGE_FILLED = 0.18;
+	/** How far a short range's cells may grow past their natural size. */
+	const MAX_SCALE = 2.5;
 
 	const layout = $derived(
-		layoutWorkoutHeatmap({ today, weeks: WEEKS, rangeWeeks, weekStart, minutesOf })
+		layoutWorkoutHeatmap({ today, weeks, rangeWeeks: weeks, weekStart, minutesOf })
 	);
-	const width = WEEKS * STEP;
-	const height = LABEL_HEIGHT + DAYS * STEP;
-
-	let scroller: HTMLDivElement | undefined = $state();
-
-	/**
-	 * Starts at the current week, and makes the scrolling area reachable by
-	 * keyboard (WCAG 2.1.1) so earlier weeks can be scrolled to with the arrow keys.
-	 */
-	$effect(() => {
-		if (scroller === undefined) return;
-		scroller.scrollLeft = scroller.scrollWidth;
-		scroller.tabIndex = 0;
-	});
-
-	function opacity(level: number, inRange: boolean): number {
-		if (inRange) return IN_RANGE_OPACITY.at(level) ?? 1;
-		return level === 0 ? OUT_OF_RANGE_EMPTY : OUT_OF_RANGE_FILLED;
-	}
+	const width = $derived(weeks * STEP - (STEP - CELL));
+	const height = DAYS * STEP - (STEP - CELL);
 </script>
 
-<div class="heatmap">
+<div class="heatmap" role="img" aria-label={summary} style:--max-width={width * MAX_SCALE}>
+	<ol class="months" aria-hidden="true">
+		{#each layout.months as month (month.column)}
+			<li style:--at={month.column / weeks}>{monthLabel(month.date)}</li>
+		{/each}
+	</ol>
 	<ol class="weekdays" aria-hidden="true">
 		{#each weekdayLetters as letter, row (row)}
 			<li>{letter}</li>
 		{/each}
 	</ol>
-	<div class="scroller" bind:this={scroller} role="region" aria-label={summary}>
-		<svg viewBox="0 0 {width} {height}" {width} {height} aria-hidden="true">
-			{#each layout.months as month (month.column)}
-				<text
-					class:dim={month.column < WEEKS - rangeWeeks}
-					x={month.column * STEP}
-					y={LABEL_BASELINE}>{monthLabel(month.date)}</text
-				>
-			{/each}
-			{#each layout.cells as cell (cell.date.toString())}
-				{@const x = cell.column * STEP}
-				{@const y = LABEL_HEIGHT + cell.row * STEP}
-				{#if cell.future}
+	<svg viewBox="0 0 {width} {height}" aria-hidden="true">
+		{#each layout.cells as cell (cell.date.toString())}
+			{@const x = cell.column * STEP}
+			{@const y = cell.row * STEP}
+			{#if cell.future}
+				<rect
+					class="ahead"
+					x={x + HALF_RING}
+					y={y + HALF_RING}
+					width={CELL - RING}
+					height={CELL - RING}
+				/>
+			{:else}
+				<rect
+					class:done={cell.level > 0}
+					{x}
+					{y}
+					width={CELL}
+					height={CELL}
+					fill-opacity={IN_RANGE_OPACITY.at(cell.level) ?? 1}
+				/>
+				{#if cell.today}
 					<rect
-						class="ahead"
-						x={x + HALF_RING}
-						y={y + HALF_RING}
-						width={CELL - RING}
-						height={CELL - RING}
+						class="today"
+						x={x + RING}
+						y={y + RING}
+						width={CELL - TODAY_INSET}
+						height={CELL - TODAY_INSET}
 					/>
-				{:else}
-					<rect
-						class:done={cell.level > 0}
-						{x}
-						{y}
-						width={CELL}
-						height={CELL}
-						fill-opacity={opacity(cell.level, cell.inRange)}
-					/>
-					{#if cell.today}
-						<rect
-							class="today"
-							x={x + RING}
-							y={y + RING}
-							width={CELL - TODAY_INSET}
-							height={CELL - TODAY_INSET}
-						/>
-					{/if}
 				{/if}
-			{/each}
-		</svg>
-	</div>
+			{/if}
+		{/each}
+	</svg>
 </div>
 
 <style>
 	.heatmap {
-		display: flex;
+		display: grid;
+		grid-template-columns: auto minmax(0, calc(var(--max-width) * 1px));
+		grid-template-rows: auto auto;
+		justify-content: start;
 		gap: var(--chip-gap);
 		margin-top: var(--chip-gap);
 	}
 
+	.months {
+		position: relative;
+		grid-column: 2;
+		height: var(--space-4);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-12);
+	}
+
+	.months li {
+		position: absolute;
+		left: min(calc(var(--at) * 100%), calc(100% - var(--space-6)));
+	}
+
 	.weekdays {
 		display: grid;
-		flex: none;
-		grid-template-rows: repeat(7, var(--heat-cell));
-		gap: var(--tick-gap);
-		padding-top: var(--space-5);
+		grid-row: 2;
+		grid-template-rows: repeat(7, 1fr);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-10);
-		line-height: var(--heat-cell);
-	}
-
-	.scroller {
-		flex: 1;
-		min-width: 0;
-		overflow-x: auto;
-		scrollbar-width: none;
-	}
-
-	.scroller:focus-visible {
-		outline: var(--focus-ring-width) solid var(--color-text);
-		outline-offset: var(--focus-ring-width);
+		align-items: center;
 	}
 
 	svg {
 		display: block;
-	}
-
-	text {
-		fill: var(--color-text-muted);
-		font-size: var(--font-size-12);
-	}
-
-	text.dim {
-		fill: var(--color-field-line);
+		grid-row: 2;
+		grid-column: 2;
+		width: 100%;
+		height: auto;
 	}
 
 	rect {

@@ -1,6 +1,7 @@
 /** SVG path data for each icon, drawn on a 24 × 24 grid with a square-capped stroke. */
 export const ICON_PATHS = {
 	today: 'M4 6h16v14H4zM4 10.5h16M9 3v4M15 3v4',
+	home: 'M4 10.5L12 4l8 6.5V20H4zM10 20v-6h4v6',
 	train: 'M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11',
 	eat: 'M7 3v18M4.5 3v5.5a2.5 2.5 0 0 0 5 0V3M17 21V3c-2.2 1.2-3.5 3.6-3.5 7 0 2 1.4 3 3.5 3',
 	body: 'M4 4h16v16H4zM8 11.5a4 4 0 0 1 8 0M12 11.5l2-3',
@@ -16,6 +17,7 @@ export const ICON_PATHS = {
 	back: 'M15 5l-7 7 7 7',
 	search: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4',
 	chevronDown: 'M6 9l6 6 6-6',
+	chevronUp: 'M6 15l6-6 6 6',
 	trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
 	camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 9.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7z',
 	forward: 'M9 6l6 6-6 6'

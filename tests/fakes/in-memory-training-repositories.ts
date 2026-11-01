@@ -33,6 +33,11 @@ import type { LocalDate } from '../../src/lib/shared/local-date.ts';
 /** The exercise library in memory; names are unique ignoring case, like the table. */
 export class InMemoryExerciseRepository implements ExerciseReader, ExerciseWriter {
 	private readonly exercises = new Map<ExerciseId, Exercise>();
+	private readonly archived = new Set<ExerciseId>();
+
+	private get active(): Exercise[] {
+		return [...this.exercises.values()].filter((exercise) => !this.archived.has(exercise.id));
+	}
 
 	/** @param workouts - Where to look for when each exercise was last used. */
 	constructor(private readonly workouts: InMemoryWorkoutRepository) {}
@@ -40,7 +45,7 @@ export class InMemoryExerciseRepository implements ExerciseReader, ExerciseWrite
 	findAllByRecentUse(): Promise<readonly Exercise[]> {
 		const lastUsed = (exercise: Exercise) => this.workouts.lastStartedWith(exercise.id);
 		return Promise.resolve(
-			[...this.exercises.values()].toSorted((a, b) => {
+			this.active.toSorted((a, b) => {
 				const [usedA, usedB] = [lastUsed(a), lastUsed(b)];
 				if (usedA === undefined || usedB === undefined) {
 					if (usedA !== usedB) return usedA === undefined ? -1 : 1;
@@ -52,9 +57,7 @@ export class InMemoryExerciseRepository implements ExerciseReader, ExerciseWrite
 	}
 
 	findAll(): Promise<readonly Exercise[]> {
-		return Promise.resolve(
-			[...this.exercises.values()].toSorted((a, b) => a.name.localeCompare(b.name))
-		);
+		return Promise.resolve(this.active.toSorted((a, b) => a.name.localeCompare(b.name)));
 	}
 
 	findByName(name: string): Promise<Exercise | undefined> {
@@ -70,6 +73,15 @@ export class InMemoryExerciseRepository implements ExerciseReader, ExerciseWrite
 		if (clash !== undefined && clash.id !== exercise.id)
 			throw new Error('UNIQUE constraint failed: exercise.name');
 		this.exercises.set(exercise.id, exercise);
+	}
+
+	archive(id: ExerciseId): Promise<void> {
+		this.archived.add(id);
+		return Promise.resolve();
+	}
+
+	restore(id: ExerciseId): Promise<boolean> {
+		return Promise.resolve(this.archived.delete(id));
 	}
 }
 

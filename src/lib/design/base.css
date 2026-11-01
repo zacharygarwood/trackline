@@ -10,9 +10,7 @@ body {
 }
 
 html {
-	scroll-padding-bottom: calc(
-		var(--tab-bar-height) + var(--fab-size) + var(--space-8) + env(safe-area-inset-bottom)
-	);
+	scroll-padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
 }
 
 body {
@@ -122,4 +120,15 @@ ol {
 		opacity: 0;
 		transform: translateY(var(--rise-distance));
 	}
+}
+
+/* The back link at the top of a page whose header is laid out by the page itself. */
+.back-link {
+	display: flex;
+	align-items: center;
+	min-height: var(--tap-target);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-15);
+	font-weight: var(--font-weight-semibold);
+	text-decoration: none;
 }

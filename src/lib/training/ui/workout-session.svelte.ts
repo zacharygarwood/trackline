@@ -149,12 +149,6 @@ export class WorkoutSession {
 		this.query = '';
 	}
 
-	/** Opens or closes the search for another exercise. */
-	toggleAdding(): void {
-		this.adding = !this.adding;
-		this.query = '';
-	}
-
 	/** Adds an exercise from the library and shows it. */
 	async add(exercise: Exercise): Promise<void> {
 		const result = await this.useCases.addExerciseToWorkout.execute({ name: exercise.name });

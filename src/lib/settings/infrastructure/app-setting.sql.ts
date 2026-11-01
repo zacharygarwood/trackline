@@ -8,12 +8,12 @@ export const SettingKey = {
 	weekStart: 'week_start',
 	installHintDismissed: 'install_hint_dismissed',
 	theme: 'theme',
-	accent: 'accent',
 	trackCarbsAndFat: 'track_carbs_and_fat',
 	distanceUnit: 'distance_unit',
 	newFoodUnit: 'new_food_unit',
 	restSeconds: 'rest_seconds',
-	weeklyWorkoutGoal: 'weekly_workout_goal'
+	weeklyWorkoutGoal: 'weekly_workout_goal',
+	homeTrackers: 'home_trackers'
 } as const;
 
 /** One of the {@link SettingKey} values. */

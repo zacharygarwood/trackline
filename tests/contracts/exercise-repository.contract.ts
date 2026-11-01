@@ -83,5 +83,26 @@ export function exerciseContract(create: () => Promise<TrainingRepositories>) {
 				})
 			).rejects.toThrow();
 		});
+
+		it('hides a deleted exercise from the lists, finds it by name, and restores it', async () => {
+			const repositories = await create();
+			const [squat] = await withExercises(repositories, 'Squat', 'Lunge');
+			if (squat === undefined) throw new Error('setup');
+
+			await repositories.exercises.archive(squat);
+			const hidden = (await repositories.exercises.findAll()).map((exercise) => exercise.name);
+			const recent = (await repositories.exercises.findAllByRecentUse()).map(
+				(exercise) => exercise.name
+			);
+			const found = await repositories.exercises.findByName('squat');
+			const restored = await repositories.exercises.restore(squat);
+			const restoredAgain = await repositories.exercises.restore(squat);
+
+			expect(hidden).toEqual(['Lunge']);
+			expect(recent).toEqual(['Lunge']);
+			expect(found?.id).toBe(squat);
+			expect([restored, restoredAgain]).toEqual([true, false]);
+			expect(await repositories.exercises.findAll()).toHaveLength(2);
+		});
 	});
 }

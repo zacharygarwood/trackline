@@ -22,6 +22,15 @@ async function setUp() {
 }
 
 describe('FoodScreen', () => {
+	it('shows another day when one is chosen', async () => {
+		const { app, screen } = await setUp();
+		screen.date = app.clock.today().addDays(-1);
+
+		await screen.load();
+
+		expect(screen.day.entries).toEqual([]);
+	});
+
 	it('creates a typed food and logs one portion of it in the slot of the hour', async () => {
 		const { app, screen, entry } = await setUp();
 
@@ -45,18 +54,28 @@ describe('FoodScreen', () => {
 		expect([screen.visibleFoods.length, screen.canCreate]).toEqual([0, true]);
 	});
 
-	it('steps and logs a typed amount', async () => {
+	it('steps and logs a typed amount, starting from the usual portion', async () => {
 		const { screen } = await setUp();
 		const [chicken] = screen.foods;
 		if (chicken === undefined) throw new Error('expected chicken');
 
-		screen.toggleFood(chicken);
+		screen.choose(chicken);
+		expect(screen.amount).toBe('100');
 		screen.stepFoodAmount(chicken, 1);
 		expect(screen.amount).toBe('110');
 		const entry = await screen.addTyped(chicken);
 
 		expect(entry?.amount).toBe(110);
-		expect(screen.openFood).toBeUndefined();
+	});
+
+	it('finds a food or an eaten entry by the id a page was opened with', async () => {
+		const { screen, entry } = await setUp();
+		const [chicken] = screen.foods;
+
+		expect(screen.findFood(chicken?.id)).toBe(chicken);
+		expect(screen.findEntry(entry.id)?.foodNameSnapshot).toBe('Chicken breast');
+		expect(screen.findFood('unknown')).toBeUndefined();
+		expect(screen.findEntry(undefined)).toBeUndefined();
 	});
 
 	it('changes, removes, and restores what was eaten', async () => {

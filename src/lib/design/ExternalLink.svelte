@@ -5,10 +5,26 @@
 	interface Props {
 		/** An absolute URL on another site. */
 		href: string;
+		/** Draws the link as a full-width accent button. */
+		prominent?: boolean;
 		children: Snippet;
 	}
 
-	const { href, children }: Props = $props();
+	const { href, prominent = false, children }: Props = $props();
 </script>
 
-<a {href} target="_blank" rel="noopener noreferrer">{@render children()}</a>
+<a {href} class:prominent target="_blank" rel="noopener noreferrer">{@render children()}</a>
+
+<style>
+	.prominent {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: var(--button-height);
+		background: var(--color-accent);
+		color: var(--color-on-accent);
+		font-size: var(--font-size-17);
+		font-weight: var(--font-weight-semibold);
+		text-decoration: none;
+	}
+</style>

@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures.ts';
-import { finishFirstRun } from './helpers.ts';
+import { expectOnHome, finishFirstRun, homeBar } from './helpers.ts';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 
 test('after one visit, the app opens and navigates with no network', async ({ page, context }) => {
@@ -21,10 +21,7 @@ test('after one visit, the app opens and navigates with no network', async ({ pa
 	await context.setOffline(true);
 	await page.reload();
 
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.today);
-	await page
-		.getByRole('navigation', { name: messages.navigation.tabs })
-		.getByRole('link', { name: messages.navigation.stats })
-		.click();
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.navigation.stats);
+	await expectOnHome(page);
+	await homeBar(page, messages.home.workouts).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(messages.home.workouts);
 });

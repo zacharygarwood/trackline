@@ -5,23 +5,19 @@
 	import { CheckIn, type CheckInResult } from '#lib/body/ui/check-in.svelte.ts';
 	import CheckInForm from '#lib/body/ui/CheckInForm.svelte';
 	import { ObjectUrls } from '#lib/body/ui/object-urls.ts';
+	import { photoTiles } from '#lib/body/ui/body-trends.ts';
 	import { PhotoGallery } from '#lib/body/ui/photo-gallery.svelte.ts';
 	import PhotoTiles from '#lib/body/ui/PhotoTiles.svelte';
-	import { photoTiles, weightChange, weightsSince } from '#lib/body/ui/body-trends.ts';
-	import BigNumber from '#lib/design/BigNumber.svelte';
-	import { ChartSize } from '#lib/design/chart.constants.ts';
-	import TrendLine from '#lib/design/TrendLine.svelte';
+	import NavRow from '#lib/design/NavRow.svelte';
+	import PageHeader from '#lib/design/PageHeader.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
-	import { MassUnit } from '#lib/shared/mass-unit.constants.ts';
 	import { unitLabel } from '#lib/ui/format.ts';
 	import { getToaster } from '#lib/ui/toast.svelte.ts';
 	import { AppRoute } from '../app-route.constants.ts';
 
-	const CHART_DAYS = 90;
-	const KG_PADDING = 0.15;
-	const LB_PADDING = 0.3;
-
+	/** How many of the latest photos show on the Weight tab: two rows of three. */
+	const PREVIEW_PHOTOS = 6;
 	const preferences = getPreferences();
 	const toaster = getToaster();
 	let body: BodyScreen | undefined = $state();
@@ -51,73 +47,55 @@
 	}
 </script>
 
+<PageHeader title={messages.home.weight} />
+
 {#if body !== undefined && gallery !== undefined && checkIn !== undefined}
-	{@const unit = preferences.massUnit}
-	{@const weights = weightsSince(body.weighIns, body.today.addDays(1 - CHART_DAYS), unit)}
-	{@const change = weightChange(weights)}
-	<CheckInForm {checkIn} unit={unitLabel(unit)} onsaved={saved} />
+	<div class="check-in">
+		<CheckInForm {checkIn} unit={unitLabel(preferences.massUnit)} onsaved={saved} />
+	</div>
 
-	<section class="section" aria-labelledby="last-days">
-		<h2 id="last-days">{messages.checkIn.lastNinetyDays}</h2>
-		<BigNumber value={change.text} suffix={unitLabel(unit)} />
-		{#if weights.length > 0}
-			<TrendLine
-				values={weights}
-				padding={unit === MassUnit.kg ? KG_PADDING : LB_PADDING}
-				size={ChartSize.tall}
-				summary={messages.checkIn.chart({
-					direction: change.direction,
-					change: change.amount,
-					unit: unitLabel(unit),
-					latest: change.latest
-				})}
+	<h2 id="weight-photos">{messages.checkIn.photos}</h2>
+	{#if gallery.photos.length === 0}
+		<p class="empty">{messages.checkIn.noPhotos}</p>
+	{:else}
+		<section aria-labelledby="weight-photos">
+			<PhotoTiles
+				{gallery}
+				tiles={photoTiles(gallery.photos, body.weighIns, preferences.massUnit).slice(
+					0,
+					PREVIEW_PHOTOS
+				)}
 			/>
-		{/if}
-	</section>
-
-	<section class="section photos" aria-labelledby="photos">
-		<div class="photos-heading">
-			<h2 id="photos">{messages.checkIn.photos}</h2>
+		</section>
+		<div class="more">
+			{#if gallery.photos.length > PREVIEW_PHOTOS}
+				<NavRow label={messages.checkIn.allPhotos} href={resolve(AppRoute.photos)} />
+			{/if}
 			{#if gallery.photos.length > 1}
-				<a href={resolve(AppRoute.photos)}>{messages.checkIn.compare}</a>
+				<NavRow label={messages.navigation.compare} href={resolve(AppRoute.compare)} />
 			{/if}
 		</div>
-		<PhotoTiles {gallery} tiles={photoTiles(gallery.photos, body.weighIns, unit)} />
-	</section>
+	{/if}
 {/if}
 
 <style>
-	.section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--gap-14);
-		margin: 0 calc(-1 * var(--gutter));
-		padding: var(--space-6) var(--gutter);
-		border-top: var(--border-hairline) solid var(--color-divider);
-	}
-
-	.photos {
-		padding-bottom: 0;
+	.check-in {
+		margin-bottom: var(--space-5);
 	}
 
 	h2 {
+		margin: var(--space-6) 0 var(--space-3);
+		color: var(--color-text-muted);
 		font-size: var(--font-size-15);
 		font-weight: var(--font-weight-semibold);
 	}
 
-	.photos-heading {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
+	.more {
+		margin-top: var(--space-4);
 	}
 
-	.photos-heading a {
-		display: flex;
-		align-items: center;
-		min-height: var(--tap-target);
-		color: var(--color-accent);
-		font-size: var(--font-size-15);
-		font-weight: var(--font-weight-semibold);
-		text-decoration: none;
+	.empty {
+		color: var(--color-text-muted);
+		font-size: var(--font-size-16);
 	}
 </style>

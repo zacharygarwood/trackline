@@ -25,6 +25,7 @@ import {
 	savedMealMapper
 } from './nutrition.mapper.ts';
 import {
+	archiveFood,
 	clearMealItems,
 	deleteEntry,
 	deleteMeal,
@@ -63,6 +64,11 @@ export class SqliteFoodRepository implements FoodReader, FoodWriter {
 	/** {@inheritDoc FoodWriter.save} */
 	async save(food: Food): Promise<void> {
 		await this.database.execute(saveFood(foodMapper.toRow(food)));
+	}
+
+	/** {@inheritDoc FoodWriter.archive} */
+	async archive(id: FoodId): Promise<void> {
+		await this.database.execute(archiveFood(id));
 	}
 }
 

@@ -1,77 +1,168 @@
 /*
  * Design tokens: the only place raw colors, sizes, and durations appear.
- * Values come from the owner's prototype; see docs/adr/0018-match-the-prototype.md.
- * The theme is `data-theme` on <html> (dark by default) and the accent is `data-accent`.
- * Light accents are darkened just enough for WCAG 2.2 AA (4.5:1) on the background and under white text.
+ * Sizes come from the owner's prototype (docs/adr/0018-match-the-prototype.md); themes from docs/adr/0021-named-themes.md.
+ * The theme is `data-theme` on <html> (dark by default). Each theme sets six colors and the rest are mixed from them,
+ * so `data-theme` on any element previews that theme inside it. Every theme meets WCAG 2.2 AA (4.5:1 text, 3:1 lines).
  */
-:root,
-:root[data-theme='dark'] {
-	color-scheme: dark;
 
+:root,
+[data-theme='dark'],
+[data-theme='system'] {
 	--color-background: #0b0b0c;
-	--color-surface: #1a1a1c;
-	--color-surface-strong: #2e2e31;
-	--color-hover: #121214;
 	--color-text: #f4f4f1;
 	--color-text-muted: #bdbdc2;
-	--color-divider: #232326;
-	--color-edge: #3a3a3d;
-	--color-field-line: #6a6a70;
-	--color-empty: #2a2a2d;
-	--color-placeholder: #7c7c82;
+	--color-accent: #5bc4f5;
 	--color-danger: #ff8a80;
 	--color-on-accent: #0b0b0c;
-	--color-backdrop: rgb(0 0 0 / 70%);
-	--accent-sky: #5bc4f5;
-	--accent-jade: #34c79a;
-	--accent-clay: #f08a4b;
-	--accent-violet: #a594ff;
-	--accent-rose: #f57a9b;
 }
 
-:root[data-theme='light'] {
-	color-scheme: light;
-
+[data-theme='light'] {
 	--color-background: #f6f6f3;
-	--color-surface: #ebebe7;
-	--color-surface-strong: #d6d6d1;
-	--color-hover: #eeeeea;
 	--color-text: #111113;
 	--color-text-muted: #55555b;
-	--color-divider: #e2e2dd;
-	--color-edge: #c9c9c4;
-	--color-field-line: #8e8e93;
-	--color-empty: #e2e2de;
-	--color-placeholder: #6e6e74;
+	--color-accent: #0d6299;
 	--color-danger: #c2332b;
 	--color-on-accent: #fff;
-	--color-backdrop: rgb(0 0 0 / 40%);
-	--accent-sky: #1475b1;
-	--accent-jade: #12805e;
-	--accent-clay: #b85318;
-	--accent-violet: #6a55e0;
-	--accent-rose: #c83c64;
+}
+
+[data-theme='forest'] {
+	--color-background: #0f1712;
+	--color-text: #e9f1e6;
+	--color-text-muted: #a9bba9;
+	--color-accent: #8fd694;
+	--color-danger: #ff9a8a;
+	--color-on-accent: #0f1712;
+}
+
+[data-theme='ocean'] {
+	--color-background: #0b1520;
+	--color-text: #e6eef6;
+	--color-text-muted: #9fb2c4;
+	--color-accent: #4fd1c5;
+	--color-danger: #ff8f8f;
+	--color-on-accent: #0b1520;
+}
+
+[data-theme='dusk'] {
+	--color-background: #16121f;
+	--color-text: #efe9f7;
+	--color-text-muted: #b5abc6;
+	--color-accent: #c3a6ff;
+	--color-danger: #ff8fa3;
+	--color-on-accent: #16121f;
+}
+
+[data-theme='ember'] {
+	--color-background: #1a1310;
+	--color-text: #f6ebe2;
+	--color-text-muted: #c4b0a2;
+	--color-accent: #ff9f5a;
+	--color-danger: #ff8a80;
+	--color-on-accent: #1a1310;
+}
+
+[data-theme='slate'] {
+	--color-background: #1c2128;
+	--color-text: #e8ecf1;
+	--color-text-muted: #a7b0bc;
+	--color-accent: #7ee0b5;
+	--color-danger: #ff9a92;
+	--color-on-accent: #1c2128;
+}
+
+[data-theme='mocha'] {
+	--color-background: #201a17;
+	--color-text: #f2e6da;
+	--color-text-muted: #bfae9f;
+	--color-accent: #e8c27a;
+	--color-danger: #ff9488;
+	--color-on-accent: #201a17;
+}
+
+[data-theme='sand'] {
+	--color-background: #f3ece0;
+	--color-text: #2b241c;
+	--color-text-muted: #5e5244;
+	--color-accent: #933d17;
+	--color-danger: #b3261e;
+	--color-on-accent: #fff;
+}
+
+[data-theme='mint'] {
+	--color-background: #eef5ef;
+	--color-text: #14261b;
+	--color-text-muted: #455c4e;
+	--color-accent: #176b42;
+	--color-danger: #b3261e;
+	--color-on-accent: #fff;
+}
+
+[data-theme='blossom'] {
+	--color-background: #faf0f2;
+	--color-text: #2a1a20;
+	--color-text-muted: #6d5560;
+	--color-accent: #a52c54;
+	--color-danger: #a8251c;
+	--color-on-accent: #fff;
+}
+
+[data-theme='glacier'] {
+	--color-background: #eef3f8;
+	--color-text: #13202e;
+	--color-text-muted: #4c5d70;
+	--color-accent: #1d58a3;
+	--color-danger: #b3261e;
+	--color-on-accent: #fff;
 }
 
 :root,
-:root[data-accent='sky'] {
-	--color-accent: var(--accent-sky);
+[data-theme='dark'],
+[data-theme='forest'],
+[data-theme='ocean'],
+[data-theme='dusk'],
+[data-theme='ember'],
+[data-theme='slate'],
+[data-theme='mocha'],
+[data-theme='system'] {
+	color-scheme: dark;
+
+	--color-backdrop: rgb(0 0 0 / 70%);
 }
 
-:root[data-accent='jade'] {
-	--color-accent: var(--accent-jade);
+[data-theme='light'],
+[data-theme='sand'],
+[data-theme='mint'],
+[data-theme='blossom'],
+[data-theme='glacier'] {
+	color-scheme: light;
+
+	--color-backdrop: rgb(0 0 0 / 40%);
 }
 
-:root[data-accent='clay'] {
-	--color-accent: var(--accent-clay);
+@media (prefers-color-scheme: light) {
+	[data-theme='system'] {
+		color-scheme: light;
+
+		--color-background: #f6f6f3;
+		--color-text: #111113;
+		--color-text-muted: #55555b;
+		--color-accent: #0d6299;
+		--color-danger: #c2332b;
+		--color-on-accent: #fff;
+		--color-backdrop: rgb(0 0 0 / 40%);
+	}
 }
 
-:root[data-accent='violet'] {
-	--color-accent: var(--accent-violet);
-}
-
-:root[data-accent='rose'] {
-	--color-accent: var(--accent-rose);
+:root,
+[data-theme] {
+	--color-surface: color-mix(in oklab, var(--color-text) 8%, var(--color-background));
+	--color-surface-strong: color-mix(in oklab, var(--color-text) 18%, var(--color-background));
+	--color-hover: color-mix(in oklab, var(--color-text) 4%, var(--color-background));
+	--color-divider: color-mix(in oklab, var(--color-text) 9%, var(--color-background));
+	--color-edge: color-mix(in oklab, var(--color-text) 22%, var(--color-background));
+	--color-field-line: color-mix(in oklab, var(--color-text) 50%, var(--color-background));
+	--color-empty: color-mix(in oklab, var(--color-text) 12%, var(--color-background));
+	--color-placeholder: color-mix(in oklab, var(--color-text) 62%, var(--color-background));
 }
 
 :root {
@@ -129,6 +220,7 @@
 	--gap-18: 18px;
 	--tick-gap: 3px;
 	--chip-gap: 6px;
+	--tab-bar-height: 72px;
 	--tab-gap: 5px;
 	--suffix-gap: 10px;
 
@@ -152,8 +244,10 @@
 	--food-base-width: 72px;
 	--weight-entry-height: 88px;
 	--photo-tile: 72px;
-	--swatch-size: 36px;
-	--tab-bar-height: 72px;
+	--theme-name-width: 84px;
+	--theme-bar-height: 14px;
+	--theme-bar-fill: 62%;
+	--theme-mark-size: 10px;
 	--tab-indicator: 3px;
 	--tab-indicator-inset: 18px;
 	--icon-size: 24px;
@@ -165,17 +259,13 @@
 	--switch-thumb: 21px;
 	--switch-inset: 3px;
 	--switch-travel: 26px;
-	--tick-height-hero: 30px;
-	--tick-height-food: 22px;
-	--tick-height: 14px;
-	--tick-height-small: 12px;
-	--heat-cell: 14px;
+	--progress-height: 32px;
+	--progress-row-padding: 20px;
 	--chart-height: 120px;
 	--chart-height-medium: 100px;
 	--chart-height-small: 80px;
 	--bars-height: 72px;
 	--grade-label-width: 28px;
-	--fab-size: 56px;
 	--number-key-height: 56px;
 	--content-max-width: 600px;
 

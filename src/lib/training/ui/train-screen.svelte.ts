@@ -5,7 +5,6 @@ import type { ListRecentExercises } from '../application/list-recent-exercises.t
 import type { ListTemplates } from '../application/list-templates.ts';
 import type { StartWorkout } from '../application/start-workout.ts';
 import type { Exercise } from '../domain/exercise.ts';
-import type { WorkoutTemplateId } from '../domain/ids.ts';
 import type { Tracking } from '../domain/tracking.ts';
 import type { WorkoutTemplate } from '../domain/workout-template.ts';
 import type { ActiveWorkout } from '../domain/workout.ts';
@@ -22,13 +21,12 @@ export interface TrainScreenUseCases {
 	readonly createExercise: CreateExercise;
 }
 
-/** State and actions of the Train tab: saved workouts, exercises, and starting or adding to a workout. */
+/** State and actions of the Train tab and its pages: saved workouts, exercises, and starting or adding to a workout. */
 export class TrainScreen {
 	templates: readonly WorkoutTemplate[] = $state([]);
 	library: readonly Exercise[] = $state([]);
 	active: ActiveWorkout | undefined = $state();
 	query = $state('');
-	openTemplate: WorkoutTemplateId | undefined = $state();
 
 	constructor(private readonly useCases: TrainScreenUseCases) {}
 
@@ -73,9 +71,21 @@ export class TrainScreen {
 				);
 	}
 
-	/** Opens or closes a saved workout's exercise list. */
-	toggleTemplate(id: WorkoutTemplateId): void {
-		this.openTemplate = this.openTemplate === id ? undefined : id;
+	/**
+	 * The saved workout a page was opened for.
+	 *
+	 * @param id - The id passed to the page, if any.
+	 */
+	findTemplate(id: string | undefined): WorkoutTemplate | undefined {
+		return this.templates.find((template) => template.id === id);
+	}
+
+	/** The names of a saved workout's exercises, in order. */
+	exerciseNames(template: WorkoutTemplate): readonly string[] {
+		return template.exercises.flatMap((planned) => {
+			const exercise = this.library.find((known) => known.id === planned.exerciseId);
+			return exercise === undefined ? [] : [exercise.name];
+		});
 	}
 
 	/** Starts a saved workout, or adds its exercises to the workout in progress. */

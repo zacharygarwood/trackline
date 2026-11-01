@@ -1,29 +1,44 @@
 import type { CreateExercise } from '../application/create-exercise.ts';
 import type { CreateTemplate } from '../application/create-template.ts';
+import type { EditTemplate } from '../application/edit-template.ts';
 import type { ListRecentExercises } from '../application/list-recent-exercises.ts';
 import type { Exercise } from '../domain/exercise.ts';
 import type { Tracking } from '../domain/tracking.ts';
+import type { WorkoutTemplate } from '../domain/workout-template.ts';
 import { canCreateExercise, capitalized, matchExercises } from './exercise-search.ts';
 
 /** The use cases the workout builder calls. */
 export interface WorkoutBuilderUseCases {
 	readonly listRecentExercises: ListRecentExercises;
 	readonly createTemplate: CreateTemplate;
+	readonly editTemplate: EditTemplate;
 	readonly createExercise: CreateExercise;
 }
 
-/** State and actions of the New workout screen: a name and an ordered list of exercises. */
+/** State and actions of the New workout and Edit workout screens: a name and an ordered list of exercises. */
 export class WorkoutBuilder {
 	name = $state('');
 	chosen: readonly Exercise[] = $state([]);
 	library: readonly Exercise[] = $state([]);
 	query = $state('');
 
-	constructor(private readonly useCases: WorkoutBuilderUseCases) {}
+	/**
+	 * @param useCases - What the builder calls.
+	 * @param editing - The saved workout being edited; a new one is built when absent.
+	 */
+	constructor(
+		private readonly useCases: WorkoutBuilderUseCases,
+		private readonly editing?: WorkoutTemplate
+	) {}
 
-	/** Loads the exercise library. */
+	/** Loads the exercise library, and the saved workout being edited. */
 	async load(): Promise<void> {
 		this.library = await this.useCases.listRecentExercises.execute();
+		if (this.editing === undefined) return;
+		this.name = this.editing.name;
+		this.chosen = this.editing.exercises.flatMap((planned) =>
+			this.library.filter((exercise) => exercise.id === planned.exerciseId)
+		);
 	}
 
 	/** Exercises matching the search, or the recent ones. */
@@ -71,10 +86,14 @@ export class WorkoutBuilder {
 	 * @returns Its name, or undefined if it could not be saved.
 	 */
 	async save(): Promise<string | undefined> {
-		const result = await this.useCases.createTemplate.execute({
+		const command = {
 			name: capitalized(this.name),
 			exerciseIds: this.chosen.map((exercise) => exercise.id)
-		});
+		};
+		const result =
+			this.editing === undefined
+				? await this.useCases.createTemplate.execute(command)
+				: await this.useCases.editTemplate.execute({ ...command, id: this.editing.id });
 		return result.ok ? result.value.name : undefined;
 	}
 }

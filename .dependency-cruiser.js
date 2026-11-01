@@ -33,8 +33,11 @@ export default {
 			name: 'contexts-meet-only-through-shared-kernel',
 			comment: 'Bounded contexts never import each other.',
 			severity: 'error',
-			from: { path: '^src/lib/(training|nutrition|body|insights|settings)/' },
-			to: { path: '^src/lib/(training|nutrition|body|insights|settings)/', pathNot: '^src/lib/$1/' }
+			from: { path: '^src/lib/(training|nutrition|body|insights|settings|trackers)/' },
+			to: {
+				path: '^src/lib/(training|nutrition|body|insights|settings|trackers)/',
+				pathNot: '^src/lib/$1/'
+			}
 		},
 		{
 			name: 'ui-never-imports-infrastructure',

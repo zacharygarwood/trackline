@@ -19,7 +19,7 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 
 ## Architecture (non-negotiable)
 
-- Bounded contexts: training, nutrition, body, insights, settings (preferences), plus a small shared kernel.
+- Bounded contexts: training, nutrition, body, insights, settings (preferences), trackers (what Home tracks), plus a small shared kernel.
 - Screens get use cases with `getAppContext()` (a `Promise<App>` set by the app shell) and keep state in `*.svelte.ts` view models in `<context>/ui/` (ADR 0007).
 - Layers per context: domain -> application -> infrastructure / ui. Dependencies point inward only.
 - Domain: pure TypeScript, no Svelte, no SQL, no browser APIs.
@@ -38,7 +38,7 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 
 - Import app code through `#lib/...` with the file extension: `import { messages } from '#lib/i18n/messages.en.ts'`. Inside `src/lib`, sibling and parent modules use relative imports, also with the extension.
 - SvelteKit 3 modules: `$app/paths` (`resolve`), `$app/state`, `$app/env`. Route paths live in `src/routes/app/app-route.constants.ts`; always link with `resolve(AppRoute.x)`.
-- Design primitives live in `src/lib/design/` (Button, Choice, SearchField, StepButton, Switch, BigNumber, ProgressBar, TrendLine, Bars, Sparkline, WorkoutHeatmap, ResumeBar, Toast, TabBar, Icon, and the older Card, Row, Sheet, NumberPad used by Settings and Welcome). Screens match the owner's prototype (ADR 0018); use the font sizes, spacing, and colors in tokens.css only. Logic behind a primitive goes in a plain `.ts` module next to it.
+- Design primitives live in `src/lib/design/` (Button, Choice, SearchField, StepButton, Switch, BigNumber, NavRow, PageHeader, ProgressRow, ActionButton, OptionList, TabBar, ExternalLink, TrendLine, Bars, WorkoutHeatmap, ResumeBar, Toast, Icon, and the older Card, Row, Sheet, NumberPad used by Settings and Welcome). Screens match the owner's prototype (ADR 0018). Home shows a progress bar per tracked thing, chosen in Settings, each opening its tracker page; Home, Food, Workouts, and Weight are bottom tabs, and Settings is a list of pages (ADR 0020). Colors come from named themes in tokens.css (ADR 0021). Workouts and Food each have one main button, then history and an editable library (ADR 0022); deleting an exercise or food hides it. Trackers appear only on Home, and every trend is on the Stats tab (ADR 0023). Every tracker is a measure (food log, workouts, weigh-ins, or the user's own log) plus a goal and a day or week; goals live on the tracker (ADR 0024). Rows open pages, never inline expansion (ADR 0019): pages use PageHeader and NavRow, and get their item from page state (`App.PageState`), never the URL; use the font sizes, spacing, and colors in tokens.css only. Logic behind a primitive goes in a plain `.ts` module next to it.
 - User-facing text: `src/lib/i18n/messages.en.ts`. Identifiers: `*.constants.ts` (`as const`). SQL: `*.sql.ts`. These are the only files where string literals are allowed in `src/`.
 - Clock and IdGenerator implementations live in `src/lib/platform/system/`, the only place allowed to read the time or randomness.
 - Unit tests sit next to the code as `*.test.ts`, component tests as `*.svelte.test.ts` (jsdom). Fakes, builders, test support, and e2e live under `tests/`.

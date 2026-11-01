@@ -74,4 +74,22 @@ describe('StatsScreen', () => {
 			2000, 2200, 2640
 		]);
 	});
+
+	it('lists the days before today that have food, newest first', async () => {
+		const { queries, stats } = screen();
+		const day = (text: string, calories: number) => ({
+			date: date(text),
+			calories,
+			protein: 0,
+			calorieGoal: undefined,
+			proteinGoal: undefined
+		});
+		queries.nutrition = [day('2026-10-20', 1800), day('2026-10-27', 2100), day('2026-10-29', 900)];
+		await stats.load();
+
+		expect(stats.pastDays.map((past) => [past.date.toString(), past.calories])).toEqual([
+			['2026-10-27', 2100],
+			['2026-10-20', 1800]
+		]);
+	});
 });

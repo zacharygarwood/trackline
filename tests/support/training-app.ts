@@ -1,8 +1,10 @@
 import { AddExerciseToWorkout } from '../../src/lib/training/application/add-exercise-to-workout.ts';
 import { CreateExercise } from '../../src/lib/training/application/create-exercise.ts';
 import { CreateTemplate } from '../../src/lib/training/application/create-template.ts';
+import { DeleteExercise } from '../../src/lib/training/application/delete-exercise.ts';
 import { DeleteTemplate } from '../../src/lib/training/application/delete-template.ts';
 import { DiscardWorkout } from '../../src/lib/training/application/discard-workout.ts';
+import { EditTemplate } from '../../src/lib/training/application/edit-template.ts';
 import { FinishWorkout } from '../../src/lib/training/application/finish-workout.ts';
 import { GetActiveWorkout } from '../../src/lib/training/application/get-active-workout.ts';
 import { GetLastPerformance } from '../../src/lib/training/application/get-last-performance.ts';
@@ -17,6 +19,7 @@ import { MoveTemplate } from '../../src/lib/training/application/move-template.t
 import { RemoveExerciseFromWorkout } from '../../src/lib/training/application/remove-exercise-from-workout.ts';
 import { RemoveRestDay } from '../../src/lib/training/application/remove-rest-day.ts';
 import { RemoveSet } from '../../src/lib/training/application/remove-set.ts';
+import { RenameExercise } from '../../src/lib/training/application/rename-exercise.ts';
 import { RenameTemplate } from '../../src/lib/training/application/rename-template.ts';
 import { RestoreWorkout } from '../../src/lib/training/application/restore-workout.ts';
 import { SaveWorkoutAsTemplate } from '../../src/lib/training/application/save-workout-as-template.ts';
@@ -44,6 +47,8 @@ export function trainingApp(clock = new FixedClock(Date.UTC(2026, 9, 27, 9), '20
 		listExercises: new ListExercises(exercises),
 		listRecentExercises: new ListRecentExercises(exercises),
 		createExercise: new CreateExercise({ exercises, ids }),
+		renameExercise: new RenameExercise(exercises),
+		deleteExercise: new DeleteExercise({ exercises, templates }),
 		startWorkout: new StartWorkout({ workouts, templates, clock, ids }),
 		getActiveWorkout: new GetActiveWorkout(workouts),
 		addExerciseToWorkout: new AddExerciseToWorkout({ workouts, exercises, ids }),
@@ -60,6 +65,7 @@ export function trainingApp(clock = new FixedClock(Date.UTC(2026, 9, 27, 9), '20
 		createTemplate: new CreateTemplate({ templates, ids }),
 		listTemplates: new ListTemplates(templates),
 		renameTemplate: new RenameTemplate(templates),
+		editTemplate: new EditTemplate(templates),
 		deleteTemplate: new DeleteTemplate(templates),
 		moveTemplate: new MoveTemplate(templates),
 		markRestDay: new MarkRestDay({ restDays, workouts, ids }),
