@@ -11,6 +11,7 @@
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { watchForUpdates } from '#lib/platform/pwa/app-updates.ts';
 	import { canAddToHomeScreen } from '#lib/platform/pwa/home-screen.ts';
+	import { followThemeColor } from '#lib/platform/pwa/theme-color.ts';
 	import { AppPreferences, setPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
 	import type { LocalDate } from '#lib/shared/local-date.ts';
 	import { formatShortDate } from '#lib/ui/format.ts';
@@ -58,6 +59,7 @@
 
 	$effect(() => {
 		document.documentElement.dataset.theme = preferences.current.theme;
+		return followThemeColor();
 	});
 
 	/** Sends a new user to the first-run screen before anything else. */
