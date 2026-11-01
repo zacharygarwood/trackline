@@ -83,6 +83,7 @@ test('a new tracker’s goal is built from simple choices while creating it, lik
 	await page.getByRole('textbox', { name: messages.tracking.inputs.minutes }).fill('');
 	await expect(page.getByText('2 h a day')).toBeVisible();
 	await page.getByRole('button', { name: messages.tracking.add.create }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Piano');
 
 	await tab(page, messages.navigation.home).click();
 	await expect(homeRow(page, 'Piano')).toContainText('/ 2 h a day');
