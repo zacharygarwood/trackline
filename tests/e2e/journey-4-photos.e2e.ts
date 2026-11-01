@@ -1,28 +1,23 @@
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
 import { addPhoto, addTracker, finishFirstRun, storedPhotoFiles } from './helpers.ts';
 
 const PHOTO = path.join(import.meta.dirname, 'assets', 'photo-with-gps.jpg');
-const EXIF_HEADER = [...Buffer.from('Exif\0\0')];
-const CAMERA_TAG = [...Buffer.from('TrackTestCamera')];
+const THUMBNAIL = '.thumb';
 
-function contains(bytes: readonly number[], sequence: readonly number[]): boolean {
-	return bytes.some((_, start) => sequence.every((byte, offset) => bytes[start + offset] === byte));
-}
-
-test('add body photos, find them stripped of GPS metadata, and compare them', async ({ page }) => {
+test('add a body photo, kept as the original file next to a thumbnail', async ({ page }) => {
 	await finishFirstRun(page);
 	await addTracker(page, messages.tracking.templates.body_photos);
 	await addPhoto(page, PHOTO);
 
 	const files = await storedPhotoFiles(page);
+	const full = files.find((file) => !file.name.endsWith(THUMBNAIL));
+	const thumbnail = files.find((file) => file.name.endsWith(THUMBNAIL));
 	expect(files).toHaveLength(2);
-	for (const file of files) {
-		expect(file.bytes.length).toBeGreaterThan(0);
-		expect(contains(file.bytes, EXIF_HEADER)).toBe(false);
-		expect(contains(file.bytes, CAMERA_TAG)).toBe(false);
-	}
+	expect(full?.bytes).toEqual([...(await readFile(PHOTO))]);
+	expect(thumbnail?.bytes.length).toBeGreaterThan(0);
 });
 
 test('compare the oldest and newest photo', async ({ page }) => {

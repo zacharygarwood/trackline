@@ -17,18 +17,18 @@ export interface SavePhotoPorts {
 }
 
 /**
- * Stores a photo for a photo field. The image is re-encoded first, so its
- * metadata (including GPS location) never reaches storage.
+ * Stores a photo for a photo field: the chosen file as is, so it keeps its
+ * full quality, and a thumbnail for grids.
  */
 export class SavePhoto {
 	constructor(private readonly ports: SavePhotoPorts) {}
 
 	/** @param command - The chosen image. */
 	async execute(command: SavePhotoCommand): Promise<Result<PhotoId, UnreadableImage>> {
-		const encoded = await this.ports.processor.reencode(command.image);
-		if (!encoded.ok) return err(encoded.error);
+		const thumbnail = await this.ports.processor.thumbnail(command.image);
+		if (!thumbnail.ok) return err(thumbnail.error);
 		const id = this.ports.ids.next<'Photo'>();
-		await this.ports.store.put(id, encoded.value);
+		await this.ports.store.put(id, { full: command.image, thumbnail: thumbnail.value });
 		return ok(id);
 	}
 }

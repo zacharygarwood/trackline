@@ -2,29 +2,23 @@ import type { Result } from '../../shared/result.ts';
 import type { PhotoId } from '../domain/field.ts';
 import type { PhotoSize } from './photo-size.constants.ts';
 
-/** A photo's image files, re-encoded without any of the original's metadata. */
+/** A photo's image files: the file the user chose, and a small copy for grids. */
 export interface PhotoFiles {
 	readonly full: Uint8Array;
 	readonly thumbnail: Uint8Array;
 }
 
-/** A re-encoded photo and the size of its full image in pixels. */
-export interface EncodedPhoto extends PhotoFiles {
-	readonly width: number;
-	readonly height: number;
-}
-
 /** Raised when the chosen file is not an image the device can decode. */
 export class UnreadableImage {}
 
-/** Re-encodes images so no metadata, such as GPS location, is ever stored. */
+/** Makes the small copies of photos that grids show. */
 export interface ImageProcessor {
 	/**
-	 * Decodes an image and encodes a capped-size copy and a thumbnail.
+	 * Decodes an image and encodes a small copy of it.
 	 *
 	 * @param image - The file the user chose, as is.
 	 */
-	reencode(image: Uint8Array): Promise<Result<EncodedPhoto, UnreadableImage>>;
+	thumbnail(image: Uint8Array): Promise<Result<Uint8Array, UnreadableImage>>;
 }
 
 /** Keeps photos' image files next to the database. */
