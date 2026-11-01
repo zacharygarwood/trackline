@@ -5,7 +5,7 @@ import { addPhoto, addTracker, finishFirstRun, storedPhotoFiles } from './helper
 
 const PHOTO = path.join(import.meta.dirname, 'assets', 'photo-with-gps.jpg');
 const EXIF_HEADER = [...Buffer.from('Exif\0\0')];
-const CAMERA_TAG = [...Buffer.from('BuffalogTestCam')];
+const CAMERA_TAG = [...Buffer.from('TrackTestCamera')];
 
 function contains(bytes: readonly number[], sequence: readonly number[]): boolean {
 	return bytes.some((_, start) => sequence.every((byte, offset) => bytes[start + offset] === byte));
