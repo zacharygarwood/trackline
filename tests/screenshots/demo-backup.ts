@@ -5,11 +5,13 @@ import { BACKUP_FORMAT_VERSION } from '../../src/lib/settings/domain/backup.ts';
 import { ZipBackupCodec } from '../../src/lib/settings/infrastructure/zip-backup-codec.ts';
 import { last } from '../../src/lib/shared/collections.ts';
 import { LogEntry } from '../../src/lib/tracking/application/entries.ts';
+import { AddSubject } from '../../src/lib/tracking/application/library.ts';
 import { FinishSession, StartSession } from '../../src/lib/tracking/application/sessions.ts';
 import { AddTrackers } from '../../src/lib/tracking/application/trackers.ts';
 import { fieldKey, type FieldValue } from '../../src/lib/tracking/domain/field.ts';
 import { templateOf } from '../../src/lib/tracking/domain/from-template.ts';
 import type { Goal } from '../../src/lib/tracking/domain/goal.ts';
+import type { SubjectId } from '../../src/lib/tracking/domain/ids.ts';
 import { TemplateKey } from '../../src/lib/tracking/domain/template.constants.ts';
 import type { Tracker } from '../../src/lib/tracking/domain/tracker.ts';
 import { FieldType, GoalType } from '../../src/lib/tracking/domain/tracking.constants.ts';
@@ -57,6 +59,7 @@ function wire(database: TestDatabase, clock: FixedClock) {
 	return {
 		subjects,
 		addTrackers: new AddTrackers({ trackers, subjects, ids }),
+		addSubject: new AddSubject({ trackers, subjects, ids }),
 		log: new LogEntry({ trackers, subjects, sessions, entries, clock, ids }),
 		start: new StartSession({ trackers, sessions, clock, ids }),
 		finish: new FinishSession({ sessions, entries, clock })
@@ -64,6 +67,15 @@ function wire(database: TestDatabase, clock: FixedClock) {
 }
 
 type Demo = ReturnType<typeof wire>;
+
+/** What each starter exercise starts at, ten weeks ago, in kilograms. */
+const STARTING_KG = new Map([
+	['Squat', 80],
+	['Bench press', 60],
+	['Deadlift', 100],
+	['Overhead press', 35],
+	['Row', 50]
+]);
 
 async function workout(
 	demo: Demo,
@@ -73,10 +85,11 @@ async function workout(
 ): Promise<void> {
 	const exercises = await demo.subjects.findFor(tracker.id);
 	const session = expectOk(await demo.start.execute({ trackerId: tracker.id }));
-	for (const [index, exercise] of exercises.slice(back % 3, (back % 3) + 3).entries()) {
+	for (const exercise of exercises.slice(back % 3, (back % 3) + 3)) {
+		const start = STARTING_KG.get(exercise.name) ?? 40;
 		for (let set = 0; set < 3; set += 1) {
 			clock.advance(3 * 60_000);
-			const weight = 40 + index * 20 + Math.floor((DAYS - back) / 7) * 2.5;
+			const weight = start + Math.floor((DAYS - back) / 7) * 2.5;
 			await demo.log.execute({
 				trackerId: tracker.id,
 				subjectId: exercise.id,
@@ -95,14 +108,71 @@ interface DemoTrackers {
 	readonly sleep: Tracker;
 	readonly weight: Tracker;
 	readonly steps: Tracker;
+	readonly food: Tracker;
 }
 
 function demoTrackers(added: readonly Tracker[]): DemoTrackers {
-	const [workouts, water, sleep, weight, steps] = added;
+	const [workouts, food, water, sleep, weight, steps] = added;
 	if (workouts === undefined || water === undefined || sleep === undefined)
 		throw new Error('Demo trackers missing');
-	if (weight === undefined || steps === undefined) throw new Error('Demo trackers missing');
-	return { workouts, water, sleep, weight, steps };
+	if (weight === undefined || steps === undefined || food === undefined)
+		throw new Error('Demo trackers missing');
+	return { workouts, food, water, sleep, weight, steps };
+}
+
+/** The demo's foods: name, then calories, protein, carbs, and fat per serving. */
+const FOODS = [
+	['Oatmeal', 320, 10, 54, 7],
+	['Rice bowl', 610, 42, 68, 16],
+	['Yogurt', 150, 15, 8, 4],
+	['Salmon', 540, 36, 40, 24],
+	['Apple', 95, 0, 25, 0]
+] as const;
+
+/** Which foods are eaten on a day, by their place in {@link FOODS}. */
+const MEALS = [
+	[0, 1, 2, 3],
+	[0, 1, 4, 3],
+	[2, 1, 4, 3]
+] as const;
+
+async function addFoods(demo: Demo, food: Tracker): Promise<readonly SubjectId[]> {
+	const ids: SubjectId[] = [];
+	for (const [name] of FOODS) {
+		const added = await demo.addSubject.execute({
+			trackerId: food.id,
+			name,
+			fieldKeys: [],
+			defaults: new Map()
+		});
+		ids.push(expectOk(added).id);
+	}
+	return ids;
+}
+
+async function meals(
+	demo: Demo,
+	food: Tracker,
+	foods: readonly SubjectId[],
+	back: number
+): Promise<void> {
+	const today = MEALS[back % MEALS.length] ?? [];
+	for (const index of back === 0 ? today.slice(0, 2) : today) {
+		const subjectId = foods[index];
+		if (subjectId === undefined) continue;
+		const [, calories, protein, carbs, fat] = FOODS[index];
+		await demo.log.execute({
+			trackerId: food.id,
+			subjectId,
+			values: values(
+				['servings', number(1)],
+				['calories', number(calories)],
+				['protein', number(protein)],
+				['carbs', number(carbs)],
+				['fat', number(fat)]
+			)
+		});
+	}
 }
 
 function weightOn(back: number): number {
@@ -125,9 +195,11 @@ async function day(
 	demo: Demo,
 	trackers: DemoTrackers,
 	clock: FixedClock,
-	back: number
+	back: number,
+	foods: readonly SubjectId[]
 ): Promise<void> {
 	await body(demo, trackers, back);
+	await meals(demo, trackers.food, foods, back);
 	const glasses = back === 0 ? 5 : 6 + (back % 3);
 	for (let glass = 0; glass < glasses; glass += 1) {
 		await demo.log.execute({
@@ -140,7 +212,7 @@ async function day(
 
 /**
  * Builds a backup file full of plausible, made-up data for the screenshots:
- * ten weeks of workouts, water, sleep, steps, and weigh-ins.
+ * ten weeks of workouts, meals, water, sleep, steps, and weigh-ins.
  */
 export async function demoBackup(): Promise<Uint8Array> {
 	const executor = new NodeSqliteExecutor();
@@ -151,6 +223,7 @@ export async function demoBackup(): Promise<Uint8Array> {
 	const weightGoal: Goal = { type: GoalType.target, field: fieldKey('weight'), target: 78 };
 	const keys = [
 		TemplateKey.workouts,
+		TemplateKey.food,
 		TemplateKey.water,
 		TemplateKey.sleep,
 		TemplateKey.weight,
@@ -164,10 +237,11 @@ export async function demoBackup(): Promise<Uint8Array> {
 		})
 	);
 	const trackers = demoTrackers(added);
+	const foods = await addFoods(demo, trackers.food);
 	for (let back = DAYS; back >= 0; back -= 1) {
 		const date = new Date(todayAt - back * DAY).toISOString().slice(0, 10);
 		clock.setToday(date);
-		await day(demo, trackers, clock, back);
+		await day(demo, trackers, clock, back, foods);
 		clock.advance(DAY);
 	}
 	await database.execute({
