@@ -10,9 +10,10 @@ import {
 	withTrackers
 } from '../../../../tests/support/tracking-app.ts';
 import type { Goal } from '../domain/goal.ts';
-import { TemplateKey } from '../domain/template.constants.ts';
+import { BasicKey, TemplateKey } from '../domain/template.constants.ts';
+import { InvalidTracker } from '../domain/tracker.ts';
 import { templateOf } from '../domain/from-template.ts';
-import { FieldType, GoalType, TrackerProblem } from '../domain/tracking.constants.ts';
+import { FieldProblem, FieldType, GoalType, TrackerProblem } from '../domain/tracking.constants.ts';
 import { MoveDirection } from './move-direction.constants.ts';
 import { TrackerNotFound } from './tracking-errors.ts';
 
@@ -60,6 +61,27 @@ describe('adding trackers from templates', () => {
 		expect(weight?.goal).toEqual(goal);
 	});
 
+	it('gives a plain number field the unit the user typed, such as push-ups in reps', async () => {
+		const app = trackingApp();
+		const number = templateOf(BasicKey.number);
+		const [pushUps] = expectOk(
+			await app.addTrackers.execute({
+				picks: [
+					{
+						template: number,
+						text: text('Push-ups'),
+						goal: number.goal,
+						starterNames: [],
+						renames: [{ key: 'amount', label: 'amount', unit: ' reps ' }]
+					}
+				]
+			})
+		);
+		const amount = pushUps?.fields.at(0);
+
+		expect(amount?.type === FieldType.number && amount.unit).toBe('reps');
+	});
+
 	it('adds nothing when a goal does not fit', async () => {
 		const app = trackingApp();
 		const goal: Goal = { type: GoalType.target, field: aKey('missing'), target: 75 };
@@ -89,6 +111,36 @@ describe('editing trackers', () => {
 		expect(
 			expectErr(await app.updateTracker.execute({ id: anId(), name: 'X', goal }))
 		).toBeInstanceOf(TrackerNotFound);
+	});
+
+	it('renames a number field and changes its unit, keeping what was logged', async () => {
+		const { app, tracker } = await firstTracker(TemplateKey.water);
+		const updated = expectOk(
+			await app.updateTracker.execute({
+				id: tracker.id,
+				name: tracker.name,
+				goal: tracker.goal,
+				renames: [{ key: 'glasses', label: 'Water', unit: 'oz' }]
+			})
+		);
+		const water = updated.fields.at(0);
+
+		expect(water?.label).toBe('Water');
+		expect(water?.type === FieldType.number && water.unit).toBe('oz');
+	});
+
+	it('rejects a unit that is too long', async () => {
+		const { app, tracker } = await firstTracker(TemplateKey.water);
+		const problem = expectErr(
+			await app.updateTracker.execute({
+				id: tracker.id,
+				name: tracker.name,
+				goal: tracker.goal,
+				renames: [{ key: 'glasses', label: 'Water', unit: 'x'.repeat(21) }]
+			})
+		);
+
+		expect(problem).toEqual(new InvalidTracker(FieldProblem.unit, 'glasses'));
 	});
 
 	it('moves a tracker on Home, staying put at the ends', async () => {

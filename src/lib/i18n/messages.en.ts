@@ -552,6 +552,9 @@ export const messages = {
 		},
 		edit: {
 			name: 'Name',
+			numberName: 'What it counts',
+			unit: 'Unit',
+			unitExample: 'oz',
 			goalAmount: 'Amount',
 			goalType: 'Goal',
 			goalUnit: 'Unit',
@@ -581,6 +584,8 @@ export const messages = {
 			added: (name: string) => `${name} added`,
 			name: 'What are you tracking?',
 			nameNeeded: 'Give it a name.',
+			unit: 'Unit (optional)',
+			unitExample: 'reps',
 			create: 'Add tracker',
 			examples: {
 				photos: 'Dog',

@@ -1,7 +1,7 @@
 import type { IdGenerator } from '../../shared/id-generator.ts';
 import { err, ok, type Result } from '../../shared/result.ts';
 import { photosOf } from '../domain/entry.ts';
-import { fieldKey } from '../domain/field.ts';
+import { fieldKey, renameFields, type FieldRename } from '../domain/field.ts';
 import { draftFromTemplate, type TemplateText } from '../domain/from-template.ts';
 import type { Goal } from '../domain/goal.ts';
 import type { TrackerId } from '../domain/ids.ts';
@@ -25,6 +25,8 @@ export interface TemplatePick {
 	readonly goal: Goal;
 	/** The names of the template's starting library, in the template's order. */
 	readonly starterNames: readonly string[];
+	/** New labels and units the user gave its plain number fields, if any. */
+	readonly renames?: readonly FieldRename[];
 }
 
 /** The templates to add as trackers, in order. */
@@ -51,7 +53,8 @@ export class AddTrackers {
 		for (const [offset, pick] of command.picks.entries()) {
 			const placement = { id: ids.next<'Tracker'>(), position: start + offset };
 			const draft = draftFromTemplate(pick.template, placement, pick.text);
-			const tracker = createTracker({ ...draft, goal: pick.goal });
+			const fields = renameFields(draft.fields, pick.renames ?? []);
+			const tracker = createTracker({ ...draft, fields, goal: pick.goal });
 			if (!tracker.ok) return tracker;
 			added.push(tracker.value);
 		}
@@ -75,14 +78,15 @@ export class AddTrackers {
 	}
 }
 
-/** A tracker's new name and goal. */
+/** A tracker's new name and goal, and new labels and units for its plain number fields. */
 export interface UpdateTrackerCommand {
 	readonly id: TrackerId;
 	readonly name: string;
 	readonly goal: Goal;
+	readonly renames?: readonly FieldRename[];
 }
 
-/** Renames a tracker or changes its goal. */
+/** Renames a tracker, changes its goal, or renames its number fields and their units. */
 export class UpdateTracker {
 	constructor(private readonly trackers: TrackerReader & TrackerWriter) {}
 
@@ -92,7 +96,12 @@ export class UpdateTracker {
 	): Promise<Result<Tracker, TrackerNotFound | InvalidTracker>> {
 		const tracker = await this.trackers.findById(command.id);
 		if (tracker === undefined) return err(new TrackerNotFound(command.id));
-		const updated = createTracker({ ...tracker, name: command.name, goal: command.goal });
+		const updated = createTracker({
+			...tracker,
+			name: command.name,
+			goal: command.goal,
+			fields: renameFields(tracker.fields, command.renames ?? [])
+		});
 		if (updated.ok) await this.trackers.save([updated.value]);
 		return updated;
 	}

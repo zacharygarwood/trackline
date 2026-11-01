@@ -43,4 +43,21 @@ describe('NewTracker', () => {
 		expect(await piano.add(app.addTrackers)).toBeUndefined();
 		expect(piano.problem).toBe('Enter a goal, so the bar has something to fill.');
 	});
+
+	it('gives a number tracker the unit typed, and shows it in the goal', async () => {
+		const number = BASICS.find((basic) => basic.key === BasicKey.number);
+		if (number === undefined) throw new Error('No Number basic');
+		const app = trackingApp();
+		const water = new NewTracker(number, units);
+		water.name = 'Water';
+		water.unit = 'oz';
+
+		expect(water.goal.tracker.fields.at(0)).toMatchObject({ unit: 'oz' });
+		const tracker = await water.add(app.addTrackers);
+		expect(tracker?.fields.at(0)).toMatchObject({ unit: 'oz' });
+	});
+
+	it('asks for no unit when the tracker has no plain number', () => {
+		expect(newPiano().unitField).toBeUndefined();
+	});
 });

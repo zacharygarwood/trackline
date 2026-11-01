@@ -63,6 +63,17 @@
 	>
 		<TextField label={messages.tracking.edit.name} bind:value={ready.name} />
 
+		{#each ready.renames as rename (rename.key)}
+			<div class="number">
+				<TextField label={messages.tracking.edit.numberName} bind:value={rename.label} />
+				<TextField
+					label={messages.tracking.edit.unit}
+					placeholder={messages.tracking.edit.unitExample}
+					bind:value={rename.unit}
+				/>
+			</div>
+		{/each}
+
 		<div class="goal">
 			<GoalInput editor={goal} {units} />
 		</div>
@@ -90,6 +101,13 @@
 	form {
 		display: flex;
 		flex-direction: column;
+	}
+
+	.number {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+		margin-top: var(--space-6);
 	}
 
 	.goal {

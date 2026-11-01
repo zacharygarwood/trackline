@@ -66,6 +66,7 @@ export default defineConfig({
 				'src/lib/**/*.constants.ts',
 				'src/lib/platform/db/{worker,open-database,wasm-sql-executor}.ts',
 				'src/lib/platform/backup/download-file.ts',
+				'src/lib/platform/pwa/theme-color.ts',
 				'src/lib/platform/photos/{photo-writer.worker,opfs-photo-folder,open-photo-folder,reencode-image}.ts',
 				'src/lib/body/infrastructure/canvas-image-processor.ts'
 			],

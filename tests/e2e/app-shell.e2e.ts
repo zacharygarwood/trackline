@@ -156,6 +156,29 @@ test('the site follows the device’s light or dark mode, and the app keeps the 
 	await expect(body).toHaveCSS('background-color', LIGHT_BACKGROUND);
 });
 
+test('the phone’s status and navigation bars take the chosen theme’s background', async ({
+	page
+}) => {
+	const themeColors = page.locator('meta[name="theme-color"]');
+	await page.emulateMedia({ colorScheme: 'light' });
+	await finishFirstRun(page);
+
+	for (const color of await themeColors.all()) {
+		await expect(color).toHaveAttribute('content', '#0b0b0c');
+	}
+	await page.goto('/app/settings/theme');
+	await page.getByRole('button', { name: messages.preferences.themes.forest, exact: true }).click();
+	for (const color of await themeColors.all()) {
+		await expect(color).toHaveAttribute('content', '#0f1712');
+	}
+
+	await page.getByRole('button', { name: messages.preferences.themes.system, exact: true }).click();
+	await page.emulateMedia({ colorScheme: 'dark' });
+	for (const color of await themeColors.all()) {
+		await expect(color).toHaveAttribute('content', '#0b0b0c');
+	}
+});
+
 test('iPhone Safari users see how to add the app to the home screen until they dismiss it', async ({
 	page
 }) => {

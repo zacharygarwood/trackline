@@ -1,8 +1,10 @@
 import { messages } from '../../i18n/messages.en.ts';
 import { isId } from '../../shared/id.ts';
 import type { DeleteTracker, GetTracker, UpdateTracker } from '../application/trackers.ts';
+import { renameFields, type FieldRename } from '../domain/field.ts';
 import type { Tracker } from '../domain/tracker.ts';
 import type { DisplayUnits } from './display-units.ts';
+import { currentRenames, type RenameDraft } from './field-renames.ts';
 import { GoalEditor } from './goal-editor.svelte.ts';
 
 /** The use cases the edit page calls. */
@@ -12,10 +14,15 @@ export interface TrackerEditorUseCases {
 	readonly deleteTracker: DeleteTracker;
 }
 
-/** State and actions of a tracker's edit page: its name, its goal, and deleting it. */
+/**
+ * State and actions of a tracker's edit page: its name, the label and unit of
+ * each plain number, its goal, and deleting it.
+ */
 export class TrackerEditor {
 	tracker: Tracker | undefined = $state();
 	name = $state('');
+	/** The label and unit of each number the user can rename, such as Water's glasses. */
+	renames: RenameDraft[] = $state([]);
 	goal: GoalEditor | undefined = $state();
 	problem: string | undefined = $state();
 
@@ -36,11 +43,21 @@ export class TrackerEditor {
 		if (tracker === undefined) return false;
 		this.tracker = tracker;
 		this.name = tracker.name;
-		this.goal = new GoalEditor(tracker, this.units);
+		this.renames = currentRenames(tracker);
+		const renames = (): readonly FieldRename[] => this.renames;
+		this.goal = new GoalEditor(
+			{
+				...tracker,
+				get fields() {
+					return renameFields(tracker.fields, renames());
+				}
+			},
+			this.units
+		);
 		return true;
 	}
 
-	/** Saves the name and goal, or explains what to fix. */
+	/** Saves the name, number labels and units, and goal, or explains what to fix. */
 	async save(): Promise<Tracker | undefined> {
 		if (this.tracker === undefined || this.goal === undefined) return undefined;
 		const goal = this.goal.goal();
@@ -51,7 +68,8 @@ export class TrackerEditor {
 		const saved = await this.useCases.updateTracker.execute({
 			id: this.tracker.id,
 			name: this.name,
-			goal: goal.value
+			goal: goal.value,
+			renames: this.renames
 		});
 		this.problem = saved.ok ? undefined : messages.tracking.page.fixProblem;
 		return saved.ok ? saved.value : undefined;
