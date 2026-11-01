@@ -8,6 +8,7 @@ import {
 } from '../../../../tests/builders/tracking.builder.ts';
 import { expectOk } from '../../../../tests/support/result.ts';
 import { DistanceUnit } from '../../shared/distance-unit.constants.ts';
+import { first } from '../../shared/collections.ts';
 import { MassUnit } from '../../shared/mass-unit.constants.ts';
 import { templateOf, draftFromTemplate } from '../domain/from-template.ts';
 import { TemplateKey } from '../domain/template.constants.ts';
@@ -17,6 +18,7 @@ import { homeLine } from './home-line.ts';
 import { templateText } from './template-text.ts';
 import {
 	entrySummary,
+	formatAmount,
 	formatDuration,
 	goalDetail,
 	goalText,
@@ -40,6 +42,31 @@ describe('formatDuration', () => {
 		[27_000, '7 h 30 min']
 	])('shows %d seconds as %s', (seconds, text) => {
 		expect(formatDuration(seconds)).toBe(text);
+	});
+});
+
+describe('formatAmount', () => {
+	function numberField(key: TemplateKey) {
+		const field = first(fromTemplate(key).fields);
+		if (field?.type !== FieldType.number) throw new Error('Expected a number field');
+		return field;
+	}
+
+	it.each([
+		[TemplateKey.food, 1, '1 serving'],
+		[TemplateKey.food, 2, '2 servings'],
+		[TemplateKey.water, 1, '1 glass'],
+		[TemplateKey.coffee, 1, '1 cup'],
+		[TemplateKey.steps, 1, '1 step'],
+		[TemplateKey.water, 1.5, '1.5 glasses']
+	])('names one of a %s unit in the singular: %d is %s', (key, amount, text) => {
+		expect(formatAmount(numberField(key), amount, km)).toBe(text);
+	});
+
+	it('leaves a unit the user named as it is', () => {
+		const field = { ...numberField(TemplateKey.water), unit: 'scoops' };
+
+		expect(formatAmount(field, 1, km)).toBe('1 scoops');
 	});
 });
 

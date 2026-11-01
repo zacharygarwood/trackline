@@ -1,5 +1,14 @@
 const APP_NAME = 'Trackline';
 
+/** The singular of each unit label templates give a number field, for an amount of exactly one. */
+const SINGULAR_UNITS: ReadonlyMap<string, string> = new Map([
+	['reps', 'rep'],
+	['steps', 'step'],
+	['servings', 'serving'],
+	['glasses', 'glass'],
+	['cups', 'cup']
+]);
+
 const countOf = (count: number, one: string, many: string) =>
 	`${String(count)} ${count === 1 ? one : many}`;
 
@@ -315,6 +324,7 @@ export const messages = {
 			minutes: (minutes: number) => `${String(minutes)} min`,
 			seconds: (seconds: number) => `${String(seconds)} s`,
 			amount: (amount: string, unit: string) => (unit === '' ? amount : `${amount} ${unit}`),
+			singularUnit: (unit: string) => SINGULAR_UNITS.get(unit) ?? unit,
 			photo: 'Photo',
 			pace: (pace: string, unit: string) => `${pace} /${unit}`,
 			join: (parts: readonly string[]) => parts.join(' · ')

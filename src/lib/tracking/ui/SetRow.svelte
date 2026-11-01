@@ -63,7 +63,7 @@
 							bind:value={draft.text}
 							onchange={commit}
 						/>
-						<span>{unitText(field, units)}</span>
+						<span>{unitText(field, units, parseDecimal(draft.text))}</span>
 					</label>
 					<StepButton
 						label={messages.tracking.inputs.more(field.label)}

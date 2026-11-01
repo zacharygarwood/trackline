@@ -50,7 +50,7 @@
 {#if draft.type === FieldType.number && field.type === FieldType.number}
 	<p class="label" id="{id}-label">{label}</p>
 	<StepperField
-		label={unitText(field, units)}
+		label={unitText(field, units, parseDecimal(draft.text))}
 		value={draft.text}
 		lessLabel={messages.tracking.inputs.less(field.label)}
 		moreLabel={messages.tracking.inputs.more(field.label)}

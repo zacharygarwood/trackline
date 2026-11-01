@@ -51,13 +51,16 @@ export function toStored(field: NumberField, shown: number, units: DisplayUnits)
 }
 
 /**
- * The unit a number field is shown in, such as "glasses", "kg", or "mi".
+ * The unit a number field is shown in, such as "glasses", "glass", "kg", or "mi".
+ * A template's unit is named in the singular for exactly one; a unit the user typed is shown as typed.
  *
  * @param field - The number's field.
  * @param units - The user's units.
+ * @param shown - The amount the unit follows, in the user's units, if there is one.
  */
-export function unitText(field: NumberField, units: DisplayUnits): string {
+export function unitText(field: NumberField, units: DisplayUnits, shown?: number): string {
 	if (field.dimension === Dimension.mass)
 		return units.mass === MassUnit.kg ? messages.units.kg : messages.units.lb;
-	return field.dimension === Dimension.distance ? units.distance : field.unit;
+	if (field.dimension === Dimension.distance) return units.distance;
+	return shown === 1 ? messages.tracking.values.singularUnit(field.unit) : field.unit;
 }

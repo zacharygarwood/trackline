@@ -45,7 +45,7 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
- * A stored number in the user's units with its unit, such as "8 glasses" or "176.4 lb".
+ * A stored number in the user's units with its unit, such as "8 glasses", "1 glass", or "176.4 lb".
  *
  * @param field - The number's field.
  * @param stored - The stored amount.
@@ -55,7 +55,7 @@ export function formatAmount(field: NumberField, stored: number, units: DisplayU
 	const shown = toShown(field, stored, units);
 	const text =
 		field.dimension === Dimension.distance ? distanceFormat.format(shown) : formatNumber(shown);
-	return messages.tracking.values.amount(text, unitText(field, units));
+	return messages.tracking.values.amount(text, unitText(field, units, shown));
 }
 
 function formatMeasured(field: Field, value: FieldValue, units: DisplayUnits): string | undefined {
