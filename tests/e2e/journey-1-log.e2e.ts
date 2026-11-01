@@ -2,6 +2,7 @@ import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
 import {
 	addTracker,
+	amountFields,
 	finishFirstRun,
 	homeRow,
 	openAddTracker,
@@ -40,12 +41,12 @@ test('the next log starts from the last one', async ({ page }) => {
 	await finishFirstRun(page);
 	await openTracker(page, templates.water);
 	await page.getByRole('button', { name: trackerPage.log, exact: true }).click();
-	await page.getByRole('spinbutton').first().fill('2');
+	await amountFields(page).first().fill('2');
 	await page.getByRole('button', { name: trackerPage.save }).click();
 
 	await page.getByRole('button', { name: trackerPage.log, exact: true }).click();
 
-	await expect(page.getByRole('spinbutton').first()).toHaveValue('2');
+	await expect(amountFields(page).first()).toHaveValue('2');
 });
 
 test('a required field must be filled', async ({ page }) => {
@@ -83,6 +84,7 @@ test('a new tracker’s goal is built from simple choices while creating it, lik
 	await page.getByRole('textbox', { name: messages.tracking.inputs.minutes }).fill('');
 	await expect(page.getByText('2 h a day')).toBeVisible();
 	await page.getByRole('button', { name: messages.tracking.add.create }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Piano');
 
 	await tab(page, messages.navigation.home).click();
 	await expect(homeRow(page, 'Piano')).toContainText('/ 2 h a day');
@@ -96,11 +98,11 @@ test('water can be counted in oz instead of glasses', async ({ page }) => {
 
 	await page.getByRole('textbox', { name: edit.numberName }).fill('Water');
 	await page.getByRole('textbox', { name: edit.unit, exact: true }).fill('oz');
-	await page.getByRole('spinbutton').fill('64');
+	await amountFields(page).fill('64');
 	await page.getByRole('button', { name: trackerPage.save }).click();
 
 	await page.getByRole('button', { name: trackerPage.log, exact: true }).click();
-	await page.getByRole('spinbutton').first().fill('16');
+	await amountFields(page).first().fill('16');
 	await expect(page.getByText('oz', { exact: true })).toBeVisible();
 	await page.getByRole('button', { name: trackerPage.save }).click();
 	await expect(page.getByRole('list', { name: trackerPage.history })).toContainText('16 oz');
@@ -117,7 +119,18 @@ test('a number tracker can be given its own unit while creating it', async ({ pa
 	await page.getByRole('button', { name: messages.tracking.add.create }).click();
 
 	await page.getByRole('button', { name: trackerPage.log, exact: true }).click();
-	await page.getByRole('spinbutton').first().fill('20');
+	await amountFields(page).first().fill('20');
 	await page.getByRole('button', { name: trackerPage.save }).click();
 	await expect(page.getByRole('list', { name: trackerPage.history })).toContainText('20 reps');
+});
+
+test('a weight takes decimals, typed one key at a time', async ({ page }) => {
+	await finishFirstRun(page);
+	await addTracker(page, templates.weight);
+
+	await page.getByRole('button', { name: trackerPage.log, exact: true }).click();
+	await amountFields(page).first().pressSequentially('72.5');
+	await page.getByRole('button', { name: trackerPage.save }).click();
+
+	await expect(page.getByRole('list', { name: trackerPage.history })).toContainText('72.5');
 });

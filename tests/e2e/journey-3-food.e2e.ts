@@ -1,6 +1,6 @@
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
-import { addTracker, finishFirstRun, homeRow, tab } from './helpers.ts';
+import { addTracker, amountFields, finishFirstRun, homeRow, tab } from './helpers.ts';
 
 const { food, library, templates } = messages.tracking;
 
@@ -11,8 +11,8 @@ test('add a new food, eat two servings, and see the day’s totals', async ({ pa
 	await page.getByRole('button', { name: food.add }).click();
 	await page.getByRole('searchbox', { name: food.search }).fill('Oats');
 	await page.getByRole('button', { name: food.create('Oats') }).click();
-	await page.getByRole('spinbutton').nth(0).fill('150');
-	await page.getByRole('spinbutton').nth(1).fill('5');
+	await amountFields(page).nth(0).fill('150');
+	await amountFields(page).nth(1).fill('5');
 	await page.getByRole('button', { name: library.save }).click();
 	await page.getByRole('button', { name: 'Oats' }).click();
 	await page.getByRole('button', { name: messages.tracking.inputs.more(food.servings) }).click();
@@ -32,7 +32,7 @@ test('quick add logs calories without a food', async ({ page }) => {
 	await addTracker(page, templates.food);
 	await page.getByRole('button', { name: food.add }).click();
 	await page.getByRole('button', { name: food.quickAdd }).click();
-	await page.getByRole('spinbutton').nth(1).fill('420');
+	await amountFields(page).nth(1).fill('420');
 	await page.getByRole('button', { name: messages.tracking.page.save }).click();
 	await page.goBack();
 

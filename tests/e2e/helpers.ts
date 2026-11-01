@@ -102,6 +102,16 @@ export function tab(page: Page, label: string) {
 		.getByRole('link', { name: label, exact: true });
 }
 
+/**
+ * The number fields with − and + buttons, in page order. They are text inputs with a
+ * decimal keyboard, so they can't be told apart from other text boxes by role alone.
+ *
+ * @param page - The page.
+ */
+export function amountFields(page: Page) {
+	return page.locator('input[inputmode="decimal"]');
+}
+
 /** A photo file as stored on the device. */
 export interface StoredPhotoFile {
 	readonly name: string;
