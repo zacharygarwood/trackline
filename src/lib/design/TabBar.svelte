@@ -55,7 +55,6 @@
 	}
 
 	a {
-		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -81,15 +80,5 @@
 
 	a[aria-current='page'] .glyph {
 		color: var(--color-accent);
-	}
-
-	a[aria-current='page']::before {
-		position: absolute;
-		top: calc(-1 * var(--border-hairline));
-		right: var(--tab-indicator-inset);
-		left: var(--tab-indicator-inset);
-		height: var(--tab-indicator);
-		background: var(--color-accent);
-		content: '';
 	}
 </style>

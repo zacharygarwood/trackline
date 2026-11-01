@@ -9,7 +9,7 @@ The plan asks for an open source license chosen by ADR: GPL-3.0, which keeps for
 
 ## Decision
 
-Buffalog is licensed under the GNU General Public License v3, only (`GPL-3.0-only`). The full text is in `LICENSE`, and `package.json` declares it. Settings' About section, the landing page, and the README say so and link to the source at https://github.com/zacharygarwood/buffalog.
+Trackline is licensed under the GNU General Public License v3, only (`GPL-3.0-only`). The full text is in `LICENSE`, and `package.json` declares it. Settings' About section, the landing page, and the README say so and link to the source at https://github.com/zacharygarwood/trackline.
 
 Copyleft fits the privacy promise: anyone who distributes a modified version has to publish its source, so a fork can't quietly add tracking while keeping the name of an inspectable app. "Only" rather than "or later" keeps the terms fixed to the version chosen here.
 

@@ -1,15 +1,30 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { migrate, type Migration } from '../../src/lib/platform/db/migrate.ts';
-import type { SqlStatement } from '../../src/lib/platform/db/sql.ts';
 import { BACKUP_FORMAT_VERSION } from '../../src/lib/settings/domain/backup.ts';
 import { ZipBackupCodec } from '../../src/lib/settings/infrastructure/zip-backup-codec.ts';
-import { LocalDate } from '../../src/lib/shared/local-date.ts';
 import { last } from '../../src/lib/shared/collections.ts';
+import { LogEntry } from '../../src/lib/tracking/application/entries.ts';
+import { FinishSession, StartSession } from '../../src/lib/tracking/application/sessions.ts';
+import { AddTrackers } from '../../src/lib/tracking/application/trackers.ts';
+import { fieldKey, type FieldValue } from '../../src/lib/tracking/domain/field.ts';
+import { templateOf } from '../../src/lib/tracking/domain/from-template.ts';
+import type { Goal } from '../../src/lib/tracking/domain/goal.ts';
+import { TemplateKey } from '../../src/lib/tracking/domain/template.constants.ts';
+import type { Tracker } from '../../src/lib/tracking/domain/tracker.ts';
+import { FieldType, GoalType } from '../../src/lib/tracking/domain/tracking.constants.ts';
+import {
+	SqliteEntryRepository,
+	SqliteSessionRepository,
+	SqliteSubjectRepository,
+	SqliteTrackerRepository
+} from '../../src/lib/tracking/infrastructure/sqlite-tracking-repositories.ts';
+import { templatePick } from '../../src/lib/tracking/ui/template-text.ts';
+import { FixedClock } from '../fakes/fixed-clock.ts';
+import { SequentialIdGenerator } from '../fakes/sequential-id-generator.ts';
 import { NodeSqliteExecutor } from '../support/node-sqlite-executor.ts';
 import { expectOk } from '../support/result.ts';
 import { TestDatabase } from '../support/test-database.ts';
-import { activitySets } from './demo-activities.ts';
 
 const MIGRATIONS_FOLDER = path.join(import.meta.dirname, '../../src/lib/platform/db/migrations');
 
@@ -25,246 +40,147 @@ const migrations: readonly Migration[] = readdirSync(MIGRATIONS_FOLDER)
 /** The day the screenshots are taken on. */
 export const DEMO_TODAY = '2026-10-28';
 
-const today = expectOk(LocalDate.parse(DEMO_TODAY));
-const day = (back: number) => today.addDays(-back).toString();
-const at = (back: number, hour: number) =>
-	Date.UTC(today.year, today.month - 1, today.day - back, hour);
+const DAYS = 70;
+const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
+const todayAt = Date.UTC(2026, 9, 28, 12);
+const number = (amount: number): FieldValue => ({ type: FieldType.number, amount });
+const values = (...pairs: [string, FieldValue][]) =>
+	new Map(pairs.map(([key, value]) => [fieldKey(key), value]));
 
-let sequence = 0;
-/** A valid, deterministic UUIDv7. */
-const id = () => {
-	sequence += 1;
-	return `01930000-0000-7000-8000-${sequence.toString(16).padStart(12, '0')}`;
-};
-
-const statement = (sql: string, params: SqlStatement['params'] = []): SqlStatement => ({
-	name: 'demo data',
-	sql,
-	params
-});
-
-function weighIns(): SqlStatement[] {
-	return Array.from({ length: 70 }, (_, back) => back)
-		.filter((back) => back % 9 !== 4)
-		.map((back) =>
-			statement('INSERT INTO weigh_in (id, date, weight_kg) VALUES (?, ?, ?)', [
-				id(),
-				day(back),
-				Math.round((80.2 + back * 0.05 + Math.sin(back * 1.7) * 0.45) * 10) / 10
-			])
-		);
+function wire(database: TestDatabase, clock: FixedClock) {
+	const ids = new SequentialIdGenerator();
+	const trackers = new SqliteTrackerRepository(database);
+	const subjects = new SqliteSubjectRepository(database);
+	const sessions = new SqliteSessionRepository(database);
+	const entries = new SqliteEntryRepository(database);
+	return {
+		subjects,
+		addTrackers: new AddTrackers({ trackers, subjects, ids }),
+		log: new LogEntry({ trackers, subjects, sessions, entries, clock, ids }),
+		start: new StartSession({ trackers, sessions, clock, ids }),
+		finish: new FinishSession({ sessions, entries, clock })
+	};
 }
 
-const FOODS = [
-	['Oats', 40, 'g', 150, 5, 27, 3, 'breakfast'],
-	['Greek yogurt', 170, 'g', 100, 17, 6, 0.7, 'breakfast'],
-	['Chicken breast', 150, 'g', 248, 46, 0, 5.4, 'lunch'],
-	['Rice', 150, 'g', 195, 4, 42, 0.4, 'lunch'],
-	['Salmon', 140, 'g', 290, 30, 0, 18, 'dinner'],
-	['Potatoes', 250, 'g', 193, 5, 43, 0.3, 'dinner'],
-	['Banana', 1, 'banana', 105, 1.3, 27, 0.4, 'snacks'],
-	['Protein shake', 1, 'scoop', 120, 24, 3, 1.5, 'snacks']
-] as const;
+type Demo = ReturnType<typeof wire>;
 
-function food(): SqlStatement[] {
-	const foodIds = FOODS.map(() => id());
-	const definitions = FOODS.map(([name, amount, unit, calories, protein, carbs, fat], index) =>
-		statement(
-			'INSERT INTO food (id, name, reference_amount, reference_unit, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-			[foodIds[index] ?? '', name, amount, unit, calories, protein, carbs, fat]
-		)
-	);
-	const goals = statement(
-		"INSERT INTO daily_goals (effective_from, calories, protein_g, carbs_g, fat_g) VALUES ('2025-10-01', 2200, 150, 230, 70)"
-	);
-	const entries = Array.from({ length: 300 }, (_, back) => back)
-		.filter((back) => back % 11 !== 3 && back % 17 !== 5)
-		.flatMap((back) =>
-			FOODS.flatMap(([name, amount, unit, calories, protein, carbs, fat, slot], index) => {
-				const today = back === 0;
-				if (today && slot !== 'breakfast' && slot !== 'lunch') return [];
-				if ((back + index) % 7 === 0 && !today) return [];
-				const portion = 1 + ((back * 3 + index) % 4) * 0.1;
-				return [
-					statement(
-						`INSERT INTO food_log_entry (id, date, slot, food_id, food_name, unit, amount, calories, protein_g, carbs_g, fat_g, logged_at)
-							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-						[
-							id(),
-							day(back),
-							slot,
-							foodIds[index] ?? '',
-							name,
-							unit,
-							amount * portion,
-							calories * portion,
-							protein * portion,
-							carbs * portion,
-							fat * portion,
-							at(back, 8 + index)
-						]
-					)
-				];
-			})
-		);
-	return [...definitions, goals, ...entries];
-}
-
-const LIFTS = [
-	['Squat', 80, 5],
-	['Bench press', 60, 6],
-	['Deadlift', 100, 4],
-	['Overhead press', 40, 6]
-] as const;
-
-/** Exercises beyond the lifts: a run, bouldering, and yoga, with what each tracks. */
-const ACTIVITIES = [
-	['Run', 'distance,time', null],
-	['Bouldering', 'grade', 'v'],
-	['Yoga', 'time', null]
-] as const;
-
-const ACTIVITY_NAMES = ACTIVITIES.map(([name]) => name);
-
-function templates(liftIds: readonly string[], activityIds: readonly string[]): SqlStatement[] {
-	const plans = [
-		['Push day', [liftIds.at(1), liftIds.at(3)]],
-		['Legs', [liftIds.at(0), liftIds.at(2)]],
-		['Easy run', [activityIds.at(0)]],
-		['Climbing', [activityIds.at(1)]]
-	] as const;
-	return plans.flatMap(([name, exercises], position) => {
-		const templateId = id();
-		return [
-			statement('INSERT INTO workout_template (id, name, position) VALUES (?, ?, ?)', [
-				templateId,
-				name,
-				position
-			]),
-			...exercises.map((exerciseId, index) =>
-				statement(
-					'INSERT INTO template_exercise (template_id, position, exercise_id, target_sets) VALUES (?, ?, ?, 3)',
-					[templateId, index, exerciseId ?? '']
-				)
-			)
-		];
-	});
-}
-
-function workoutWith(
-	back: number,
-	minutes: number,
-	exercises: readonly (readonly [string, (readonly (number | null)[])[]])[]
-) {
-	const workoutId = id();
-	const statements = [
-		statement(
-			'INSERT INTO workout (id, date, started_at, finished_at, note, source_template_id) VALUES (?, ?, ?, ?, ?, NULL)',
-			[workoutId, day(back), at(back, 17), at(back, 17) + minutes * 60_000, '']
-		)
-	];
-	exercises.forEach(([exerciseId, sets], position) => {
-		statements.push(
-			statement(
-				'INSERT INTO workout_exercise (workout_id, position, exercise_id) VALUES (?, ?, ?)',
-				[workoutId, position, exerciseId]
-			)
-		);
-		sets.forEach((set, setPosition) => {
-			statements.push(
-				statement(
-					`INSERT INTO workout_set (workout_id, exercise_position, position, reps, weight_kg, seconds,
-						distance_m, grade, count, completed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-					[workoutId, position, setPosition, ...set]
-				)
-			);
-		});
-	});
-	return statements;
-}
-
-function liftWorkout(back: number, weekday: number, exerciseIds: readonly string[]) {
-	const lifts = LIFTS.filter((_, index) => (index + weekday / 2) % 2 === 0 || index === 0).map(
-		([, start, reps]) => {
-			const lift = LIFTS.findIndex(([, other]) => other === start);
-			const kilograms = Math.round((start + (300 - back) * 0.1) / 2.5) * 2.5;
-			const sets = [0, 1, 2].map(() => [reps, kilograms, null, null, null, null]);
-			return [exerciseIds.at(lift) ?? '', sets] as const;
+async function workout(
+	demo: Demo,
+	tracker: Tracker,
+	clock: FixedClock,
+	back: number
+): Promise<void> {
+	const exercises = await demo.subjects.findFor(tracker.id);
+	const session = expectOk(await demo.start.execute({ trackerId: tracker.id }));
+	for (const [index, exercise] of exercises.slice(back % 3, (back % 3) + 3).entries()) {
+		for (let set = 0; set < 3; set += 1) {
+			clock.advance(3 * 60_000);
+			const weight = 40 + index * 20 + Math.floor((DAYS - back) / 7) * 2.5;
+			await demo.log.execute({
+				trackerId: tracker.id,
+				subjectId: exercise.id,
+				sessionId: session.id,
+				values: values(['reps', number(8)], ['weight', number(weight)])
+			});
 		}
-	);
-	return workoutWith(back, 45 + (back % 4) * 10, lifts);
-}
-
-function activityWorkout(back: number, weekday: number, activityIds: readonly string[]) {
-	const second = back % 2 === 0 ? 1 : 2;
-	const index = weekday === 1 ? 0 : second;
-	const name = ACTIVITY_NAMES.at(index) ?? 'Run';
-	return workoutWith(back, 30 + (back % 3) * 15, [
-		[activityIds.at(index) ?? '', activitySets(name, back)]
-	]);
-}
-
-function dayOfTraining(
-	back: number,
-	exerciseIds: readonly string[],
-	activityIds: readonly string[]
-) {
-	const weekday = back % 7;
-	if (back % 23 === 6) return [];
-	if (weekday === 0 || weekday === 2 || weekday === 4)
-		return liftWorkout(back, weekday, exerciseIds);
-	if (weekday === 1 || weekday === 5) return activityWorkout(back, weekday, activityIds);
-	return back < 40
-		? [statement('INSERT INTO rest_day (id, date) VALUES (?, ?)', [id(), day(back)])]
-		: [];
-}
-
-function training(): SqlStatement[] {
-	const exerciseIds = LIFTS.map(() => id());
-	const activityIds = ACTIVITIES.map(() => id());
-	const statements: SqlStatement[] = [
-		...LIFTS.map(([name], index) =>
-			statement('INSERT INTO exercise (id, name) VALUES (?, ?)', [exerciseIds[index] ?? '', name])
-		),
-		...ACTIVITIES.map(([name, fields, scale], index) =>
-			statement(
-				'INSERT INTO exercise (id, name, tracked_fields, grade_scale) VALUES (?, ?, ?, ?)',
-				[activityIds[index] ?? '', name, fields, scale]
-			)
-		),
-		...templates(exerciseIds, activityIds)
-	];
-	for (let back = 300; back >= 0; back -= 1) {
-		statements.push(...dayOfTraining(back, exerciseIds, activityIds));
 	}
-	return statements;
+	await demo.finish.execute({ id: session.id });
 }
 
-function settings(): SqlStatement[] {
-	return [
-		statement("INSERT INTO weight_goal (id, target_kg, direction) VALUES (1, 78, 'lose')"),
-		statement("INSERT INTO app_setting (key, value) VALUES ('setup_complete', '1')"),
-		statement("INSERT INTO app_setting (key, value) VALUES ('last_export_at', ?)", [
-			String(at(2, 9))
-		])
-	];
+/** The demo's trackers. */
+interface DemoTrackers {
+	readonly workouts: Tracker;
+	readonly water: Tracker;
+	readonly sleep: Tracker;
+	readonly weight: Tracker;
+	readonly steps: Tracker;
+}
+
+function demoTrackers(added: readonly Tracker[]): DemoTrackers {
+	const [workouts, water, sleep, weight, steps] = added;
+	if (workouts === undefined || water === undefined || sleep === undefined)
+		throw new Error('Demo trackers missing');
+	if (weight === undefined || steps === undefined) throw new Error('Demo trackers missing');
+	return { workouts, water, sleep, weight, steps };
+}
+
+function weightOn(back: number): number {
+	return Math.round((80.2 + back * 0.05 + Math.sin(back * 1.7) * 0.45) * 10) / 10;
+}
+
+async function body(demo: Demo, trackers: DemoTrackers, back: number): Promise<void> {
+	const sleep = { type: FieldType.duration, seconds: 23_400 + (back % 5) * 1200 } as const;
+	await demo.log.execute({ trackerId: trackers.sleep.id, values: values(['time', sleep]) });
+	if (back % 9 !== 4)
+		await demo.log.execute({
+			trackerId: trackers.weight.id,
+			values: values(['weight', number(weightOn(back))])
+		});
+	const steps = number(6000 + ((back * 1373) % 6000));
+	await demo.log.execute({ trackerId: trackers.steps.id, values: values(['steps', steps]) });
+}
+
+async function day(
+	demo: Demo,
+	trackers: DemoTrackers,
+	clock: FixedClock,
+	back: number
+): Promise<void> {
+	await body(demo, trackers, back);
+	const glasses = back === 0 ? 5 : 6 + (back % 3);
+	for (let glass = 0; glass < glasses; glass += 1) {
+		await demo.log.execute({
+			trackerId: trackers.water.id,
+			values: values(['glasses', number(1)])
+		});
+	}
+	if ([1, 3, 5].includes(back % 7)) await workout(demo, trackers.workouts, clock, back);
 }
 
 /**
  * Builds a backup file full of plausible, made-up data for the screenshots:
- * about ten months of training and food, and ten weeks of weigh-ins.
+ * ten weeks of workouts, water, sleep, steps, and weigh-ins.
  */
 export async function demoBackup(): Promise<Uint8Array> {
 	const executor = new NodeSqliteExecutor();
 	const database = new TestDatabase(executor);
 	await migrate(database, migrations);
-	await database.transaction([...weighIns(), ...food(), ...training(), ...settings()]);
+	const clock = new FixedClock(todayAt - DAYS * DAY, DEMO_TODAY);
+	const demo = wire(database, clock);
+	const weightGoal: Goal = { type: GoalType.target, field: fieldKey('weight'), target: 78 };
+	const keys = [
+		TemplateKey.workouts,
+		TemplateKey.water,
+		TemplateKey.sleep,
+		TemplateKey.weight,
+		TemplateKey.steps
+	];
+	const added = expectOk(
+		await demo.addTrackers.execute({
+			picks: keys.map((key) =>
+				templatePick(templateOf(key), key === TemplateKey.weight ? weightGoal : undefined)
+			)
+		})
+	);
+	const trackers = demoTrackers(added);
+	for (let back = DAYS; back >= 0; back -= 1) {
+		const date = new Date(todayAt - back * DAY).toISOString().slice(0, 10);
+		clock.setToday(date);
+		await day(demo, trackers, clock, back);
+		clock.advance(DAY);
+	}
+	await database.execute({
+		name: 'demo settings',
+		sql: "INSERT INTO app_setting (key, value) VALUES ('setup_complete', '1'), ('last_export_at', ?)",
+		params: [String(todayAt - 2 * DAY)]
+	});
 	return new ZipBackupCodec().encode({
 		manifest: {
 			formatVersion: BACKUP_FORMAT_VERSION,
 			appVersion: '1.0.0',
 			schemaVersion: last(migrations)?.version ?? 0,
-			createdAt: at(0, 7)
+			createdAt: todayAt
 		},
 		database: executor.serialize(),
 		photos: []

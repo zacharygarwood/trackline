@@ -1,4 +1,4 @@
-const APP_NAME = 'Buffalog';
+const APP_NAME = 'Trackline';
 
 const countOf = (count: number, one: string, many: string) =>
 	`${String(count)} ${count === 1 ? one : many}`;
@@ -14,7 +14,7 @@ export const messages = {
 		section === undefined ? APP_NAME : `${section} · ${APP_NAME}`,
 	app: {
 		name: APP_NAME,
-		tagline: 'A small, private tracker for workouts, food, and body weight.',
+		tagline: 'A small, private tracker for anything: workouts, food, sleep, plants, and more.',
 		updateReady: 'A new version is ready.',
 		reload: 'Reload',
 		installHint: `Install ${APP_NAME}: tap Share, then Add to Home Screen.`,
@@ -25,9 +25,8 @@ export const messages = {
 	landing: {
 		openApp: 'Open the app',
 		todayScreenshot:
-			'The Today screen: calories and protein against the goals, this week’s workouts, and weight.',
-		statsScreenshot:
-			'The Stats screen: workout days, weight, calories, and progress for each exercise.',
+			'Home: a progress bar for each thing you track, such as workouts, water, and sleep.',
+		statsScreenshot: 'Stats: the last eight days, weeks, or months of each tracker with a goal.',
 		promise: 'Everything you log stays on your device. No account, no tracking, no cloud.',
 		installTitle: 'Install it like an app',
 		installIphone: 'iPhone: open it in Safari, tap Share, then Add to Home Screen.',
@@ -50,9 +49,9 @@ export const messages = {
 		title: 'Privacy',
 		summary: `${APP_NAME} keeps everything you log on your device. Nothing is sent anywhere.`,
 		paragraphs: [
-			'There is no account and no server. Workouts, food, weigh-ins, and progress photos are stored in your browser’s private storage for this site, on this device only.',
+			'There is no account and no server. Everything you track, photos included, is stored in your browser’s private storage for this site, on this device only.',
 			'The app makes no network requests except to download updates of itself from this site. It has no analytics, crash reporting, ads, cookies, or third-party scripts, fonts, or images. Anyone can check this: the source is public, and an automated test fails if the app contacts any other site.',
-			'Progress photos are redrawn when you add them, which removes their hidden details such as the location they were taken and the camera used.',
+			'Photos are redrawn when you add them, which removes their hidden details such as the location they were taken and the camera used.',
 			'Backups are files you export yourself. The app never uploads them; where you keep them is up to you.',
 			'The links to the source code and to Ko-fi are ordinary links. Nothing from those sites is loaded unless you tap them.',
 			'Deleting all data in Settings removes everything from this device. Because nothing is stored anywhere else, there is nothing else to delete.'
@@ -99,50 +98,20 @@ export const messages = {
 		]
 	},
 	navigation: {
-		today: 'Today',
-		startWorkout: 'Start workout',
-		pastWorkouts: 'Past workouts',
-		myWorkouts: 'My workouts',
-		editWorkout: 'Edit workout',
-		editExercise: 'Edit exercise',
-		addFood: 'Add food',
-		myFoods: 'My foods',
-		editFood: 'Edit food',
-		pastDays: 'Past days',
-		stats: 'Stats',
-		newTracker: 'New tracker',
-		editTracker: 'Edit tracker',
 		home: 'Home',
+		stats: 'Stats',
 		tabs: 'Sections',
-		homeScreen: 'Home screen',
-		tracking: 'Units and tracking',
-		data: 'Backup and data',
-		support: 'Support the app',
-		eat: 'Food',
 		settings: 'Settings',
-		workout: 'Workout',
 		welcome: 'Welcome',
-		food: 'Food',
-		newFood: 'New food',
-		eaten: 'Eaten',
-		savedWorkout: 'Saved workout',
-		newExercise: 'New exercise',
-		addExercise: 'Add exercise',
-		photos: 'Photos',
-		compare: 'Compare',
-		weight: 'Weight',
-		exercises: 'Exercises',
-		exercise: 'Exercise',
-		finishedWorkout: 'Finished workout'
-	},
-	placeholder: {
-		comingSoon: 'Nothing here yet. This section is being built.'
+		tracker: 'Tracker',
+		library: 'Library',
+		trackers: 'Trackers',
+		data: 'Data',
+		support: 'Support the app'
 	},
 	units: {
 		kg: 'kg',
 		lb: 'lb',
-		kcal: 'kcal',
-		grams: 'g',
 		kgLong: 'Kilograms',
 		lbLong: 'Pounds'
 	},
@@ -150,54 +119,7 @@ export const messages = {
 		today: 'Today',
 		yesterday: 'Yesterday'
 	},
-	body: {
-		weighIn: 'Weigh in',
-		save: 'Save',
-		deleteWeighIn: 'Delete weigh-in',
-		history: 'History',
-		enterWeight: 'Enter your weight.',
-		weightOutOfRange: (min: string, max: string) => `Enter a weight between ${min} and ${max}.`,
-		editWeighIn: (date: string, weight: string) => `${date}, ${weight}. Edit`,
-		chartTitle: 'Weight',
-		chartSummary: (count: number, latest: string, average: string) =>
-			`Weight chart with ${String(count)} ${count === 1 ? 'weigh-in' : 'weigh-ins'}. Latest ${latest}, 7-day average ${average}.`,
-		chartGoal: (goal: string) => ` Goal ${goal}.`,
-		goalWeight: 'Goal weight',
-		noGoal: 'No goal set.',
-		goalSummary: (target: string, direction: string) => `${target}, ${direction}`,
-		removeGoal: 'Remove goal',
-		direction: 'Direction',
-		lose: 'Lose',
-		gain: 'Gain',
-		maintain: 'Maintain',
-		progressPhotos: 'Progress photos',
-		addPhoto: 'Add photo',
-		allPhotos: 'All photos',
-		noPhotos: 'No progress photos yet. Add one to see your changes over time.',
-		photoDate: 'Date',
-		choosePose: 'Pose',
-		front: 'Front',
-		side: 'Side',
-		back: 'Back',
-		notAnImage: 'That file is not a photo this device can open.',
-		enterDate: 'Choose a date no later than today.',
-		photoOf: (pose: string, date: string) => `${pose}, ${date}`,
-		compare: 'Compare',
-		compareWith: 'Compare with',
-		noOtherPhotos: (pose: string) => `No other ${pose.toLowerCase()} photos to compare with yet.`,
-		sideBySide: 'Side by side',
-		slider: 'Slider',
-		compareMode: 'View',
-		comparePosition: 'Slide between the photos',
-		comparison: (before: string, after: string) => `${before} compared with ${after}`,
-		deletePhoto: 'Delete photo'
-	},
 	settings: {
-		preferences: 'Preferences',
-		units: 'Units',
-		weekStart: 'First day of week',
-		monday: 'Monday',
-		sunday: 'Sunday',
 		about: 'About',
 		sourceCode: 'Source code',
 		donate: 'Support on Ko-fi',
@@ -209,7 +131,6 @@ export const messages = {
 		lastBackup: 'Last backup',
 		never: 'Never',
 		overdue: 'Overdue',
-		goals: 'Goals',
 		versionLabel: 'Version',
 		license: 'License',
 		licenseShort: 'GPL-3.0',
@@ -230,189 +151,15 @@ export const messages = {
 		deletePrompt: 'Type delete to confirm',
 		deleteConfirm: 'Delete everything',
 		recordCount: (counts: {
-			readonly weighIns: number;
-			readonly workouts: number;
-			readonly foodEntries: number;
+			readonly trackers: number;
+			readonly entries: number;
 			readonly photos: number;
 		}) =>
 			[
-				countOf(counts.weighIns, 'weigh-in', 'weigh-ins'),
-				countOf(counts.workouts, 'workout', 'workouts'),
-				countOf(counts.foodEntries, 'food entry', 'food entries'),
+				countOf(counts.trackers, 'tracker', 'trackers'),
+				countOf(counts.entries, 'entry', 'entries'),
 				countOf(counts.photos, 'photo', 'photos')
 			].join(', ')
-	},
-	training: {
-		startWorkout: 'Start workout',
-		templates: 'Templates',
-		recent: 'Recent workouts',
-		streak: (current: number, longest: number) =>
-			`Streak: ${countOf(current, 'day', 'days')}. Best: ${countOf(longest, 'day', 'days')}.`,
-		restDay: 'Rest day',
-		nothingLogged: 'Nothing logged',
-		addExercise: 'Add exercise',
-		exerciseName: 'Exercise name',
-		addNamed: (name: string) => `Add “${name}”`,
-		addSet: 'Add set',
-		removeExercise: (name: string) => `Remove ${name}`,
-		setNumber: (position: number) => `Set ${String(position)}`,
-		reps: 'Reps',
-		setColumn: 'Set',
-		previousColumn: 'Prev',
-		previous: (weight: string, reps: number) => `${weight} × ${String(reps)}`,
-		exerciseOptions: (name: string) => `${name} options`,
-		weight: (unit: string) => `Weight (${unit})`,
-		completeSet: (position: number) => `Complete set ${String(position)}`,
-		removeSet: (position: number) => `Remove set ${String(position)}`,
-		note: 'Note',
-		finishWorkout: 'Finish workout',
-		discardWorkout: 'Discard workout',
-		discardTitle: 'Discard workout',
-		discardWarning: 'Everything logged in this workout will be lost.',
-		keepWorkout: 'Keep going',
-		nothingCompleted: 'No sets were completed, so the workout was discarded.',
-		workoutSaved: 'Workout saved',
-		saveAsTemplatePrompt: 'Save this workout as a template to repeat it in one tap.',
-		templateName: 'Template name',
-		saveTemplate: 'Save template',
-		notNow: 'Not now',
-		enterName: 'Enter a name of up to 60 characters.',
-		exerciseAlreadyAdded: 'That exercise is already in this workout.',
-		templateActions: (name: string) => `${name} options`,
-		templateSummary: (exercises: number) => countOf(exercises, 'exercise', 'exercises'),
-		rename: 'Rename',
-		moveUp: 'Move up',
-		moveDown: 'Move down',
-		deleteTemplate: 'Delete template',
-		workoutSummary: (exercises: string, sets: number) =>
-			`${exercises} · ${countOf(sets, 'set', 'sets')}`
-	},
-	nutrition: {
-		logFood: 'Log food',
-		day: 'Day',
-		previousDay: 'Previous day',
-		nextDay: 'Next day',
-		breakfast: 'Breakfast',
-		lunch: 'Lunch',
-		dinner: 'Dinner',
-		snacks: 'Snacks',
-		meal: 'Meal',
-		search: 'Search foods',
-		savedMeals: 'Saved meals',
-		recentFoods: 'Foods',
-		noFoods: 'No foods yet. Create one to log it.',
-		newFood: 'New food',
-		foodName: 'Name',
-		referenceAmount: 'Amount',
-		referenceUnit: 'Unit (g, ml, slice…)',
-		macrosFor: 'Macros for that amount',
-		calories: 'Calories',
-		protein: 'Protein',
-		carbs: 'Carbs',
-		fat: 'Fat',
-		saveFood: 'Save food',
-		amountOf: (unit: string) => `Amount (${unit})`,
-		log: 'Log',
-		saveAmount: 'Save',
-		deleteEntry: 'Remove from log',
-		enterAmount: 'Enter an amount greater than zero.',
-		checkFood:
-			'Check the food: it needs a name, a positive amount, a unit, and macros of zero or more.',
-		entry: (name: string, amount: string, calories: string) => `${name}, ${amount}, ${calories}`,
-		amountWithUnit: (amount: string, unit: string) => `${amount} ${unit}`,
-		kcal: (calories: string) => `${calories} kcal`,
-		ofTarget: (eaten: string, target: string) => `${eaten} / ${target}`,
-		outOf: (target: string) => `/ ${target}`,
-		grams: (grams: string) => `${grams} g`,
-		macroLine: (amounts: {
-			readonly calories: string;
-			readonly protein: string;
-			readonly carbs: string;
-			readonly fat: string;
-		}) =>
-			`${amounts.calories} kcal · P ${amounts.protein} g · C ${amounts.carbs} g · F ${amounts.fat} g`,
-		saveSlotAsMeal: (slot: string) => `Save ${slot.toLowerCase()} as a meal`,
-		mealName: 'Meal name',
-		saveMeal: 'Save meal',
-		mealNameProblem: 'Enter a name of up to 60 characters.',
-		progressOf: (label: string, eaten: string, target: string) => `${label}: ${eaten} of ${target}`,
-		trackers: {
-			calories: 'Calories',
-			protein: 'Protein',
-			carbs: 'Carbs',
-			fat: 'Fat',
-			workouts: 'Workouts this week',
-			weight: 'Weight'
-		},
-		dailyGoals: 'Daily goals',
-		saveGoals: 'Save goals',
-		goalsSaved: 'Goals saved. Earlier days keep their old goals.',
-		checkGoals: 'Enter numbers of zero or more for every goal.'
-	},
-	stats: {
-		streaks: 'Streaks',
-		currentStreak: 'Current streak',
-		longestStreak: 'Longest streak',
-		days: (count: number) => countOf(count, 'day', 'days'),
-		activity: 'Last 52 weeks',
-		training: 'Training',
-		foodLogged: 'Food logged',
-		proteinGoalMet: 'Protein goal met',
-		workout: 'Workout',
-		restDay: 'Rest day',
-		trainingHeatmap: (trained: number, rested: number) =>
-			`Trained on ${countOf(trained, 'day', 'days')} and rested on ${countOf(rested, 'day', 'days')} in the last 52 weeks.`,
-		foodHeatmap: (days: number) =>
-			`Food logged on ${countOf(days, 'day', 'days')} in the last 52 weeks.`,
-		proteinHeatmap: (days: number) =>
-			`Protein goal met on ${countOf(days, 'day', 'days')} in the last 52 weeks.`,
-		range: 'Range',
-		fourWeeks: '4 weeks',
-		threeMonths: '3 months',
-		oneYear: '1 year',
-		all: 'All',
-		weight: 'Weight',
-		calories: 'Calories',
-		protein: 'Protein',
-		goal: 'Goal',
-		movingAverage: '7-day average',
-		dailyAverage: 'Daily average',
-		change: 'Change',
-		mass: (amount: string, unit: string) => `${amount} ${unit}`,
-		noWeighIns: 'No weigh-ins in this range.',
-		noFood: 'No food logged in this range.',
-		nutritionSummary: (label: string, days: number, average: string) =>
-			`${label} on ${countOf(days, 'logged day', 'logged days')}, averaging ${average}.`,
-		latestGoal: (goal: string) => ` Latest goal ${goal}.`,
-		exerciseProgress: 'Exercise progress',
-		exercise: 'Exercise',
-		estimatedOneRepMax: 'Estimated one-rep max',
-		noExercises: 'Finish a workout with weighted sets to see exercise progress.',
-		noSessions: 'No sets of this exercise in this range.',
-		exerciseSummary: (summary: {
-			readonly name: string;
-			readonly sessions: number;
-			readonly heaviest: string;
-			readonly best: string;
-		}) =>
-			`${summary.name}: ${countOf(summary.sessions, 'session', 'sessions')}. Heaviest set ${summary.heaviest}, best estimated one-rep max ${summary.best}.`
-	},
-	today: {
-		none: '—',
-		weighedIn: (weight: string) => `Weighed in: ${weight}`,
-		workoutDone: 'Workout done.',
-		restDayMarked: 'Rest day.',
-		noTraining: 'No workout yet today.'
-	},
-	home: {
-		workouts: 'Workouts',
-		weight: 'Weight',
-		empty: 'Nothing tracked yet. Add a tracker in Settings, Home screen.'
-	},
-	welcome: {
-		title: 'Welcome',
-		optional: (label: string) => `${label} (optional)`,
-		start: 'Get started'
 	},
 	shell: {
 		resume: (name: string, time: string) => `Resume ${name}, ${time}`,
@@ -420,260 +167,6 @@ export const messages = {
 		back: (section: string) => `← ${section}`,
 		undo: 'Undo',
 		undone: 'Undone'
-	},
-	food: {
-		entries: 'What you ate',
-		per100: (calories: string, portion: string) => `${calories} kcal per ${portion}`,
-		noFoods: 'No foods yet. Add one from Add food.',
-		noPastDays: 'Nothing logged on earlier days yet.',
-		deleted: (name: string) => `Deleted ${name}`,
-		name: 'Name',
-		search: 'Search or add food',
-		recent: 'Recent foods',
-		results: 'Results',
-		chooseAmount: (name: string) => `${name}. Choose amount`,
-		less: 'Less',
-		more: 'More',
-		amountOf: (name: string, unit: string) => `Amount of ${name} in ${unit}`,
-		add: 'Add',
-		remove: 'Remove',
-		preview: (calories: string, protein: string) => `${calories} kcal, ${protein} g protein`,
-		createTitle: (name: string) => `Add “${name}”`,
-		per: 'Per',
-		amount: 'Amount',
-		calories: 'Calories',
-		proteinGrams: 'Protein, g',
-		carbsGrams: 'Carbs, g',
-		fatGrams: 'Fat, g',
-		computedCalories: 'kcal',
-		nothingYet: 'Nothing yet',
-		entryLabel: (name: string, amount: string, unit: string) => `${name}, ${amount} ${unit}`,
-		added: (name: string, amount: string) =>
-			amount === '' ? `${name} added` : `${name} ${amount} added`,
-		removed: (name: string) => `${name} removed`,
-		times: (amount: string) => `×${amount}`,
-		goal: (amount: string) => `/ ${amount}`,
-		unitNames: {
-			serving: { one: 'serving', many: 'servings' },
-			piece: { one: 'piece', many: 'pieces' },
-			cup: { one: 'cup', many: 'cups' }
-		}
-	},
-	train: {
-		yourWorkouts: 'Your workouts',
-		addNewWorkout: '+ New workout',
-		addNewExercise: (name: string) => `+ Add “${name}”`,
-		edit: 'Edit',
-		delete: 'Delete',
-		deleted: (name: string) => `Deleted ${name}`,
-		startOne: (name: string) => `Start the ${name} workout`,
-		count: (count: number) => String(count),
-		search: 'Search or add exercise',
-		newWorkout: 'New workout',
-		start: 'Start',
-		add: 'Add',
-		addTo: (workout: string) => `Add to ${workout}`,
-		exercises: 'Exercises',
-		startExercise: (name: string) => `Start ${name}`,
-		addExercise: (name: string) => `Add ${name}`,
-		addExerciseTo: (name: string, workout: string) => `Add ${name} to ${workout}`,
-		saved: (name: string) => `${name} saved`,
-		save: 'Save',
-		name: 'Name',
-		namePlaceholder: 'Push day',
-		inThisWorkout: 'Exercises in this workout',
-		toAdd: 'Exercises to add',
-		addToThisWorkout: (name: string) => `Add ${name} to this workout`,
-		remove: (name: string) => `Remove ${name}`
-	},
-	exercise: {
-		createTitle: (name: string) => `Add “${name}”`,
-		track: 'Track',
-		fields: {
-			weight: 'Weight',
-			reps: 'Reps',
-			time: 'Time',
-			distance: 'Distance',
-			grade: 'Grade',
-			count: 'Number'
-		},
-		grades: 'Grades',
-		scales: {
-			v: 'V scale',
-			yds: 'YDS',
-			font: 'Font',
-			one_to_ten: '1 to 10',
-			custom: 'Custom'
-		},
-		scalePreview: (easiest: string, hardest: string) => `${easiest} to ${hardest}`,
-		customGrades: 'Your grades, easiest first',
-		customPlaceholder: 'White, Yellow, Orange, Green',
-		countLabel: 'What you’re counting',
-		countPlaceholder: 'Laps, rounds, floors',
-		defaultCountLabel: 'Count',
-		gradeSeparator: ',',
-		saveToWorkout: 'Add to workout',
-		saveToBuilder: 'Add to this workout',
-		saveToLibrary: 'Save exercise',
-		exists: (name: string) => `There’s already an exercise called ${name}.`,
-		invalidName: 'Give it a name of up to 60 characters.',
-		inUse: (workouts: string) =>
-			`It’s in ${workouts}. Take it out of those workouts first, then delete it.`,
-		listSeparator: ', '
-	},
-	workout: {
-		backToTrain: 'Back to Train',
-		time: 'Workout time',
-		finish: 'Finish',
-		chipDone: (name: string) => `${name}, done`,
-		addExercise: 'Add exercise',
-		grade: 'Grade',
-		clockOf: (name: string) => `${name} time`,
-		startClock: 'Start',
-		pause: 'Pause',
-		resume: 'Resume',
-		pace: (time: string, unit: string) => `${time} per ${unit}`,
-		reps: 'reps',
-		less: (step: string, unit: string) => `${step} ${unit} less`,
-		more: (step: string, unit: string) => `${step} ${unit} more`,
-		oneRepLess: '1 rep less',
-		oneRepMore: '1 rep more',
-		oneLess: '1 less',
-		oneMore: '1 more',
-		sets: 'Sets',
-		setLogged: (number: number, text: string) => `Set ${String(number)}, ${text}. Remove`,
-		setOpen: (number: number) => `Set ${String(number)} not logged`,
-		logged: 'Logged',
-		removeEntry: (text: string) => `Remove ${text}`,
-		logSet: 'Log set',
-		done: 'Done',
-		log: 'Log',
-		rest: (time: string) => `Rest ${time}`,
-		skip: 'Skip',
-		doneWith: (name: string) => `Done with ${name}`,
-		allDone: 'All done',
-		finishWorkout: 'Finish workout',
-		discard: 'Discard workout',
-		saved: 'Workout saved',
-		nothingLogged: 'Nothing logged',
-		discarded: 'Workout discarded',
-		loggedAnnouncement: (text: string) => `${text} logged`,
-		restOver: 'Rest over',
-		exerciseDone: (name: string) => `${name} done`,
-		repsText: (reps: number) => `${String(reps)} reps`,
-		weightTimesReps: (weight: string, reps: number) => `${weight} × ${String(reps)}`,
-		compactWeightTimesReps: (weight: string, reps: number) => `${weight}×${String(reps)}`,
-		withUnit: (amount: string, unit: string) => `${amount} ${unit}`,
-		setsAt: ({
-			sets,
-			reps,
-			weight,
-			unit
-		}: {
-			sets: number;
-			reps: number;
-			weight: string;
-			unit: string;
-		}) => `${String(sets)} × ${String(reps)} at ${weight} ${unit}`,
-		setsTop: (sets: number, weight: string, unit: string) =>
-			`${String(sets)} sets, top ${weight} ${unit}`,
-		topGrade: (grade: string, logged: number) => `Top ${grade}, ${String(logged)} logged`,
-		partsSeparator: ', ',
-		durationLabel: 'Time'
-	},
-	checkIn: {
-		allPhotos: 'All photos',
-		weightIn: (unit: string) => `Weight, ${unit}`,
-		tenthMore: '0.1 more',
-		tenthLess: '0.1 less',
-		checkNumber: 'Check the number',
-		takePhoto: 'Take photo',
-		changePhoto: 'Change photo',
-		checkIn: 'Check in',
-		update: 'Update',
-		checkedIn: 'Checked in',
-		updated: 'Updated',
-		photos: 'Photos',
-		noPhotos: 'No photos yet. Add one with your next check-in.',
-		photoAlt: (date: string, weight: string) => `Photo from ${date}, ${weight}`,
-		comparePhotoAlt: (date: string) => `Photo from ${date}`
-	},
-	trends: {
-		timeRange: 'Time range',
-		ranges: {
-			'one-month': '1M',
-			'three-months': '3M',
-			'six-months': '6M',
-			'one-year': '1Y',
-			all: 'All'
-		},
-		rangeWords: {
-			'one-month': 'the past month',
-			'three-months': 'the past 3 months',
-			'six-months': 'the past 6 months',
-			'one-year': 'the past year',
-			all: 'all time'
-		},
-		workoutDays: 'Workout days',
-		noWeight: 'No weigh-ins in this range.',
-		noWorkouts: 'No workouts yet.',
-		heatmap: (days: number, range: string) =>
-			`${String(days)} workout days in ${range}. Brighter squares mean longer workouts`,
-		weekdayLetters: ['', 'M', '', 'W', '', 'F', ''],
-		weightChart: ({
-			range,
-			direction,
-			change,
-			unit
-		}: {
-			range: string;
-			direction: 'down' | 'up';
-			change: string;
-			unit: string;
-		}) => `Weight over ${range}, ${direction} ${change} ${unit}`,
-		goal: (calories: string) => `goal ${calories}`,
-		average: 'avg',
-		caloriesChart: (range: string, goal: string, weeks: string) =>
-			`Average daily calories over ${range}, goal ${goal}: ${weeks}`,
-		bestOver: ({
-			name,
-			range,
-			from,
-			to
-		}: {
-			name: string;
-			range: string;
-			from: string;
-			to: string;
-		}) => `${name} best over ${range}, from ${from} to ${to}`,
-		bestGradeOver: ({
-			name,
-			range,
-			from,
-			to
-		}: {
-			name: string;
-			range: string;
-			from: string;
-			to: string;
-		}) => `${name} best grade over ${range}, from ${from} to ${to}`,
-		totalOver: ({
-			name,
-			total,
-			unit,
-			range
-		}: {
-			name: string;
-			total: string;
-			unit: string;
-			range: string;
-		}) => `${name}, ${total} ${unit} over ${range}`,
-		grades: (change: string, count: number) => `${change} ${count === 1 ? 'grade' : 'grades'}`,
-		hours: 'h',
-		minutes: 'min',
-		reps: 'reps',
-		saveToWorkouts: 'Save to Workouts',
-		savedToWorkouts: 'Saved to Workouts'
 	},
 	preferences: {
 		theme: 'Theme',
@@ -692,119 +185,303 @@ export const messages = {
 			blossom: 'Blossom',
 			glacier: 'Glacier'
 		},
-		tracking: 'Tracking',
-		carbsAndFat: 'Carbs and fat',
 		units: 'Units',
 		weight: 'Weight',
 		distance: 'Distance',
-		newFoods: 'New foods',
-		workouts: 'Workouts',
 		restTimer: 'Rest timer',
 		weekStarts: 'Week starts',
 		monday: 'Mon',
-		sunday: 'Sun',
-		unitNames: { kcal: 'kcal', grams: 'g' }
-	},
-	trackers: {
-		none: '—',
-		units: {
-			calories: 'kcal',
-			protein: 'g',
-			carbs: 'g',
-			fat: 'g',
-			workouts: '',
-			sessions: 'sessions',
-			time: 'min',
-			reps: 'reps',
-			sets: 'sets',
-			duration: 'min',
-			rating: 'of 5',
-			done: 'days'
-		},
-		toward: (goal: string, unit: string) => `to ${goal} ${unit}`,
-		atLeast: (goal: string, unit: string) => (unit === '' ? `/ ${goal}` : `/ ${goal} ${unit}`),
-		atMost: (goal: string, unit: string) =>
-			unit === '' ? `/ ${goal} max` : `/ ${goal} ${unit} max`,
-		sources: { food: 'Food', workouts: 'Workouts', weight: 'Weight', log: 'Your log' },
-		measures: {
-			calories: 'Calories',
-			protein: 'Protein',
-			carbs: 'Carbs',
-			fat: 'Fat',
-			food: 'A food',
-			workouts: 'Workouts',
-			sessions: 'Sessions of an exercise',
-			distance: 'Distance of an exercise',
-			time: 'Time of an exercise',
-			reps: 'Reps of an exercise',
-			sets: 'Sets of an exercise',
-			weight: 'Weight',
-			number: 'A number',
-			duration: 'Minutes',
-			rating: 'A rating, 1 to 5',
-			done: 'Done or not'
-		},
-		directions: { at_least: 'At least', at_most: 'At most' },
-		periods: { day: 'A day', week: 'A week' },
-		combines: { total: 'Add up', average: 'Average', days: 'Days' },
-		presets: {
-			calories: 'Calories',
-			protein: 'Protein',
-			carbs: 'Carbs',
-			fat: 'Fat',
-			workouts: 'Workouts',
-			weight: 'Weight',
-			run: 'Run',
-			climb: 'Climb',
-			water: 'Water',
-			sleep: 'Sleep',
-			steps: 'Steps',
-			meditate: 'Meditate',
-			mood: 'Mood',
-			vitamins: 'Vitamins',
-			coffee: 'Coffee'
-		},
-		presetSummary: (goal: string, unit: string, period: string) =>
-			unit === '' ? `${goal} ${period}` : `${goal} ${unit} ${period}`,
-		perPeriod: { day: 'a day', week: 'a week' },
-		presetUnits: { water: 'glasses', sleep: 'h', steps: 'steps', coffee: 'cups' },
-		noUnit: '',
-		weightPreset: 'toward a goal weight',
-		addTracker: 'Add tracker',
-		presetsHeading: 'Presets',
-		buildYourOwn: 'Build your own',
-		from: 'From',
-		what: 'What',
-		which: (source: string) => (source === 'food' ? 'Which food' : 'Which exercise'),
-		choose: 'Choose…',
-		name: 'Name',
-		unit: 'Unit',
-		unitPlaceholder: 'glasses',
-		goal: 'Goal',
-		goalIn: (unit: string) => `Goal, ${unit}`,
-		direction: 'Goal is',
-		every: 'Every',
-		combine: 'Counting',
-		invalid: 'Check the name and goal, and pick a food or exercise if asked.',
-		saved: (name: string) => `${name} saved`,
-		deleted: (name: string) => `Deleted ${name}`,
-		delete: 'Delete tracker',
-		edit: 'Edit tracker',
-		moveUp: (name: string) => `Move ${name} up`,
-		moveDown: (name: string) => `Move ${name} down`,
-		log: 'Log',
-		logged: (name: string, value: string) => `${name}: ${value}`,
-		doneToday: 'Done today',
-		markDone: 'Mark done for today',
-		rate: (value: number) => `Rate ${String(value)}`,
-		history: 'Latest',
-		nothingLogged: 'Nothing logged yet.',
-		removeEntry: (date: string) => `Remove ${date}`,
-		removed: 'Entry removed',
-		yourTrackers: 'Your trackers',
-		weeklyChart: (name: string, values: string) => `${name}, week by week: ${values}`
+		sunday: 'Sun'
 	},
 
+	tracking: {
+		templates: {
+			photos: 'Photos',
+			number: 'Number',
+			done: 'Check off',
+			time: 'Time',
+			rating: 'Rating',
+			notes: 'Notes',
+			collection: 'Collection',
+			workouts: 'Workouts',
+			running: 'Running',
+			steps: 'Steps',
+			weight: 'Weight',
+			body_photos: 'Body photos',
+			food: 'Food',
+			water: 'Water',
+			coffee: 'Coffee',
+			sleep: 'Sleep',
+			mood: 'Mood',
+			meditation: 'Meditation',
+			journal: 'Journal',
+			reading: 'Reading',
+			plants: 'Plants',
+			vitamins: 'Vitamins'
+		},
+		templateHints: {
+			photos: 'Photos of anything, to compare over time',
+			number: 'Any amount, like pages or push-ups',
+			done: 'One tap when it’s done for the day',
+			time: 'Time spent on anything',
+			rating: 'Rate it 1 to 5, with a note',
+			notes: 'A few lines whenever you like',
+			collection: 'A list of things, each with its own photos and notes',
+			workouts: 'Sets, reps, and weight, with a rest timer',
+			running: 'Distance, time, and pace',
+			steps: 'Steps a day',
+			weight: 'Weigh-ins toward a goal weight',
+			body_photos: 'Progress photos to compare',
+			food: 'Calories and macros',
+			water: 'Glasses a day',
+			coffee: 'Cups a day',
+			sleep: 'Hours and how well',
+			mood: 'How you feel, with a note',
+			meditation: 'Minutes a day',
+			journal: 'A few lines a day',
+			reading: 'Minutes a day',
+			plants: 'Watering and photos of each plant',
+			vitamins: 'Taken today or not'
+		},
+		groups: {
+			basic: 'Basics',
+			move: 'Fitness',
+			body: 'Body',
+			eat: 'Food & Drink',
+			mind: 'Mind & Sleep',
+			life: 'Habits & Hobbies'
+		},
+		fields: {
+			reps: 'Reps',
+			weight: 'Weight',
+			time: 'Time',
+			distance: 'Distance',
+			steps: 'Steps',
+			photo: 'Photo',
+			note: 'Note',
+			servings: 'Servings',
+			calories: 'Calories',
+			protein: 'Protein',
+			carbs: 'Carbs',
+			fat: 'Fat',
+			glasses: 'Glasses',
+			cups: 'Cups',
+			quality: 'How well',
+			mood: 'Mood',
+			watered: 'Watered',
+			taken: 'Taken',
+			amount: 'Amount',
+			done: 'Done',
+			rating: 'Rating'
+		},
+		units: {
+			reps: 'reps',
+			steps: 'steps',
+			servings: 'servings',
+			kcal: 'kcal',
+			g: 'g',
+			glasses: 'glasses',
+			cups: 'cups'
+		},
+		starters: {
+			squat: 'Squat',
+			bench_press: 'Bench press',
+			deadlift: 'Deadlift',
+			overhead_press: 'Overhead press',
+			row: 'Row',
+			pull_up: 'Pull-up',
+			push_up: 'Push-up',
+			plank: 'Plank'
+		},
+		periods: { day: 'a day', week: 'a week', month: 'a month' },
+		goal: {
+			atLeast: (amount: string, period: string) => `${amount} ${period}`,
+			atMost: (amount: string, period: string) => `${amount} max ${period}`,
+			target: (amount: string) => `Goal ${amount}`,
+			of: (amount: string) => `/ ${amount}`
+		},
+		countUnits: { entries: 'times', days: 'days', sessions: 'workouts' },
+		counts: {
+			entries: (count: number) => countOf(count, 'time', 'times'),
+			days: (count: number) => countOf(count, 'day', 'days'),
+			sessions: (count: number) => countOf(count, 'workout', 'workouts')
+		},
+		values: {
+			done: 'Done',
+			stars: (stars: number) => `${String(stars)}/5`,
+			starsLabel: (stars: number) => `${String(stars)} out of 5`,
+			hours: (hours: number, minutes: number) =>
+				minutes === 0 ? `${String(hours)} h` : `${String(hours)} h ${String(minutes)} min`,
+			minutes: (minutes: number) => `${String(minutes)} min`,
+			seconds: (seconds: number) => `${String(seconds)} s`,
+			amount: (amount: string, unit: string) => (unit === '' ? amount : `${amount} ${unit}`),
+			photo: 'Photo',
+			pace: (pace: string, unit: string) => `${pace} /${unit}`,
+			join: (parts: readonly string[]) => parts.join(' · ')
+		},
+		inputs: {
+			hours: 'Hours',
+			minutes: 'Minutes',
+			seconds: 'Seconds',
+			less: (label: string) => `Less ${label.toLowerCase()}`,
+			more: (label: string) => `More ${label.toLowerCase()}`,
+			optional: (label: string) => `${label} (optional)`,
+			notePlaceholder: 'Add a note',
+			takePhoto: 'Take or choose a photo',
+			retakePhoto: 'Choose another photo',
+			unreadablePhoto: 'That file is not a photo this device can open.',
+			done: 'Done today'
+		},
+		home: {
+			empty: 'Nothing tracked yet. Add a tracker in Settings, under Trackers.',
+			addTracker: 'Add tracker'
+		},
+		page: {
+			history: 'History',
+			nothingLogged: 'Nothing logged yet.',
+			edit: 'Edit',
+			editTracker: 'Edit tracker',
+			log: 'Log',
+			save: 'Save',
+			addPhoto: 'Add photo',
+			compare: 'Compare',
+			photos: 'Photos',
+			logged: (name: string) => `${name} logged`,
+			deleted: 'Entry deleted',
+			deleteEntry: 'Delete entry',
+			entry: 'Entry',
+			fixProblem: 'Check the values and try again.',
+			fillRequired: (label: string) => `Fill in ${label.toLowerCase()}.`
+		},
+		library: {
+			exercises: 'Exercises',
+			foods: 'My foods',
+			newExercise: 'New exercise',
+			newFood: 'New food',
+			newThing: 'Add new',
+			name: 'Name',
+			emptyExercises: 'No exercises yet.',
+			emptyFoods: 'No foods yet. Foods you add appear here.',
+			emptyThings: 'Nothing here yet.',
+			delete: 'Delete',
+			deleted: (name: string) => `${name} deleted`,
+			save: 'Save',
+			tracks: 'Tracks',
+			perServing: 'Per serving',
+			lastLogged: (when: string) => `Last ${when.toLowerCase()}`,
+			never: 'Not logged yet',
+			wateredToday: 'Watered today'
+		},
+		exerciseFields: {
+			lift: 'Reps and weight',
+			reps: 'Reps only',
+			time: 'Time',
+			cardio: 'Distance and time'
+		},
+		workout: {
+			start: 'Start workout',
+			resume: 'Resume workout',
+			title: 'Workout',
+			finish: 'Finish',
+			discard: 'Discard workout',
+			discardConfirm: 'Discard this workout and its sets?',
+			addExercise: 'Add exercise',
+			addSet: 'Add set',
+			set: (number: number) => `Set ${String(number)}`,
+			deleteSet: (number: number) => `Delete set ${String(number)}`,
+			lastTime: (sets: string) => `Last time: ${sets}`,
+			restLeft: (time: string) => `Rest ${time}`,
+			restDone: 'Rest done',
+			skipRest: 'Skip',
+			past: 'Past workouts',
+			noneYet: 'No workouts yet.',
+			finished: 'Workout saved',
+			empty: 'Nothing logged, so the workout was not saved.',
+			elapsed: (time: string) => `${time} so far`,
+			summary: (exercises: number, sets: number) =>
+				`${countOf(exercises, 'exercise', 'exercises')}, ${countOf(sets, 'set', 'sets')}`,
+			duration: (time: string) => `Took ${time}`,
+			chooseExercise: 'Choose an exercise',
+			deleteWorkout: 'Delete workout',
+			workoutDeleted: 'Workout deleted'
+		},
+		food: {
+			add: 'Add food',
+			search: 'Search or add food',
+			today: 'Today',
+			quickAdd: 'Quick add calories',
+			create: (name: string) => `New food “${name}”`,
+			servings: 'Servings',
+			add_portion: 'Add',
+			quickEntry: 'Quick add'
+		},
+		compare: {
+			title: 'Compare',
+			before: 'Before',
+			after: 'After',
+			choose: 'Choose two photos to compare.',
+			photoOf: (date: string) => `Photo from ${date}`
+		},
+		edit: {
+			name: 'Name',
+			goalAmount: 'Amount',
+			goalType: 'Goal',
+			goalUnit: 'Unit',
+			goalEvery: 'Every',
+			goalTarget: 'Target',
+			goalNeeded: 'Enter a goal, so the bar has something to fill.',
+			goalKinds: {
+				days: 'Days',
+				entries: 'Times',
+				sessions: 'Workouts',
+				total: 'Total',
+				average: 'Average',
+				target: 'Reach a number'
+			},
+			goalPeriods: { day: 'Day', week: 'Week', month: 'Month' },
+			goalDirections: { at_least: 'At least', at_most: 'At most' },
+			delete: 'Delete tracker',
+			deleteConfirm: (name: string) =>
+				`Delete ${name} and everything logged to it? This cannot be undone.`,
+			deleted: (name: string) => `${name} deleted`,
+			moveUp: (name: string) => `Move ${name} up`,
+			moveDown: (name: string) => `Move ${name} down`,
+			saved: 'Saved'
+		},
+		add: {
+			title: 'Add tracker',
+			added: (name: string) => `${name} added`,
+			name: 'What are you tracking?',
+			nameNeeded: 'Give it a name.',
+			create: 'Add tracker',
+			examples: {
+				photos: 'Dog',
+				number: 'Push-ups',
+				done: 'Floss',
+				time: 'Piano practice',
+				rating: 'Energy',
+				notes: 'Ideas',
+				collection: 'Pets'
+			}
+		},
+		onboarding: {
+			title: 'What do you want to track?',
+			intro: 'Pick a few. You can add more, or change anything, later.',
+			next: 'Next',
+			back: 'Back',
+			unitsTitle: 'Your units',
+			goalsTitle: 'Your goals',
+			goalsIntro: 'These are good places to start. Change them any time.',
+			start: 'Start tracking',
+			pickOne: 'Pick at least one thing to track.',
+			nextWith: (count: number) => `Next · ${countOf(count, 'tracker', 'trackers')}`
+		},
+		stats: {
+			title: 'Stats',
+			empty: 'Trackers with a goal show their history here.',
+			summary: (name: string, values: string) => `${name}: ${values}`
+		}
+	},
 	design: {
 		close: 'Close',
 		decimalSeparator: 'Decimal point',

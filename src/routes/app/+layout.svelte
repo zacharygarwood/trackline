@@ -201,6 +201,7 @@
 		width: var(--tap-target);
 		height: var(--tap-target);
 		color: var(--color-text);
+		view-transition-name: header-action;
 		--icon-size: var(--icon-size-header);
 	}
 
@@ -216,7 +217,7 @@
 	}
 
 	main.headless {
-		padding-top: calc(var(--space-9) + env(safe-area-inset-top));
+		padding-top: calc(var(--space-11) + env(safe-area-inset-top));
 	}
 
 	.tab-bar {

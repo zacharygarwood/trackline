@@ -15,7 +15,7 @@ type BasePath = '' | `/${string}`;
 const isBasePath = (value: string): value is BasePath => value === '' || value.startsWith('/');
 
 /**
- * Reads the URL prefix the app is served under (for example `/buffalog` on GitHub Pages).
+ * Reads the URL prefix the app is served under (for example `/trackline` on GitHub Pages).
  *
  * @returns The base path from the `BASE_PATH` environment variable, or the empty string.
  * @throws If `BASE_PATH` is set but does not start with a slash.

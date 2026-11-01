@@ -2,14 +2,41 @@ import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect } from './fixtures.ts';
 
-/** Goes through the first-run screen with the defaults and lands on Home. */
-export async function finishFirstRun(page: Page): Promise<void> {
+const onboarding = messages.tracking.onboarding;
+
+/**
+ * Goes through onboarding and lands on Home, with Workouts and Water picked
+ * unless other templates are named.
+ *
+ * @param page - Any page.
+ * @param picks - The template names to pick instead of the defaults.
+ */
+export async function finishFirstRun(page: Page, picks?: readonly string[]): Promise<void> {
 	await page.goto('/app/welcome');
-	await page.getByRole('button', { name: messages.welcome.start }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(onboarding.title);
+	if (picks !== undefined) {
+		for (const name of [messages.tracking.templates.workouts, messages.tracking.templates.water]) {
+			await templateRow(page, name).click();
+		}
+		for (const name of picks) await templateRow(page, name).click();
+	}
+	await page.getByRole('button', { name: /^Next/ }).click();
+	await page.getByRole('button', { name: onboarding.next, exact: true }).click();
+	await page.getByRole('button', { name: onboarding.start }).click();
 	await expectOnHome(page);
 }
 
-/** Checks that Home, with its progress bars and the Settings gear, is shown. */
+/**
+ * A template to pick in onboarding or Add tracker, found by its name.
+ *
+ * @param page - The page.
+ * @param name - The template's name, such as "Water".
+ */
+export function templateRow(page: Page, name: string) {
+	return page.getByRole('button', { name: new RegExp(`^${name} `) });
+}
+
+/** Checks that Home, with its tracker rows and the Settings gear, is shown. */
 export async function expectOnHome(page: Page): Promise<void> {
 	await expect(page).toHaveURL(/\/app$/);
 	await expect(
@@ -18,13 +45,49 @@ export async function expectOnHome(page: Page): Promise<void> {
 }
 
 /**
- * A progress bar on Home, found by its label.
+ * A tracker's row on Home.
  *
  * @param page - Home.
- * @param label - The bar's label, such as "Calories".
+ * @param name - The tracker's name, such as "Water".
  */
-export function homeBar(page: Page, label: string) {
-	return page.getByRole('main').getByRole('button', { name: new RegExp(`^${label}`) });
+export function homeRow(page: Page, name: string) {
+	return page.getByRole('main').getByRole('button', { name: new RegExp(`^${name}( |$)`) });
+}
+
+/**
+ * Opens a tracker's page from Home.
+ *
+ * @param page - Any page.
+ * @param name - The tracker's name.
+ */
+export async function openTracker(page: Page, name: string): Promise<void> {
+	await tab(page, messages.navigation.home).click();
+	await homeRow(page, name).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
+}
+
+/**
+ * Adds a tracker from Add tracker.
+ *
+ * @param page - Any page.
+ * @param name - The template's name.
+ */
+export async function addTracker(page: Page, name: string): Promise<void> {
+	await openAddTracker(page);
+	await templateRow(page, name).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
+}
+
+/**
+ * Opens Add tracker, which lives in Settings, under Trackers.
+ *
+ * @param page - Any page with the tab bar.
+ */
+export async function openAddTracker(page: Page): Promise<void> {
+	await tab(page, messages.navigation.home).click();
+	await page.getByRole('link', { name: messages.navigation.settings, exact: true }).click();
+	await page.getByRole('link', { name: messages.navigation.trackers }).click();
+	await page.getByRole('link', { name: messages.tracking.home.addTracker }).click();
 }
 
 /**
@@ -37,31 +100,6 @@ export function tab(page: Page, label: string) {
 	return page
 		.getByRole('navigation', { name: messages.navigation.tabs })
 		.getByRole('link', { name: label, exact: true });
-}
-
-/**
- * Checks in from the Weight page: types today's weight, optionally adds a photo, and saves.
- *
- * @param page - Any page of the app.
- * @param entry - The weight as typed, for example "80.4"; empty to leave it.
- * @param photo - A photo file to add, if any.
- */
-export async function checkIn(page: Page, entry: string, photo?: string): Promise<void> {
-	await page.goto('/app/body');
-	const field = page.getByRole('spinbutton', { name: /^Weight, / });
-	await field.fill(entry);
-	if (photo !== undefined) {
-		await page.getByLabel(messages.checkIn.takePhoto).setInputFiles(photo);
-	}
-	const save = page.getByRole('button', {
-		name: new RegExp(`^(${messages.checkIn.checkIn}|${messages.checkIn.update})$`)
-	});
-	await save.click();
-	await expect(
-		page
-			.getByText(new RegExp(`^(${messages.checkIn.checkedIn}|${messages.checkIn.updated})$`))
-			.first()
-	).toBeVisible();
 }
 
 /** A photo file as stored on the device. */
@@ -84,4 +122,20 @@ export async function storedPhotoFiles(page: Page): Promise<readonly StoredPhoto
 		}
 		return files;
 	});
+}
+
+/**
+ * Adds a photo on a photo tracker's page and saves it.
+ *
+ * @param page - The photo tracker's page.
+ * @param photo - The photo file.
+ */
+export async function addPhoto(page: Page, photo: string): Promise<void> {
+	const before = await page.getByRole('button', { name: /^Photo from / }).count();
+	await page.getByRole('button', { name: messages.tracking.page.addPhoto }).click();
+	await page.getByLabel(messages.tracking.inputs.takePhoto).setInputFiles(photo);
+	await expect(page.getByLabel(messages.tracking.inputs.retakePhoto)).toBeAttached();
+	const shots = page.getByRole('button', { name: /^Photo from / });
+	await page.getByRole('button', { name: messages.tracking.page.save }).click();
+	await expect(shots).toHaveCount(before + 1);
 }

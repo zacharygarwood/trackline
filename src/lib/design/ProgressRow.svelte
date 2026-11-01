@@ -8,10 +8,8 @@
 		value: string;
 		/** Shown dimmed after the value, such as "/ 2,200 kcal". */
 		detail?: string | undefined;
-		/** How far along, from 0 to 1; without it a hint shows instead of the bar. */
-		fraction?: number | undefined;
-		/** Shown under the numbers when there is no bar, such as "Set a goal in Settings". */
-		hint?: string | undefined;
+		/** How far along, from 0 to 1. */
+		fraction: number;
 		/** Opens this page when tapped. */
 		href?: string | undefined;
 		/** Runs when tapped, for a row that acts instead of opening a page. */
@@ -20,17 +18,17 @@
 		ariaLabel?: string | undefined;
 	}
 
-	const { label, value, detail, fraction, hint, href, onclick, ariaLabel }: Props = $props();
+	const { label, value, detail, fraction, href, onclick, ariaLabel }: Props = $props();
 </script>
 
 {#if onclick !== undefined}
 	<button type="button" class="progress-row" aria-label={ariaLabel} {onclick}
-		><ProgressBody {label} {value} {detail} {fraction} {hint} /></button
+		><ProgressBody {label} {value} {detail} {fraction} /></button
 	>
 {:else if href === undefined}
-	<div class="progress-row"><ProgressBody {label} {value} {detail} {fraction} {hint} /></div>
+	<div class="progress-row"><ProgressBody {label} {value} {detail} {fraction} /></div>
 {:else}
-	<a class="progress-row" {href}><ProgressBody {label} {value} {detail} {fraction} {hint} /></a>
+	<a class="progress-row" {href}><ProgressBody {label} {value} {detail} {fraction} /></a>
 {/if}
 
 <style>

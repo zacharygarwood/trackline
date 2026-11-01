@@ -1,5 +1,5 @@
 /** Where the database lives inside the OPFS SAH pool. */
-export const DATABASE_FILE = '/buffalog.sqlite3';
+export const DATABASE_FILE = '/trackline.sqlite3';
 
 /** SQLite WASM `exec` options that return result rows as objects keyed by column. */
 export const OBJECT_ROWS = { rowMode: 'object', returnValue: 'resultRows' } as const;

@@ -2,20 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { migratedDatabase } from '../../../../tests/support/migrated-database.ts';
 import { expectErr, expectOk } from '../../../../tests/support/result.ts';
 import { DistanceUnit } from '../../shared/distance-unit.constants.ts';
-import { FoodUnit } from '../../shared/food-unit.constants.ts';
-import { HomeTracker, Theme } from '../domain/preferences.constants.ts';
+import { Theme } from '../domain/preferences.constants.ts';
 import type { Preferences } from '../domain/preferences.ts';
 import { PreferencesMapper } from './preferences.mapper.ts';
 import { SqlitePreferences } from './sqlite-preferences.ts';
 
 const everything: Preferences = {
 	theme: Theme.forest,
-	trackCarbsAndFat: true,
 	distanceUnit: DistanceUnit.km,
-	newFoodUnit: FoodUnit.g,
-	restSeconds: 120,
-	weeklyWorkoutGoal: 5,
-	homeTrackers: [HomeTracker.weight, HomeTracker.carbs, HomeTracker.workouts]
+	restSeconds: 120
 };
 
 describe('PreferencesMapper', () => {
@@ -25,24 +20,10 @@ describe('PreferencesMapper', () => {
 		);
 	});
 
-	it('round-trips an empty Home', () => {
-		const rows = PreferencesMapper.toRows({ homeTrackers: [] });
-
-		expect(expectOk(PreferencesMapper.toDomain(rows))).toEqual({ homeTrackers: [] });
-	});
-
-	it('round-trips a switched-off flag', () => {
-		const rows = PreferencesMapper.toRows({ trackCarbsAndFat: false });
-
-		expect(expectOk(PreferencesMapper.toDomain(rows))).toEqual({ trackCarbsAndFat: false });
-	});
-
 	it.each([
 		['theme', 'sepia'],
 		['rest_seconds', '45'],
-		['weekly_workout_goal', '9'],
-		['track_carbs_and_fat', 'yes'],
-		['home_trackers', 'calories,steps']
+		['distance_unit', 'leagues']
 	])('rejects %s = %s', (key, value) => {
 		expect(expectErr(PreferencesMapper.toDomain([{ key, value }])).reason).toBe('invalid value');
 	});

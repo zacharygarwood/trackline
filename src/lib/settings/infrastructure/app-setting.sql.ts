@@ -8,12 +8,8 @@ export const SettingKey = {
 	weekStart: 'week_start',
 	installHintDismissed: 'install_hint_dismissed',
 	theme: 'theme',
-	trackCarbsAndFat: 'track_carbs_and_fat',
 	distanceUnit: 'distance_unit',
-	newFoodUnit: 'new_food_unit',
-	restSeconds: 'rest_seconds',
-	weeklyWorkoutGoal: 'weekly_workout_goal',
-	homeTrackers: 'home_trackers'
+	restSeconds: 'rest_seconds'
 } as const;
 
 /** One of the {@link SettingKey} values. */
@@ -52,18 +48,17 @@ export function readSettings(keys: readonly SettingKey[]): SqlStatement {
 
 /** The columns of {@link COUNT_RECORDS}. */
 export const CountColumn = {
-	weighIns: 'weigh_ins',
-	workouts: 'workouts',
-	foodEntries: 'food_entries',
+	trackers: 'trackers',
+	entries: 'entries',
 	photos: 'photos'
 } as const;
 
 /** Counts the records a restore or deletion would remove. */
 export const COUNT_RECORDS: SqlStatement = {
 	name: 'count records',
-	sql: `SELECT (SELECT count(*) FROM weigh_in) AS weigh_ins,
-		(SELECT count(*) FROM workout WHERE finished_at IS NOT NULL) AS workouts,
-		(SELECT count(*) FROM food_log_entry) AS food_entries,
-		(SELECT count(*) FROM progress_photo) AS photos`,
+	sql: `SELECT (SELECT count(*) FROM tracker) AS trackers,
+		(SELECT count(*) FROM entry) AS entries,
+		(SELECT count(*) FROM entry, json_each(entry.field_values)
+			WHERE json_extract(json_each.value, '$.type') = 'photo') AS photos`,
 	params: []
 };

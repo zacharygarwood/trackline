@@ -22,7 +22,7 @@ const backup = {
 const withPhoto = (name: string) =>
 	zipSync({
 		'manifest.json': strToU8(JSON.stringify(backup.manifest)),
-		'buffalog.sqlite3': new Uint8Array([1]),
+		'trackline.sqlite3': new Uint8Array([1]),
 		[`photos/${name}`]: new Uint8Array([1])
 	});
 
@@ -34,7 +34,7 @@ describe('ZipBackupCodec', () => {
 	it('reads a backup made before photos were included', () => {
 		const file = zipSync({
 			'manifest.json': strToU8(JSON.stringify(backup.manifest)),
-			'buffalog.sqlite3': backup.database
+			'trackline.sqlite3': backup.database
 		});
 
 		expect(expectOk(codec.decode(file)).photos).toEqual([]);
@@ -45,20 +45,20 @@ describe('ZipBackupCodec', () => {
 		['a photo in a subfolder', withPhoto('nested/photo')],
 		['a photo name that is only dots', withPhoto('..')],
 		['not a zip', new Uint8Array([1, 2, 3])],
-		['a zip without a manifest', zipSync({ 'buffalog.sqlite3': new Uint8Array([1]) })],
+		['a zip without a manifest', zipSync({ 'trackline.sqlite3': new Uint8Array([1]) })],
 		[
 			'a zip without a database',
 			zipSync({ 'manifest.json': strToU8(JSON.stringify(backup.manifest)) })
 		],
 		[
 			'a manifest that is not JSON',
-			zipSync({ 'manifest.json': strToU8('{'), 'buffalog.sqlite3': new Uint8Array([1]) })
+			zipSync({ 'manifest.json': strToU8('{'), 'trackline.sqlite3': new Uint8Array([1]) })
 		],
 		[
 			'a manifest with missing fields',
 			zipSync({
 				'manifest.json': strToU8('{"formatVersion":1}'),
-				'buffalog.sqlite3': new Uint8Array([1])
+				'trackline.sqlite3': new Uint8Array([1])
 			})
 		]
 	])('rejects %s', (_, file) => {

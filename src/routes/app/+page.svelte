@@ -1,80 +1,75 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import ProgressRow from '#lib/design/ProgressRow.svelte';
 	import ResumeBar from '#lib/design/ResumeBar.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
-	import type { TrackerProgress } from '#lib/trackers/application/list-tracker-progress.ts';
-	import { TrackerSource } from '#lib/trackers/domain/tracker.constants.ts';
-	import { sourceOf, type Tracker } from '#lib/trackers/domain/tracker.ts';
-	import { goalText, valueText } from '#lib/trackers/ui/tracker-format.ts';
-	import { TrainScreen } from '#lib/training/ui/train-screen.svelte.ts';
-	import { elapsedClock } from '#lib/training/ui/workout-format.ts';
+	import type { LocalDate } from '#lib/shared/local-date.ts';
+	import { HomeScreen } from '#lib/tracking/ui/home-screen.svelte.ts';
+	import { homeLine } from '#lib/tracking/ui/home-line.ts';
+	import { formatClock } from '#lib/ui/format.ts';
 	import { Ticker } from '#lib/ui/ticker.svelte.ts';
+	import { getToaster, reloadOnUndo } from '#lib/ui/toast.svelte.ts';
 	import { AppRoute } from './app-route.constants.ts';
-	import { loadTrackers } from './trackers.ts';
+	import { open } from './open.ts';
 
+	const MILLISECONDS_PER_SECOND = 1000;
 	const preferences = getPreferences();
 	const units = $derived({
 		mass: preferences.massUnit,
 		distance: preferences.current.distanceUnit
 	});
-	let trackers: readonly TrackerProgress[] | undefined = $state();
-	let train: TrainScreen | undefined = $state();
+	let home: HomeScreen | undefined = $state();
 	let ticker: Ticker | undefined = $state();
+	let today: LocalDate | undefined = $state();
 
 	void getAppContext().then(async (app) => {
-		const nextTrain = new TrainScreen(app.training);
-		const [progress] = await Promise.all([loadTrackers(app, preferences), nextTrain.load()]);
-		trackers = progress;
-		train = nextTrain;
+		const next = new HomeScreen(app.tracking.listHome);
+		await next.load(preferences.weekStart);
+		today = app.clock.today();
 		ticker = new Ticker(app.clock);
+		home = next;
 	});
 
+	reloadOnUndo(getToaster(), () => home?.load(preferences.weekStart));
+
 	$effect(() => ticker?.start());
-
-	const PAGES = {
-		food: AppRoute.eat,
-		workouts: AppRoute.train,
-		weight: AppRoute.body
-	} as const;
-
-	function open(tracker: Tracker): Promise<void> {
-		const source = sourceOf(tracker.measure);
-		return source === TrackerSource.log
-			? goto(resolve(AppRoute.trackerLog), { state: { selected: tracker.id } })
-			: goto(resolve(PAGES[source]));
-	}
 </script>
 
-{#if trackers !== undefined && train !== undefined}
-	{#if train.active !== undefined && ticker !== undefined}
+{#if home?.rows !== undefined && today !== undefined}
+	{@const active = home.active}
+	{#if active?.active !== undefined && ticker !== undefined}
+		{@const session = active.active}
 		<div class="resume">
 			<ResumeBar
-				name={train.activeName}
-				elapsed={elapsedClock(train.active.startedAt, ticker.now)}
+				name={active.tracker.name}
+				elapsed={formatClock((ticker.now - session.startedAt) / MILLISECONDS_PER_SECOND)}
 				href={resolve(AppRoute.workout)}
+				onclick={(event: MouseEvent) => {
+					event.preventDefault();
+					void open(AppRoute.workout, { tracker: active.tracker.id });
+				}}
 			/>
 		</div>
 	{/if}
 
 	<ul class="trackers">
-		{#each trackers as { tracker, value, fill } (tracker.id)}
+		{#each home.rows as row (row.tracker.id)}
+			{@const line = homeLine(row, units)}
 			<li>
 				<ProgressRow
-					label={tracker.name}
-					value={valueText(tracker, value, units)}
-					detail={goalText(tracker, units)}
-					fraction={fill}
-					onclick={() => open(tracker)}
+					label={row.tracker.name}
+					value={line.value}
+					detail={line.detail}
+					fraction={line.fraction}
+					onclick={() => open(AppRoute.tracker, { tracker: row.tracker.id })}
 				/>
 			</li>
 		{/each}
 	</ul>
-	{#if trackers.length === 0}
-		<p class="empty">{messages.home.empty}</p>
+	{#if home.rows.length === 0}
+		<p class="empty">{messages.tracking.home.empty}</p>
 	{/if}
 {/if}
 

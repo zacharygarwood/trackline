@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { aWeighIn } from '../../../../tests/builders/weigh-in.builder.ts';
 import { migratedDatabase } from '../../../../tests/support/migrated-database.ts';
-import { SqliteWeighInRepository } from '../../body/infrastructure/sqlite-weigh-in-repository.ts';
+import {
+	SqliteEntryRepository,
+	SqliteTrackerRepository
+} from '../../tracking/infrastructure/sqlite-tracking-repositories.ts';
+import { aKey, anEntry, aTracker } from '../../../../tests/builders/tracking.builder.ts';
+import { anId } from '../../../../tests/builders/id.builder.ts';
 import { SqliteAppState } from './sqlite-app-state.ts';
 import { SqliteDataInventory } from './sqlite-data-inventory.ts';
 
@@ -37,15 +41,21 @@ describe('SqliteAppState', () => {
 describe('SqliteDataInventory', () => {
 	it('counts stored records', async () => {
 		const database = await migratedDatabase();
-		const weighIns = new SqliteWeighInRepository(database);
-		await weighIns.save(aWeighIn().on('2026-10-01').build());
-		await weighIns.save(aWeighIn().on('2026-10-02').build());
+		const tracker = aTracker();
+		await new SqliteTrackerRepository(database).save([tracker]);
+		const entries = new SqliteEntryRepository(database);
+		await entries.save(anEntry({ trackerId: tracker.id }));
+		await entries.save(
+			anEntry({
+				trackerId: tracker.id,
+				values: [[aKey('photo'), { type: 'photo', photoId: anId<'Photo'>() }]]
+			})
+		);
 
 		expect(await new SqliteDataInventory(database).count()).toEqual({
-			weighIns: 2,
-			workouts: 0,
-			foodEntries: 0,
-			photos: 0
+			trackers: 1,
+			entries: 2,
+			photos: 1
 		});
 	});
 });

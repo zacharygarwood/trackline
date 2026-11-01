@@ -1,7 +1,7 @@
 {
-	"name": "Buffalog",
-	"short_name": "Buffalog",
-	"description": "A small, private tracker for workouts, food, and body weight.",
+	"name": "Trackline",
+	"short_name": "Trackline",
+	"description": "A small, private tracker for anything.",
 	"start_url": "app",
 	"scope": ".",
 	"display": "standalone",

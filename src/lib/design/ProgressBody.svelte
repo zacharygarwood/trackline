@@ -1,14 +1,13 @@
 <script lang="ts">
-	/** Props for what a {@link ProgressRow} shows: the label, numbers, and bar or hint. */
+	/** Props for what a {@link ProgressRow} shows: the label, numbers, and bar. */
 	interface Props {
 		label: string;
 		value: string;
 		detail: string | undefined;
-		fraction: number | undefined;
-		hint: string | undefined;
+		fraction: number;
 	}
 
-	const { label, value, detail, fraction, hint }: Props = $props();
+	const { label, value, detail, fraction }: Props = $props();
 </script>
 
 <span class="line">
@@ -18,13 +17,9 @@
 			>{/if}</span
 	>
 </span>
-{#if fraction === undefined}
-	{#if hint !== undefined}<span class="hint">{hint}</span>{/if}
-{:else}
-	<span class="track" aria-hidden="true"
-		><span class="fill" style:--fill={String(Math.min(1, Math.max(0, fraction)))}></span></span
-	>
-{/if}
+<span class="track" aria-hidden="true"
+	><span class="fill" style:--fill={String(Math.min(1, Math.max(0, fraction)))}></span></span
+>
 
 <style>
 	.line {
@@ -53,11 +48,6 @@
 
 	.detail {
 		margin-left: var(--chip-gap);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-15);
-	}
-
-	.hint {
 		color: var(--color-text-muted);
 		font-size: var(--font-size-15);
 	}

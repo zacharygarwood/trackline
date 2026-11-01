@@ -34,8 +34,8 @@ describe('AppPreferences', () => {
 
 		const changed = preferences.change({ theme: Theme.light });
 		await preferences.load(cases);
+		await changed;
 
-		expect(await changed).toBe(true);
 		expect(preferences.current.theme).toBe(Theme.light);
 	});
 
@@ -44,8 +44,7 @@ describe('AppPreferences', () => {
 		const preferences = new AppPreferences();
 		await preferences.load(cases);
 
-		expect(await preferences.change({ theme: Theme.light })).toBe(true);
-		expect(await preferences.change({ weeklyWorkoutGoal: 9 })).toBe(false);
+		await preferences.change({ theme: Theme.light });
 		await preferences.chooseMassUnit(MassUnit.lb);
 		await preferences.chooseWeekStart(WeekStart.sunday);
 
@@ -53,7 +52,6 @@ describe('AppPreferences', () => {
 		await reloaded.load(cases);
 		expect(reloaded.loaded).toBe(true);
 		expect(reloaded.current.theme).toBe(Theme.light);
-		expect(reloaded.current.weeklyWorkoutGoal).toBe(4);
 		expect([reloaded.massUnit, reloaded.weekStart]).toEqual([MassUnit.lb, WeekStart.sunday]);
 	});
 });

@@ -22,9 +22,8 @@ export class SqliteDataInventory implements DataInventory {
 	async count(): Promise<DataCounts> {
 		const row = first(await this.database.query(COUNT_RECORDS));
 		return {
-			weighIns: countIn(row, CountColumn.weighIns),
-			workouts: countIn(row, CountColumn.workouts),
-			foodEntries: countIn(row, CountColumn.foodEntries),
+			trackers: countIn(row, CountColumn.trackers),
+			entries: countIn(row, CountColumn.entries),
 			photos: countIn(row, CountColumn.photos)
 		};
 	}

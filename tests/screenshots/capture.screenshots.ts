@@ -5,8 +5,8 @@ import { demoBackup, DEMO_TODAY } from './demo-backup.ts';
 
 const OUTPUT = 'static/screenshots';
 const SCREENS = [
-	{ name: 'today', path: '/app', ready: messages.nutrition.calories },
-	{ name: 'stats', path: '/app/stats/workouts', ready: messages.trends.workoutDays }
+	{ name: 'today', path: '/app', ready: messages.tracking.templates.water },
+	{ name: 'stats', path: '/app/stats', ready: messages.tracking.templates.sleep }
 ] as const;
 
 test('capture the landing page screenshots', async ({ page }) => {

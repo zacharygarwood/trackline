@@ -47,7 +47,7 @@ describe('backup use cases', () => {
 	it('exports a dated backup file and remembers when', async () => {
 		const file = await exportBackup();
 
-		expect(file.name).toBe('buffalog-backup-2026-10-27.zip');
+		expect(file.name).toBe('trackline-backup-2026-10-27.zip');
 		expect(await state.read()).toBe(clock.now());
 	});
 
@@ -58,7 +58,7 @@ describe('backup use cases', () => {
 		const preview = expectOk(
 			await new PreviewRestore(
 				codec,
-				new FixedDataInventory({ weighIns: 4, workouts: 0, foodEntries: 0, photos: 1 }),
+				new FixedDataInventory({ trackers: 4, entries: 9, photos: 1 }),
 				2
 			).execute({
 				file: file.bytes
@@ -67,7 +67,7 @@ describe('backup use cases', () => {
 
 		expect(preview).toEqual({
 			backupCreatedAt: clock.now(),
-			replaces: { weighIns: 4, workouts: 0, foodEntries: 0, photos: 1 }
+			replaces: { trackers: 4, entries: 9, photos: 1 }
 		});
 		expect(database.bytes).toEqual(new Uint8Array([1]));
 	});
@@ -96,7 +96,7 @@ describe('backup use cases', () => {
 	it('refuses a file that is not a backup', async () => {
 		const preview = await new PreviewRestore(
 			codec,
-			new FixedDataInventory({ weighIns: 0, workouts: 0, foodEntries: 0, photos: 0 }),
+			new FixedDataInventory({ trackers: 0, entries: 0, photos: 0 }),
 			2
 		).execute({
 			file: new Uint8Array([1, 2, 3])

@@ -11,17 +11,17 @@
 
 <PageHeader
 	backHref={resolve(AppRoute.today)}
-	backLabel={messages.shell.back(messages.navigation.today)}
+	backLabel={messages.shell.back(messages.navigation.home)}
 	title={messages.navigation.settings}
 />
 
-<NavRow label={messages.navigation.homeScreen} href={resolve(AppRoute.settingsHome)} />
+<NavRow label={messages.navigation.trackers} href={resolve(AppRoute.settingsTrackers)} />
 <NavRow
 	label={messages.preferences.theme}
 	value={messages.preferences.themes[preferences.current.theme]}
 	href={resolve(AppRoute.settingsTheme)}
 />
-<NavRow label={messages.navigation.tracking} href={resolve(AppRoute.settingsTracking)} />
+<NavRow label={messages.preferences.units} href={resolve(AppRoute.settingsUnits)} />
 <NavRow label={messages.navigation.data} href={resolve(AppRoute.settingsData)} />
 
 <div class="gap"></div>
