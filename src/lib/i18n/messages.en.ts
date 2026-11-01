@@ -23,7 +23,8 @@ export const messages = {
 		section === undefined ? APP_NAME : `${section} · ${APP_NAME}`,
 	app: {
 		name: APP_NAME,
-		tagline: 'A small, private tracker for anything: workouts, food, sleep, plants, and more.',
+		tagline:
+			'A small, private, local tracker for workouts, food, sleep, and anything else you want to keep track of.',
 		updateReady: 'A new version is ready.',
 		reload: 'Reload',
 		installHint: `Install ${APP_NAME}: tap Share, then Add to Home Screen.`,
@@ -33,76 +34,193 @@ export const messages = {
 	},
 	landing: {
 		openApp: 'Open the app',
-		todayScreenshot:
-			'Home: a progress bar for each thing you track, such as workouts, water, and sleep.',
-		statsScreenshot: 'Stats: the last eight days, weeks, or months of each tracker with a goal.',
-		promise: 'Everything you log stays on your device. No account, no tracking, no cloud.',
-		installTitle: 'Install it like an app',
-		installIphone: 'iPhone: open it in Safari, tap Share, then Add to Home Screen.',
-		installAndroid: 'Android: open it in Chrome, open the menu, then tap Install app.',
-		freeTitle: 'Free and open source',
-		free: `${APP_NAME} is free, with no ads and no paid tier. If it helps you, you can support it on Ko-fi.`,
-		source: 'Source on GitHub',
-		donate: 'Support on Ko-fi'
+		todayScreenshot: 'Home, with a row for each thing you track.',
+		statsScreenshot: 'Stats, showing the last few weeks of each tracker.',
+		installTitle: 'Add it to your phone',
+		installIphone: 'iPhone: open this page in Safari, tap Share, then Add to Home Screen.',
+		installAndroid: 'Android: open this page in Chrome, tap the menu, then Install app.',
+		installMore: 'Using another browser? See every way to install it.',
+		trackersTitle: 'Things you can track'
+	},
+	templatePages: {
+		otherTitle: 'Other trackers',
+		more: 'More',
+		allTitle: 'Everything you can track',
+		allTagline: 'Start from a ready-made tracker, or build your own.',
+		readyTitle: 'Ready-made trackers',
+		buildTitle: 'Build your own',
+		buildSummary:
+			'Pick a building block and give it a name. Practice hours, photos of your dog, books you’ve read: if you can count it, rate it, or take a picture of it, you can track it.',
+		featuresTitle: 'What you get',
+		pages: {
+			workouts: {
+				link: 'Workouts',
+				title: 'Workout tracker',
+				tagline: 'Log your sets and watch your lifts go up.',
+				features: [
+					'Sets, reps, and weight',
+					'A rest timer between sets',
+					'Your own exercises, or ours',
+					'A goal for workouts each week'
+				],
+				screenshots: {
+					page: 'A workout tracker with past workouts.',
+					detail: 'The sets of one workout.'
+				}
+			},
+			food: {
+				link: 'Food',
+				title: 'Food tracker',
+				tagline: 'Keep an eye on what you eat.',
+				features: [
+					'Calories, protein, carbs, and fat',
+					'Your own list of foods',
+					'Quick add when you’re busy',
+					'A daily calorie goal'
+				],
+				screenshots: {
+					page: 'A food tracker with today’s meals.',
+					detail: 'A list of saved foods.'
+				}
+			},
+			water: {
+				link: 'Water',
+				title: 'Water tracker',
+				tagline: 'Drink more water.',
+				features: [
+					'One tap for each glass',
+					'A daily goal you pick',
+					'The last few weeks in Stats'
+				],
+				screenshots: {
+					page: 'A water tracker with today’s glasses.',
+					detail: 'Logging a glass of water.'
+				}
+			},
+			sleep: {
+				link: 'Sleep',
+				title: 'Sleep tracker',
+				tagline: 'See how much you really sleep.',
+				features: [
+					'Hours and minutes slept',
+					'Rate how well you slept',
+					'A nightly goal you pick',
+					'The last few weeks in Stats'
+				],
+				screenshots: {
+					page: 'A sleep tracker with recent nights.',
+					detail: 'Logging a night’s sleep.'
+				}
+			},
+			weight: {
+				link: 'Weight',
+				title: 'Weight tracker',
+				tagline: 'Follow your weight over time.',
+				features: ['Kilograms or pounds', 'A goal weight', 'Weigh in as often as you like'],
+				screenshots: {
+					page: 'A weight tracker with recent weigh-ins.',
+					detail: 'Logging a weigh-in.'
+				}
+			},
+			steps: {
+				link: 'Steps',
+				title: 'Step log',
+				tagline: 'Keep a daily record of your steps.',
+				features: ['One number a day', 'A daily step goal you pick', 'The last few weeks in Stats'],
+				screenshots: { page: 'A steps tracker with recent days.', detail: 'Logging a day’s steps.' }
+			}
+		}
 	},
 	site: {
 		home: APP_NAME,
 		footer: 'Site',
 		privacy: 'Privacy',
 		faq: 'FAQ',
+		install: 'Install',
 		source: 'Source',
-		donate: 'Donate',
-		copyright: '© 2026 Zach Garwood'
+		donate: 'Donate'
+	},
+	install: {
+		title: 'Install Trackline',
+		summary:
+			'Add Trackline to your home screen and it opens like any other app, even offline. It’s free and there’s nothing to download from an app store.',
+		iphoneTitle: 'iPhone and iPad',
+		androidTitle: 'Android',
+		iphone: [
+			{
+				browser: 'Safari',
+				steps:
+					'Tap Share, then Add to Home Screen. If you don’t see Share, tap the three dots first.'
+			},
+			{ browser: 'Chrome', steps: 'Tap Share in the address bar, then Add to Home Screen.' },
+			{ browser: 'Edge', steps: 'Tap the menu, then Share, then Add to Home Screen.' },
+			{ browser: 'Firefox', steps: 'Tap the menu, then Share, then Add to Home Screen.' }
+		],
+		android: [
+			{ browser: 'Chrome', steps: 'Tap the three dots, then Add to home screen, then Install.' },
+			{
+				browser: 'Samsung Internet',
+				steps: 'Tap the menu, then Add page to, then Home screen.'
+			},
+			{ browser: 'Firefox', steps: 'Tap the three dots, then Add to Home screen.' },
+			{ browser: 'Edge', steps: 'Tap the menu, then Add to phone.' }
+		],
+		after:
+			'Then open Trackline from your home screen. Everything you track stays on that phone, so export a backup from Settings now and then.'
 	},
 	privacy: {
 		title: 'Privacy',
-		summary: `${APP_NAME} keeps everything you log on your device. Nothing is sent anywhere.`,
+		summary: `${APP_NAME} keeps what you log on your device. It doesn’t send it anywhere.`,
 		paragraphs: [
-			'There is no account and no server. Everything you track, photos included, is stored in your browser’s private storage for this site, on this device only.',
-			'The app makes no network requests except to download updates of itself from this site. It has no analytics, crash reporting, ads, cookies, or third-party scripts, fonts, or images. Anyone can check this: the source is public, and an automated test fails if the app contacts any other site.',
-			'Photos are redrawn when you add them, which removes their hidden details such as the location they were taken and the camera used.',
-			'Backups are files you export yourself. The app never uploads them; where you keep them is up to you.',
-			'The links to the source code and to Ko-fi are ordinary links. Nothing from those sites is loaded unless you tap them.',
-			'Deleting all data in Settings removes everything from this device. Because nothing is stored anywhere else, there is nothing else to delete.'
+			'There’s no account and no server. Everything you track, photos included, is saved in your browser’s storage for this site, on this device.',
+			'The app only goes online to download its own updates from this site. There are no analytics, crash reports, ads, or cookies, and it doesn’t load scripts, fonts, or images from anywhere else. The source is public, and an automated test fails if the app ever contacts another site.',
+			'When you add a photo, the app redraws it. That removes the hidden details photos carry, like where it was taken and which camera took it.',
+			'Backups are files you save yourself. The app never uploads them.',
+			'The links to the source code and to Ko-fi are plain links. Nothing from those sites loads unless you tap one.',
+			'Deleting all data in Settings removes everything from this device. There’s no other copy to delete.'
 		]
 	},
 	faq: {
-		title: 'Frequently asked questions',
+		title: 'FAQ',
 		entries: [
+			{
+				question: 'How do I install it?',
+				answer:
+					'Open it in your phone’s browser and add it to your home screen. The Install page has the steps for each browser.'
+			},
 			{
 				question: 'Where is my data stored?',
 				answer:
-					'Only on your device, in the browser’s private storage for this site. There is no account and no copy anywhere else.'
+					'On your device, in your browser’s storage for this site. There’s no account and no copy anywhere else.'
 			},
 			{
 				question: 'What if I lose my phone or clear my browser data?',
 				answer:
-					'Then the data is gone, because it only ever lived there. Export a backup from Settings now and then and keep it somewhere safe. The app reminds you gently when the last backup is a month old.'
+					'Then your data is gone, since it only lived there. Export a backup from Settings every so often and keep it somewhere safe. The app reminds you when your last backup is a month old.'
 			},
 			{
 				question: 'How do I move to a new phone?',
 				answer:
-					'Export a backup on the old phone, move the file to the new one, open the app there, and restore it from Settings.'
+					'Export a backup on the old phone, copy the file to the new one, open the app there, and restore it from Settings.'
 			},
 			{
 				question: 'Does it work offline?',
-				answer:
-					'Yes. After the first visit, everything works without a connection, including installing it to your home screen.'
+				answer: 'Yes. After your first visit, it works without a connection.'
 			},
 			{
 				question: 'Why is there no sync or account?',
 				answer:
-					'Keeping everything on your device is the whole point: nothing to sign up for, nothing to breach, nothing to sell. Backups cover moving between devices.'
+					'Because then your data would have to live on a server. Keeping it on your phone is simpler and safer. Backups take care of moving to a new device.'
 			},
 			{
-				question: 'Is it really free?',
+				question: 'Is it free?',
 				answer:
-					'Yes. There are no ads and no paid tier. It is open source under the GNU GPL v3, and supported only by voluntary donations on Ko-fi.'
+					'Yes. No ads, no paid version. It’s open source under the GNU GPL v3. If you’d like to chip in, there’s a Ko-fi page.'
 			},
 			{
 				question: 'Can I host it myself?',
 				answer:
-					'Yes. It is a static site with no backend. The README in the source repository explains how to build it and serve it from any static host.'
+					'Yes. It’s a static site with no backend. The README in the source repository shows how to build it and put it on any static host.'
 			}
 		]
 	},

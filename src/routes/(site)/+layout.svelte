@@ -26,13 +26,13 @@
 	<footer>
 		<nav aria-label={messages.site.footer}>
 			<ul>
+				<li><a href={resolve(SiteRoute.install)}>{messages.site.install}</a></li>
 				<li><a href={resolve(SiteRoute.privacy)}>{messages.site.privacy}</a></li>
 				<li><a href={resolve(SiteRoute.faq)}>{messages.site.faq}</a></li>
 				<li><ExternalLink href={ExternalUrl.source}>{messages.site.source}</ExternalLink></li>
 				<li><ExternalLink href={ExternalUrl.donate}>{messages.site.donate}</ExternalLink></li>
 			</ul>
 		</nav>
-		<p>{messages.site.copyright}</p>
 	</footer>
 </div>
 
