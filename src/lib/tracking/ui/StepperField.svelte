@@ -31,9 +31,9 @@
 	<div class="value">
 		<input
 			{id}
-			type="number"
+			type="text"
 			inputmode="decimal"
-			min="0"
+			autocomplete="off"
 			{value}
 			oninput={(event) => {
 				oninput(event.currentTarget.value);

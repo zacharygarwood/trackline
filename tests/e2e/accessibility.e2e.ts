@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { messages } from '../../src/lib/i18n/messages.en.ts';
 import { expect, test } from './fixtures.ts';
-import { finishFirstRun, homeRow, tab } from './helpers.ts';
+import { amountFields, finishFirstRun, homeRow, tab } from './helpers.ts';
 import { eachScreen, settled } from './screens.ts';
 
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -73,7 +73,7 @@ test('the main flows work from the keyboard alone', async ({ page }) => {
 	);
 	await page.getByRole('button', { name: messages.tracking.page.log, exact: true }).focus();
 	await page.keyboard.press('Enter');
-	await page.getByRole('spinbutton').first().focus();
+	await amountFields(page).first().focus();
 	await page.keyboard.type('2');
 	await page.keyboard.press('Enter');
 	await expect(page.getByRole('list', { name: messages.tracking.page.history })).toContainText(

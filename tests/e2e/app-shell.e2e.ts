@@ -1,6 +1,7 @@
 import { expect, test } from './fixtures.ts';
 import {
 	addTracker,
+	amountFields,
 	expectOnHome,
 	finishFirstRun,
 	homeRow,
@@ -49,7 +50,7 @@ test('onboarding asks only each goal’s amount; the editor sets a goal weight i
 	await page.getByText(messages.units.lbLong).click();
 	await page.getByRole('button', { name: onboarding.next, exact: true }).click();
 	await expect(page.getByText(messages.tracking.edit.goalType, { exact: true })).toBeHidden();
-	await page.getByRole('spinbutton').nth(0).fill('4');
+	await amountFields(page).nth(0).fill('4');
 	await page.getByRole('button', { name: onboarding.start }).click();
 
 	await expectOnHome(page);
@@ -58,7 +59,7 @@ test('onboarding asks only each goal’s amount; the editor sets a goal weight i
 	await openTracker(page, templates.weight);
 	await page.getByRole('button', { name: messages.tracking.page.editTracker }).click();
 	await page.getByRole('button', { name: messages.tracking.edit.goalKinds.target }).click();
-	await page.getByRole('spinbutton').fill('165');
+	await amountFields(page).fill('165');
 	await page.getByRole('button', { name: messages.tracking.page.save }).click();
 	await tab(page, messages.navigation.home).click();
 	await expect(homeRow(page, templates.weight)).toContainText('Goal 165 lb');
