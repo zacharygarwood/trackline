@@ -15,7 +15,7 @@ export const test = base.extend({
 			await use(context);
 			return;
 		}
-		const profile = await mkdtemp(path.join(tmpdir(), 'buffalog-webkit-'));
+		const profile = await mkdtemp(path.join(tmpdir(), 'trackline-webkit-'));
 		const persistent = await webkit.launchPersistentContext(profile, {
 			...iPhone,
 			baseURL

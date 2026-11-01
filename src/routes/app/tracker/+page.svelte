@@ -1,119 +1,92 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
+	import { onDestroy } from 'svelte';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { getAppContext } from '#lib/app/app-context.ts';
-	import type { App } from '#lib/app/container.ts';
-	import Button from '#lib/design/Button.svelte';
+	import BigNumber from '#lib/design/BigNumber.svelte';
 	import PageHeader from '#lib/design/PageHeader.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
-	import type { Tracker } from '#lib/trackers/domain/tracker.ts';
-	import { TrackerForm } from '#lib/trackers/ui/tracker-form.svelte.ts';
-	import { isPresetName } from '#lib/trackers/ui/tracker-presets.ts';
-	import { getToaster } from '#lib/ui/toast.svelte.ts';
+	import type { LocalDate } from '#lib/shared/local-date.ts';
+	import { TrackerKind } from '#lib/tracking/domain/tracking.constants.ts';
+	import { PhotoUrls } from '#lib/tracking/ui/photo-urls.ts';
+	import { TrackerScreen } from '#lib/tracking/ui/tracker-screen.svelte.ts';
+	import { goalDetail, progressText } from '#lib/tracking/ui/value-format.ts';
+	import { getToaster, reloadOnUndo } from '#lib/ui/toast.svelte.ts';
 	import { AppRoute } from '../app-route.constants.ts';
-	import { loadTrackers, shareGoal } from '../trackers.ts';
-	import TrackerFields from './TrackerFields.svelte';
+	import { open, replace } from '../open.ts';
+	import CollectionSection from './CollectionSection.svelte';
+	import FoodSection from './FoodSection.svelte';
+	import LogSection from './LogSection.svelte';
+	import PhotosSection from './PhotosSection.svelte';
+	import WorkoutSection from './WorkoutSection.svelte';
 
 	const preferences = getPreferences();
-	const toaster = getToaster();
-	const backHref = resolve(AppRoute.settingsHome);
 	const units = $derived({
 		mass: preferences.massUnit,
 		distance: preferences.current.distanceUnit
 	});
-	const selected = page.state.selected;
-	const form = new TrackerForm();
-	let app: App | undefined = $state();
-	let editing: Tracker | undefined = $state();
-	let foods: readonly { id: string; name: string; unit: string }[] = $state([]);
-	let exercises: readonly { id: string; name: string; unit: string }[] = $state([]);
-	let invalid = $state(false);
+	let screen: TrackerScreen | undefined = $state();
+	let photos: PhotoUrls | undefined = $state();
+	let today: LocalDate | undefined = $state();
+	const trackerId = $derived(screen?.tracker?.id);
 
-	void getAppContext().then(async (ready) => {
-		const [progress, foodList, exerciseList] = await Promise.all([
-			loadTrackers(ready, preferences),
-			ready.nutrition.listFoods.execute(),
-			ready.training.listExercises.execute()
-		]);
-		editing = progress.find((item) => item.tracker.id === selected)?.tracker;
-		if (selected !== undefined && editing === undefined) {
-			await goto(backHref, { replaceState: true });
+	void getAppContext().then(async (app) => {
+		const next = new TrackerScreen(app.tracking, app.clock, preferences.weekStart);
+		if (!(await next.load(page.state.tracker))) {
+			await replace(AppRoute.today);
 			return;
 		}
-		if (editing !== undefined) form.fill(editing, units);
-		else if (isPresetName(page.state.preset)) form.usePreset(page.state.preset);
-		foods = foodList.map((food) => ({ id: food.id, name: food.name, unit: food.reference.unit }));
-		exercises = exerciseList.map((exercise) => ({
-			id: exercise.id,
-			name: exercise.name,
-			unit: ''
-		}));
-		app = ready;
+		today = app.clock.today();
+		photos = new PhotoUrls(app.tracking.getPhotoImage);
+		screen = next;
 	});
 
-	async function save(ready: App): Promise<void> {
-		const command = form.toCommand(units);
-		const saved = await ready.trackers.saveTracker.execute(
-			editing === undefined ? command : { ...command, id: editing.id }
-		);
-		invalid = !saved.ok;
-		if (!saved.ok) return;
-		await shareGoal(ready, saved.value);
-		toaster.show(messages.trackers.saved(saved.value.name));
-		await goto(backHref);
-	}
+	reloadOnUndo(getToaster(), async () => {
+		await screen?.load(page.state.tracker);
+	});
 
-	async function remove(ready: App, tracker: Tracker): Promise<void> {
-		await ready.trackers.deleteTracker.execute({ id: tracker.id });
-		toaster.show(messages.trackers.deleted(tracker.name));
-		await goto(backHref);
-	}
+	onDestroy(() => void photos?.clear());
 </script>
 
 <PageHeader
-	{backHref}
-	backLabel={messages.shell.back(messages.navigation.homeScreen)}
-	title={editing === undefined ? messages.navigation.newTracker : messages.navigation.editTracker}
+	backHref={resolve(AppRoute.today)}
+	backLabel={messages.shell.back(messages.navigation.home)}
+	title={screen?.tracker?.name ?? ''}
+	actionIcon="settings"
+	actionLabel={messages.tracking.page.editTracker}
+	onaction={trackerId === undefined
+		? undefined
+		: () => open(AppRoute.editTracker, { tracker: trackerId })}
 />
 
-{#if app !== undefined}
-	{@const ready = app}
-	<TrackerFields {form} {foods} {exercises} {units} />
-	{#if invalid}
-		<p class="problem" role="alert">{messages.trackers.invalid}</p>
+{#if screen?.tracker !== undefined && today !== undefined && photos !== undefined}
+	{@const tracker = screen.tracker}
+	{@const progress = screen.progress}
+	{#if progress?.value !== undefined}
+		<div class="summary">
+			<BigNumber
+				value={progressText(tracker, progress.value, units)}
+				suffix={goalDetail(tracker, units)}
+			/>
+		</div>
 	{/if}
-	<div class="actions">
-		<Button onclick={() => save(ready)}>{messages.train.save}</Button>
-		{#if editing !== undefined}
-			{@const tracker = editing}
-			<button type="button" class="delete" onclick={() => remove(ready, tracker)}
-				>{messages.trackers.delete}</button
-			>
-		{/if}
-	</div>
+
+	{#if tracker.kind === TrackerKind.log}
+		<LogSection {screen} {tracker} {units} {today} />
+	{:else if tracker.kind === TrackerKind.photos}
+		<PhotosSection {screen} {tracker} {photos} />
+	{:else if tracker.kind === TrackerKind.collection}
+		<CollectionSection {screen} {tracker} {today} />
+	{:else if tracker.kind === TrackerKind.workout}
+		<WorkoutSection {screen} {tracker} {today} />
+	{:else}
+		<FoodSection {screen} {tracker} {units} {today} />
+	{/if}
 {/if}
 
 <style>
-	.problem {
-		margin-top: var(--space-4);
-		color: var(--color-danger);
-		font-size: var(--font-size-15);
-	}
-
-	.actions {
-		display: grid;
-		gap: var(--space-2);
-		margin-top: var(--space-8);
-	}
-
-	.delete {
-		min-height: var(--row-height);
-		border: none;
-		background: transparent;
-		color: var(--color-danger);
-		font-size: var(--font-size-17);
-		font-weight: var(--font-weight-semibold);
+	.summary {
+		margin: var(--space-2) 0 var(--space-6);
 	}
 </style>

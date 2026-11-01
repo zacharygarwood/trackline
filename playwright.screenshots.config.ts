@@ -3,7 +3,7 @@ import { androidPhone } from './tests/e2e/devices.ts';
 
 const PORT = 4174;
 
-/** Captures the landing page screenshots: `pnpm screenshots`. Not part of the test suite. */
+/** Captures the site screenshots: `pnpm screenshots`. Not part of the test suite. */
 export default defineConfig({
 	testDir: 'tests/screenshots',
 	testMatch: '**/*.screenshots.ts',

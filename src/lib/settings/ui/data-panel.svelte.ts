@@ -59,9 +59,12 @@ export class DataPanel {
 		return lastExportAt === undefined ? messages.settings.never : formatInstantDate(lastExportAt);
 	}
 
-	/** Whether it is time to export a fresh backup. */
+	/**
+	 * Whether an earlier backup is old enough to export a fresh one. False when
+	 * there has never been a backup, since "Never" already says so.
+	 */
 	get overdue(): boolean {
-		return this.status?.overdue ?? false;
+		return this.status?.lastExportAt !== undefined && this.status.overdue;
 	}
 
 	/** Loads the backup status. */

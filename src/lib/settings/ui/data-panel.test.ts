@@ -25,12 +25,7 @@ describe('DataPanel', () => {
 		const clock = new FixedClock(Date.UTC(2026, 9, 27, 12), '2026-10-27');
 		const state = new InMemoryAppState();
 		const codec = new ZipBackupCodec();
-		const inventory = new FixedDataInventory({
-			weighIns: 3,
-			workouts: 1,
-			foodEntries: 0,
-			photos: 0
-		});
+		const inventory = new FixedDataInventory({ trackers: 3, entries: 1, photos: 0 });
 		database = new InMemoryDatabaseFile(new Uint8Array([5]));
 		const photos = new InMemoryPhotoArchive();
 		saved = [];
@@ -55,15 +50,15 @@ describe('DataPanel', () => {
 		await panel.load();
 	});
 
-	it('shows no backup yet as overdue', () => {
+	it('shows no backup yet as Never, without also calling it overdue', () => {
 		expect(panel.lastBackup).toBe('Never');
-		expect(panel.overdue).toBe(true);
+		expect(panel.overdue).toBe(false);
 	});
 
 	it('exports a backup and shows when', async () => {
 		await panel.export();
 
-		expect(saved.map((file) => file.name)).toEqual(['buffalog-backup-2026-10-27.zip']);
+		expect(saved.map((file) => file.name)).toEqual(['trackline-backup-2026-10-27.zip']);
 		expect(panel.lastBackup).toBe('Oct 27, 2026');
 		expect(panel.overdue).toBe(false);
 	});
@@ -76,7 +71,7 @@ describe('DataPanel', () => {
 
 		await panel.choose(backup.bytes);
 		expect(panel.pendingRestore?.summary).toBe(
-			'This replaces everything on this device (3 weigh-ins, 1 workout, 0 food entries, 0 photos) with the backup from Oct 27, 2026.'
+			'This replaces everything on this device (3 trackers, 1 entry, 0 photos) with the backup from Oct 27, 2026.'
 		);
 
 		expect(await panel.restore()).toBe(true);
@@ -91,9 +86,7 @@ describe('DataPanel', () => {
 	});
 
 	it('says exactly what deleting everything removes', async () => {
-		expect(await panel.deletionSummary()).toContain(
-			'(3 weigh-ins, 1 workout, 0 food entries, 0 photos)'
-		);
+		expect(await panel.deletionSummary()).toContain('(3 trackers, 1 entry, 0 photos)');
 
 		await panel.deleteAll();
 

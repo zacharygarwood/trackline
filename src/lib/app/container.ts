@@ -1,4 +1,4 @@
-import { CanvasImageProcessor } from '../body/infrastructure/canvas-image-processor.ts';
+import { CanvasImageProcessor } from '../tracking/infrastructure/canvas-image-processor.ts';
 import { downloadFile, type DownloadableFile } from '../platform/backup/download-file.ts';
 import { bundledMigrations } from '../platform/db/bundled-migrations.ts';
 import { migrate } from '../platform/db/migrate.ts';
@@ -8,22 +8,14 @@ import { requestPersistentStorage } from '../platform/pwa/persistent-storage.ts'
 import { SystemClock } from '../platform/system/system-clock.ts';
 import type { Clock } from '../shared/clock.ts';
 import type { Infrastructure } from './infrastructure.ts';
-import { wireBody } from './wire-body.ts';
-import { wireTrackers } from './wire-trackers.ts';
-import { wireInsights } from './wire-insights.ts';
-import { wireNutrition } from './wire-nutrition.ts';
 import { wireSettings } from './wire-settings.ts';
-import { wireTraining } from './wire-training.ts';
+import { wireTracking } from './wire-tracking.ts';
 
 /** Every use case the UI can call, grouped by bounded context. */
 export interface App {
 	readonly clock: Clock;
-	readonly body: ReturnType<typeof wireBody>;
 	readonly settings: ReturnType<typeof wireSettings>;
-	readonly training: ReturnType<typeof wireTraining>;
-	readonly nutrition: ReturnType<typeof wireNutrition>;
-	readonly insights: ReturnType<typeof wireInsights>;
-	readonly trackers: ReturnType<typeof wireTrackers>;
+	readonly tracking: ReturnType<typeof wireTracking>;
 	/** Hands a file to the browser's download flow. */
 	readonly saveFile: (file: DownloadableFile) => void;
 }
@@ -38,12 +30,8 @@ export interface App {
 export function wireApp(infrastructure: Infrastructure): App {
 	return {
 		clock: infrastructure.clock,
-		body: wireBody(infrastructure),
 		settings: wireSettings(infrastructure),
-		training: wireTraining(infrastructure),
-		nutrition: wireNutrition(infrastructure),
-		insights: wireInsights(infrastructure),
-		trackers: wireTrackers(infrastructure),
+		tracking: wireTracking(infrastructure),
 		saveFile: downloadFile
 	};
 }

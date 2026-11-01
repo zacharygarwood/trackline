@@ -55,6 +55,7 @@
 
 	legend {
 		margin-bottom: var(--space-2);
+		padding: 0;
 		font-size: var(--font-size-15);
 		font-weight: var(--font-weight-semibold);
 	}

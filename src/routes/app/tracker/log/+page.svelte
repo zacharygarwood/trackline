@@ -1,209 +1,108 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { onDestroy } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import Button from '#lib/design/Button.svelte';
-	import Choice from '#lib/design/Choice.svelte';
-	import Icon from '#lib/design/Icon.svelte';
-	import NavRow from '#lib/design/NavRow.svelte';
 	import PageHeader from '#lib/design/PageHeader.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
-	import { Measure } from '#lib/trackers/domain/tracker.constants.ts';
-	import { MAX_RATING, type Tracker, type TrackerEntry } from '#lib/trackers/domain/tracker.ts';
-	import {
-		formatTrackerNumber,
-		goalText,
-		unitOf,
-		valueText
-	} from '#lib/trackers/ui/tracker-format.ts';
-	import { TrackerLog } from '#lib/trackers/ui/tracker-log.svelte.ts';
-	import { formatDate, parseDecimal } from '#lib/ui/format.ts';
+	import { PhotoSize } from '#lib/tracking/application/photo-size.constants.ts';
+	import { FieldType } from '#lib/tracking/domain/tracking.constants.ts';
+	import FieldInput from '#lib/tracking/ui/FieldInput.svelte';
+	import { LogScreen } from '#lib/tracking/ui/log-screen.svelte.ts';
+	import { PhotoUrls } from '#lib/tracking/ui/photo-urls.ts';
 	import { getToaster } from '#lib/ui/toast.svelte.ts';
 	import { AppRoute } from '../../app-route.constants.ts';
-	import TrackerField from '../TrackerField.svelte';
+	import { back, replace } from '../../open.ts';
 
 	const preferences = getPreferences();
 	const toaster = getToaster();
-	const homeHref = resolve(AppRoute.today);
-	const units = $derived({
-		mass: preferences.massUnit,
-		distance: preferences.current.distanceUnit
-	});
-	const RATINGS = Array.from({ length: MAX_RATING }, (_, index) => index + 1);
-	let log: TrackerLog | undefined = $state();
-	let typed = $state('');
+	const units = { mass: preferences.massUnit, distance: preferences.current.distanceUnit };
+	let screen: LogScreen | undefined = $state();
+	let photos: PhotoUrls | undefined = $state();
+	let saving = $state(false);
 
 	void getAppContext().then(async (app) => {
-		const next = new TrackerLog(app.trackers, app.clock, preferences.weekStart);
-		if (!(await next.load(page.state.selected))) {
-			await goto(homeHref, { replaceState: true });
+		const next = new LogScreen(app.tracking, units);
+		if (!(await next.load({ tracker: page.state.tracker, subject: page.state.subject }))) {
+			await replace(AppRoute.today);
 			return;
 		}
-		log = next;
+		photos = new PhotoUrls(app.tracking.getPhotoImage);
+		screen = next;
 	});
 
-	function entryText(tracker: Tracker, entry: TrackerEntry): string {
-		if (tracker.measure === Measure.done) return messages.trackers.doneToday;
-		const unit = unitOf(tracker, units);
-		const value = formatTrackerNumber(entry.value);
-		return unit === '' ? value : messages.nutrition.amountWithUnit(value, unit);
-	}
+	onDestroy(() => {
+		void screen?.leave();
+		void photos?.clear();
+	});
 
-	async function add(ready: TrackerLog, tracker: Tracker, value: number): Promise<void> {
-		const entry = await ready.log(value);
-		if (entry === undefined) return;
-		typed = '';
-		toaster.show(messages.trackers.logged(tracker.name, entryText(tracker, entry)), async () => {
-			await ready.remove(entry);
-		});
-	}
-
-	async function remove(ready: TrackerLog, entry: TrackerEntry): Promise<void> {
-		toaster.show(messages.trackers.removed, await ready.remove(entry));
+	async function save(ready: LogScreen): Promise<void> {
+		saving = true;
+		const entry = await ready.save();
+		saving = false;
+		if (entry === undefined || ready.tracker === undefined) return;
+		toaster.show(messages.tracking.page.logged(ready.subject?.name ?? ready.tracker.name));
+		back();
 	}
 </script>
 
 <PageHeader
-	backHref={homeHref}
-	backLabel={messages.shell.back(messages.navigation.home)}
-	title={log?.tracker?.name ?? ''}
+	backHref={resolve(AppRoute.tracker)}
+	backLabel={messages.shell.back(screen?.tracker?.name ?? messages.navigation.home)}
+	title={screen?.subject?.name ?? screen?.tracker?.name ?? ''}
+	onback={back}
 />
 
-{#if log?.tracker !== undefined}
-	{@const ready = log}
-	{@const tracker = log.tracker}
-	<p class="now">
-		<span class="value">{valueText(tracker, ready.value, units)}</span>
-		<span class="goal">{goalText(tracker, units)}</span>
-	</p>
+{#if screen?.form !== undefined && photos !== undefined}
+	{@const ready = screen}
+	{@const urls = photos}
+	<form
+		onsubmit={(event) => {
+			event.preventDefault();
+			void save(ready);
+		}}
+	>
+		{#each ready.form?.fields ?? [] as field (field.key)}
+			{@const draft = ready.form?.drafts[field.key]}
+			{#if draft !== undefined}
+				<FieldInput
+					{field}
+					{draft}
+					{units}
+					onphoto={(image: Uint8Array) => void ready.attach(field, image)}
+					photoUrl={draft.type === FieldType.photo && draft.picked?.type === FieldType.photo
+						? urls.url(draft.picked.photoId, PhotoSize.thumbnail)
+						: undefined}
+				/>
+			{/if}
+		{/each}
 
-	{#if tracker.measure === Measure.rating}
-		<div class="ratings" role="group" aria-label={messages.trackers.log}>
-			{#each RATINGS as rating (rating)}
-				<Choice
-					joined
-					pressed={false}
-					ariaLabel={messages.trackers.rate(rating)}
-					onclick={() => add(ready, tracker, rating)}>{rating}</Choice
-				>
-			{/each}
-		</div>
-	{:else if tracker.measure === Measure.done}
-		{#if ready.loggedToday}
-			<p class="done">{messages.trackers.doneToday}</p>
-		{:else}
-			<div class="action">
-				<Button onclick={() => add(ready, tracker, 1)}>{messages.trackers.markDone}</Button>
-			</div>
+		{#if ready.problem !== undefined}
+			<p class="problem" role="alert">{ready.problem}</p>
 		{/if}
-	{:else}
-		<TrackerField
-			id="tracker-entry"
-			label={unitOf(tracker, units) === '' ? messages.trackers.log : unitOf(tracker, units)}
-			numeric
-			bind:value={typed}
-		/>
-		<div class="action">
-			<Button onclick={() => add(ready, tracker, parseDecimal(typed) ?? 0)}
-				>{messages.trackers.log}</Button
-			>
+		<div class="save">
+			<Button type="submit" disabled={saving}>{messages.tracking.page.save}</Button>
 		</div>
-	{/if}
-
-	<h2 id="tracker-history">{messages.trackers.history}</h2>
-	{#if ready.entries.length === 0}
-		<p class="empty">{messages.trackers.nothingLogged}</p>
-	{:else}
-		<ul aria-labelledby="tracker-history">
-			{#each ready.entries as entry (entry.id)}
-				{@const day = formatDate(entry.date, ready.today)}
-				<li>
-					<span>{day}</span>
-					<span class="amount">{entryText(tracker, entry)}</span>
-					<button
-						type="button"
-						aria-label={messages.trackers.removeEntry(day)}
-						onclick={() => remove(ready, entry)}><Icon name="close" /></button
-					>
-				</li>
-			{/each}
-		</ul>
-	{/if}
-
-	<div class="edit">
-		<NavRow
-			label={messages.trackers.edit}
-			onclick={() => goto(resolve(AppRoute.tracker), { state: { selected: tracker.id } })}
-		/>
-	</div>
+	</form>
 {/if}
 
 <style>
-	.now {
+	form {
 		display: flex;
-		align-items: baseline;
-		gap: var(--chip-gap);
-		margin-bottom: var(--space-5);
+		flex-direction: column;
 	}
 
-	.value {
-		font-size: var(--font-size-34);
-		font-weight: var(--font-weight-bold);
-		letter-spacing: var(--letter-spacing-title);
-	}
-
-	.goal,
-	.empty,
-	.done {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-16);
-	}
-
-	.ratings {
-		display: grid;
-		grid-template-columns: repeat(5, 1fr);
-	}
-
-	.action {
-		display: grid;
+	.problem {
 		margin-top: var(--space-4);
-	}
-
-	h2 {
-		margin: var(--space-8) 0 var(--space-2);
-		color: var(--color-text-muted);
+		color: var(--color-danger);
 		font-size: var(--font-size-15);
-		font-weight: var(--font-weight-semibold);
 	}
 
-	li {
+	.save {
 		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		min-height: var(--row-height);
-		border-bottom: var(--border-hairline) solid var(--color-divider);
-		font-size: var(--font-size-17);
-	}
-
-	.amount {
-		margin-left: auto;
-		color: var(--color-text-muted);
-	}
-
-	li button {
-		display: grid;
-		place-items: center;
-		width: var(--tap-target);
-		height: var(--tap-target);
-		border: none;
-		background: transparent;
-		color: var(--color-text-muted);
-		--icon-size: var(--icon-size-small);
-	}
-
-	.edit {
-		margin-top: var(--space-6);
+		flex-direction: column;
+		margin-top: var(--space-8);
 	}
 </style>

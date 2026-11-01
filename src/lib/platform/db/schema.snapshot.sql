@@ -1,169 +1,51 @@
-CREATE INDEX food_log_entry_by_date ON food_log_entry (date, logged_at);
+CREATE INDEX entry_by_date ON entry (date, logged_at);
 
-CREATE INDEX food_log_entry_by_food ON food_log_entry (food_id, logged_at);
+CREATE INDEX entry_by_session ON entry (session_id);
 
-CREATE INDEX tracker_entry_by_date ON tracker_entry (date);
+CREATE INDEX entry_by_tracker ON entry (tracker_id, date, logged_at);
 
-CREATE INDEX tracker_entry_by_tracker ON tracker_entry (tracker_id, date);
+CREATE INDEX session_by_tracker ON session (tracker_id, started_at);
 
-CREATE INDEX workout_by_date ON workout (date, started_at);
-
-CREATE INDEX workout_exercise_by_exercise ON workout_exercise (exercise_id);
-
-CREATE UNIQUE INDEX workout_one_active ON workout ((finished_at IS NULL)) WHERE finished_at IS NULL;
+CREATE INDEX subject_by_tracker ON subject (tracker_id, name);
 
 CREATE TABLE app_setting (
 	key TEXT PRIMARY KEY NOT NULL,
 	value TEXT NOT NULL
 ) STRICT;
 
-CREATE TABLE daily_goals (
-	effective_from TEXT PRIMARY KEY NOT NULL,
-	calories REAL NOT NULL CHECK (calories >= 0),
-	protein_g REAL NOT NULL CHECK (protein_g >= 0),
-	carbs_g REAL NOT NULL CHECK (carbs_g >= 0),
-	fat_g REAL NOT NULL CHECK (fat_g >= 0)
-) STRICT;
-
-CREATE TABLE exercise (
+CREATE TABLE entry (
 	id TEXT PRIMARY KEY NOT NULL,
-	name TEXT NOT NULL COLLATE NOCASE UNIQUE CHECK (length(name) BETWEEN 1 AND 60)
-, tracked_fields TEXT NOT NULL DEFAULT 'weight,reps'
-	CHECK (length(tracked_fields) BETWEEN 1 AND 60), grade_scale TEXT
-	CHECK (grade_scale IN ('v', 'yds', 'font', 'one_to_ten', 'custom')), custom_grades TEXT
-	CHECK ((grade_scale = 'custom') = (custom_grades IS NOT NULL)), count_label TEXT
-	CHECK (count_label IS NULL OR length(count_label) BETWEEN 1 AND 30), archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))) STRICT;
-
-CREATE TABLE food (
-	id TEXT PRIMARY KEY NOT NULL,
-	name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 60),
-	reference_amount REAL NOT NULL CHECK (reference_amount > 0),
-	reference_unit TEXT NOT NULL CHECK (length(reference_unit) BETWEEN 1 AND 20),
-	calories REAL NOT NULL CHECK (calories >= 0),
-	protein_g REAL NOT NULL CHECK (protein_g >= 0),
-	carbs_g REAL NOT NULL CHECK (carbs_g >= 0),
-	fat_g REAL NOT NULL CHECK (fat_g >= 0)
-, archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))) STRICT;
-
-CREATE TABLE food_log_entry (
-	id TEXT PRIMARY KEY NOT NULL,
+	tracker_id TEXT NOT NULL REFERENCES tracker (id) ON DELETE CASCADE,
 	date TEXT NOT NULL,
-	slot TEXT NOT NULL CHECK (slot IN ('breakfast', 'lunch', 'dinner', 'snacks')),
-	food_id TEXT NOT NULL REFERENCES food (id),
-	food_name TEXT NOT NULL,
-	unit TEXT NOT NULL,
-	amount REAL NOT NULL CHECK (amount > 0),
-	calories REAL NOT NULL CHECK (calories >= 0),
-	protein_g REAL NOT NULL CHECK (protein_g >= 0),
-	carbs_g REAL NOT NULL CHECK (carbs_g >= 0),
-	fat_g REAL NOT NULL CHECK (fat_g >= 0),
-	logged_at INTEGER NOT NULL
+	logged_at INTEGER NOT NULL,
+	subject_id TEXT REFERENCES subject (id) ON DELETE CASCADE,
+	session_id TEXT REFERENCES session (id) ON DELETE CASCADE,
+	field_values TEXT NOT NULL CHECK (json_valid(field_values))
 ) STRICT;
 
-CREATE TABLE progress_photo (
+CREATE TABLE session (
 	id TEXT PRIMARY KEY NOT NULL,
+	tracker_id TEXT NOT NULL REFERENCES tracker (id) ON DELETE CASCADE,
 	date TEXT NOT NULL,
-	pose TEXT NOT NULL CHECK (pose IN ('front', 'side', 'back')),
-	width INTEGER NOT NULL CHECK (width > 0),
-	height INTEGER NOT NULL CHECK (height > 0)
+	started_at INTEGER NOT NULL,
+	finished_at INTEGER CHECK (finished_at IS NULL OR finished_at >= started_at)
 ) STRICT;
 
-CREATE TABLE rest_day (
+CREATE TABLE subject (
 	id TEXT PRIMARY KEY NOT NULL,
-	date TEXT NOT NULL UNIQUE
-) STRICT;
-
-CREATE TABLE saved_meal (
-	id TEXT PRIMARY KEY NOT NULL,
-	name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 60)
-) STRICT;
-
-CREATE TABLE saved_meal_item (
-	meal_id TEXT NOT NULL REFERENCES saved_meal (id) ON DELETE CASCADE,
-	position INTEGER NOT NULL CHECK (position >= 0),
-	food_id TEXT NOT NULL REFERENCES food (id),
-	amount REAL NOT NULL CHECK (amount > 0),
-	PRIMARY KEY (meal_id, position)
-) STRICT;
-
-CREATE TABLE template_exercise (
-	template_id TEXT NOT NULL REFERENCES workout_template (id) ON DELETE CASCADE,
-	position INTEGER NOT NULL CHECK (position >= 0),
-	exercise_id TEXT NOT NULL REFERENCES exercise (id),
-	target_sets INTEGER NOT NULL CHECK (target_sets BETWEEN 1 AND 20),
-	PRIMARY KEY (template_id, position)
+	tracker_id TEXT NOT NULL REFERENCES tracker (id) ON DELETE CASCADE,
+	name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 40),
+	field_keys TEXT NOT NULL CHECK (json_valid(field_keys)),
+	defaults TEXT NOT NULL CHECK (json_valid(defaults)),
+	archived INTEGER NOT NULL CHECK (archived IN (0, 1))
 ) STRICT;
 
 CREATE TABLE tracker (
 	id TEXT PRIMARY KEY NOT NULL,
 	name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 40),
+	icon TEXT NOT NULL,
+	kind TEXT NOT NULL CHECK (kind IN ('log', 'photos', 'collection', 'workout', 'food')),
 	position INTEGER NOT NULL CHECK (position >= 0),
-	measure TEXT NOT NULL CHECK (measure IN ('calories', 'protein', 'carbs', 'fat', 'food', 'workouts',
-		'sessions', 'distance', 'time', 'reps', 'sets', 'weight', 'number', 'duration', 'rating', 'done')),
-	subject_id TEXT,
-	unit TEXT NOT NULL CHECK (length(unit) <= 20),
-	goal REAL NOT NULL CHECK (goal > 0),
-	direction TEXT NOT NULL CHECK (direction IN ('at_least', 'at_most')),
-	period TEXT NOT NULL CHECK (period IN ('day', 'week')),
-	combine TEXT NOT NULL CHECK (combine IN ('total', 'average', 'days'))
-) STRICT;
-
-CREATE TABLE tracker_entry (
-	id TEXT PRIMARY KEY NOT NULL,
-	tracker_id TEXT NOT NULL REFERENCES tracker (id) ON DELETE CASCADE,
-	date TEXT NOT NULL,
-	value REAL NOT NULL CHECK (value > 0)
-) STRICT;
-
-CREATE TABLE tracker_setup (id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1)) STRICT;
-
-CREATE TABLE weigh_in (
-	id TEXT PRIMARY KEY NOT NULL,
-	date TEXT NOT NULL UNIQUE,
-	weight_kg REAL NOT NULL CHECK (weight_kg > 0)
-) STRICT;
-
-CREATE TABLE weight_goal (
-	id INTEGER PRIMARY KEY CHECK (id = 1),
-	target_kg REAL NOT NULL CHECK (target_kg > 0),
-	direction TEXT NOT NULL CHECK (direction IN ('lose', 'gain', 'maintain'))
-) STRICT;
-
-CREATE TABLE workout (
-	id TEXT PRIMARY KEY NOT NULL,
-	date TEXT NOT NULL,
-	started_at INTEGER NOT NULL,
-	finished_at INTEGER,
-	note TEXT NOT NULL,
-	source_template_id TEXT REFERENCES workout_template (id) ON DELETE SET NULL
-) STRICT;
-
-CREATE TABLE workout_exercise (
-	workout_id TEXT NOT NULL REFERENCES workout (id) ON DELETE CASCADE,
-	position INTEGER NOT NULL CHECK (position >= 0),
-	exercise_id TEXT NOT NULL REFERENCES exercise (id),
-	PRIMARY KEY (workout_id, position)
-) STRICT;
-
-CREATE TABLE "workout_set" (
-	workout_id TEXT NOT NULL,
-	exercise_position INTEGER NOT NULL,
-	position INTEGER NOT NULL CHECK (position >= 0),
-	reps INTEGER CHECK (reps IS NULL OR reps BETWEEN 1 AND 999),
-	weight_kg REAL CHECK (weight_kg IS NULL OR weight_kg >= 0),
-	seconds REAL CHECK (seconds IS NULL OR seconds >= 0),
-	distance_m REAL CHECK (distance_m IS NULL OR distance_m >= 0),
-	grade INTEGER CHECK (grade IS NULL OR grade >= 0),
-	count REAL CHECK (count IS NULL OR count >= 0),
-	completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
-	CHECK (coalesce(reps, weight_kg, seconds, distance_m, grade, count) IS NOT NULL),
-	PRIMARY KEY (workout_id, exercise_position, position),
-	FOREIGN KEY (workout_id, exercise_position)
-		REFERENCES workout_exercise (workout_id, position) ON DELETE CASCADE
-) STRICT;
-
-CREATE TABLE workout_template (
-	id TEXT PRIMARY KEY NOT NULL,
-	name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 60),
-	position INTEGER NOT NULL CHECK (position >= 0)
+	fields TEXT NOT NULL CHECK (json_valid(fields)),
+	goal TEXT CHECK (goal IS NULL OR json_valid(goal))
 ) STRICT;

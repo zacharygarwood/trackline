@@ -19,7 +19,7 @@ export interface AppPreferencesUseCases {
 	readonly setWeekStart: SetWeekStart;
 }
 
-/** How the app looks, what it tracks, and its units, shared by every screen and kept up to date. */
+/** How the app looks and its units, shared by every screen and kept up to date. */
 export class AppPreferences {
 	current: Preferences = $state(DEFAULT_PREFERENCES);
 	massUnit: MassUnit = $state(MassUnit.kg);
@@ -47,14 +47,11 @@ export class AppPreferences {
 	 * Changes some preferences and stores them, once the stored ones have been read.
 	 *
 	 * @param changes - The preferences to change.
-	 * @returns Whether they were valid and saved.
 	 */
-	async change(changes: Partial<Preferences>): Promise<boolean> {
+	async change(changes: Partial<Preferences>): Promise<void> {
 		const useCases = await this.startup.promise;
-		const result = await useCases.updatePreferences.execute(changes);
-		if (!result.ok) return false;
+		await useCases.updatePreferences.execute(changes);
 		this.current = { ...this.current, ...changes };
-		return true;
 	}
 
 	/** Switches the weight unit. */

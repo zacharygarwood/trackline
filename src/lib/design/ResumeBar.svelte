@@ -9,12 +9,14 @@
 		elapsed: string;
 		/** The workout screen. */
 		href: string;
+		/** Runs instead of following the link, to open the screen with page state. */
+		onclick?: ((event: MouseEvent) => void) | undefined;
 	}
 
-	const { name, elapsed, href }: Props = $props();
+	const { name, elapsed, href, onclick }: Props = $props();
 </script>
 
-<a {href} aria-label={messages.shell.resume(name, elapsed)}>
+<a {href} {onclick} aria-label={messages.shell.resume(name, elapsed)}>
 	<span>{name}</span>
 	<span class="time">{messages.shell.resumeTime(elapsed)}</span>
 </a>

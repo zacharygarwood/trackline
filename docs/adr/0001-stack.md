@@ -5,7 +5,7 @@
 
 ## Context
 
-The build plan fixes the stack: static SvelteKit with Svelte 5 runes, strict TypeScript, SQLite WASM on OPFS in a Web Worker, `@vite-pwa/sveltekit`, hand-written SVG charts, fflate, plain CSS with tokens, pnpm, ESLint/Prettier/svelte-check, dependency-cruiser, Vitest, Playwright, and GitHub Pages. The product is called "Steady" in the plan; the final name is pending, so we use the working name **Buffalog**.
+The build plan fixes the stack: static SvelteKit with Svelte 5 runes, strict TypeScript, SQLite WASM on OPFS in a Web Worker, `@vite-pwa/sveltekit`, hand-written SVG charts, fflate, plain CSS with tokens, pnpm, ESLint/Prettier/svelte-check, dependency-cruiser, Vitest, Playwright, and GitHub Pages. The product is called "Steady" in the plan; its name is **Trackline** (trackline.app).
 
 Some current tool versions differ from what the plan assumed.
 

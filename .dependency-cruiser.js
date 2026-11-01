@@ -33,9 +33,9 @@ export default {
 			name: 'contexts-meet-only-through-shared-kernel',
 			comment: 'Bounded contexts never import each other.',
 			severity: 'error',
-			from: { path: '^src/lib/(training|nutrition|body|insights|settings|trackers)/' },
+			from: { path: '^src/lib/(settings|tracking)/' },
 			to: {
-				path: '^src/lib/(training|nutrition|body|insights|settings|trackers)/',
+				path: '^src/lib/(settings|tracking)/',
 				pathNot: '^src/lib/$1/'
 			}
 		},

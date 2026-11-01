@@ -1,4 +1,4 @@
-import type { ImageProcessor } from '../body/application/photo-ports.ts';
+import type { ImageProcessor } from '../tracking/application/photo-ports.ts';
 import type { SqlDriver } from '../platform/db/sql-driver.ts';
 import type { PhotoFolder } from '../platform/photos/photo-folder.ts';
 import type { DatabaseFile } from '../settings/application/backup-ports.ts';
