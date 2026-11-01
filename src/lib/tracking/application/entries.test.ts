@@ -85,6 +85,18 @@ describe('logging', () => {
 });
 
 describe('photos', () => {
+	it('keeps the chosen file as the full image, next to a thumbnail', async () => {
+		const app = trackingApp();
+		const photoId = expectOk(await app.savePhoto.execute({ image: Uint8Array.of(9) }));
+
+		expect(await app.getPhotoImage.execute({ id: photoId, size: PhotoSize.full })).toEqual(
+			Uint8Array.of(9)
+		);
+		expect(await app.getPhotoImage.execute({ id: photoId, size: PhotoSize.thumbnail })).toEqual(
+			Uint8Array.of(2, 9)
+		);
+	});
+
 	it('refuses an unreadable image, and discards a photo that was not logged', async () => {
 		const app = trackingApp();
 		const photoId = expectOk(await app.savePhoto.execute({ image: Uint8Array.of(9) }));

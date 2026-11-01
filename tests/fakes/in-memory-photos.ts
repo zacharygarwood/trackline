@@ -1,6 +1,5 @@
 import {
 	UnreadableImage,
-	type EncodedPhoto,
 	type ImageProcessor,
 	type PhotoFiles,
 	type PhotoStore
@@ -29,17 +28,10 @@ export class InMemoryPhotos implements PhotoStore {
 	}
 }
 
-/** Marks images instead of decoding them; an empty file is unreadable. */
+/** Marks thumbnails instead of decoding images; an empty file is unreadable. */
 export class FakeImages implements ImageProcessor {
-	reencode(image: Uint8Array): Promise<Result<EncodedPhoto, UnreadableImage>> {
+	thumbnail(image: Uint8Array): Promise<Result<Uint8Array, UnreadableImage>> {
 		if (image.length === 0) return Promise.resolve(err(new UnreadableImage()));
-		return Promise.resolve(
-			ok({
-				full: Uint8Array.of(1, ...image),
-				thumbnail: Uint8Array.of(2, ...image),
-				width: 3,
-				height: 4
-			})
-		);
+		return Promise.resolve(ok(Uint8Array.of(2, ...image)));
 	}
 }

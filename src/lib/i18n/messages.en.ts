@@ -174,7 +174,6 @@ export const messages = {
 		paragraphs: [
 			'There’s no account and no server. Everything you track, photos included, is saved in your browser’s storage for this site, on this device.',
 			'The app only goes online to download its own updates from this site. There are no analytics, crash reports, ads, or cookies, and it doesn’t load scripts, fonts, or images from anywhere else. The source is public, and an automated test fails if the app ever contacts another site.',
-			'When you add a photo, the app redraws it. That removes the hidden details photos carry, like where it was taken and which camera took it.',
 			'Backups are files you save yourself. The app never uploads them.',
 			'The links to the source code and to Ko-fi are plain links. Nothing from those sites loads unless you tap one.',
 			'Deleting all data in Settings removes everything from this device. There’s no other copy to delete.'
