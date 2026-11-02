@@ -3,8 +3,10 @@
 	import { page } from '$app/state';
 	import { getAppContext } from '#lib/app/app-context.ts';
 	import Button from '#lib/design/Button.svelte';
+	import OptionList from '#lib/design/OptionList.svelte';
 	import PageHeader from '#lib/design/PageHeader.svelte';
 	import Row from '#lib/design/Row.svelte';
+	import SectionTitle from '#lib/design/SectionTitle.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
 	import { servingsFieldOf } from '#lib/tracking/domain/portion.ts';
@@ -23,10 +25,16 @@
 		distance: preferences.current.distanceUnit
 	});
 	let screen: PortionScreen | undefined = $state();
+	const servingId = $props.id();
 
 	void getAppContext().then(async (app) => {
 		const next = new PortionScreen(app.tracking);
-		if (!(await next.load({ tracker: page.state.tracker, subject: page.state.subject }))) {
+		const target = {
+			tracker: page.state.tracker,
+			subject: page.state.subject,
+			food: page.state.food
+		};
+		if (!(await next.load(target))) {
 			await replace(AppRoute.today);
 			return;
 		}
@@ -35,7 +43,7 @@
 
 	async function save(ready: PortionScreen): Promise<void> {
 		if (!(await ready.save())) return;
-		toaster.show(messages.tracking.page.logged(ready.food?.name ?? ''));
+		toaster.show(messages.tracking.page.logged(ready.name));
 		backTwice();
 	}
 </script>
@@ -43,15 +51,26 @@
 <PageHeader
 	backHref={resolve(AppRoute.addFood)}
 	backLabel={messages.shell.back(messages.tracking.food.add)}
-	title={screen?.food?.name ?? ''}
+	title={screen?.name ?? ''}
 	onback={back}
 />
 
-{#if screen?.tracker !== undefined && screen.food !== undefined}
+{#if screen?.tracker !== undefined && (screen.food !== undefined || screen.databaseFood !== undefined)}
 	{@const ready = screen}
 	{@const tracker = screen.tracker}
 	{@const servings = servingsFieldOf(tracker.fields)}
 	{@const values = ready.values}
+	{#if ready.databaseFood !== undefined}
+		<SectionTitle title={messages.tracking.food.serving} id={servingId} />
+		<OptionList
+			labelledBy={servingId}
+			options={ready.servingChoices.map(({ label }) => ({ value: label, label }))}
+			value={ready.serving.label}
+			onchoose={(label: string) => {
+				ready.chooseServing(label);
+			}}
+		/>
+	{/if}
 	<StepperField
 		label={servings?.unit ?? messages.tracking.food.servings}
 		value={ready.servings}

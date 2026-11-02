@@ -1,4 +1,6 @@
 import { CanvasImageProcessor } from '../tracking/infrastructure/canvas-image-processor.ts';
+import { StaticFoodDatabase } from '../tracking/infrastructure/static-food-database.ts';
+import { fetchAppFile } from '../platform/pwa/app-file.ts';
 import { downloadFile, type DownloadableFile } from '../platform/backup/download-file.ts';
 import { bundledMigrations } from '../platform/db/bundled-migrations.ts';
 import { migrate } from '../platform/db/migrate.ts';
@@ -25,7 +27,7 @@ export interface App {
  * beside it are the composition root, the only code that knows which
  * implementation backs each port.
  *
- * @param infrastructure - The database, its file, the photo folder, image processing, and the clock.
+ * @param infrastructure - The database, its file, the photo folder, image processing, the food database, and the clock.
  */
 export function wireApp(infrastructure: Infrastructure): App {
 	return {
@@ -40,9 +42,10 @@ export function wireApp(infrastructure: Infrastructure): App {
  * Opens the on-device database, brings its schema up to date, asks the
  * browser to keep the data, and returns the wired app.
  *
+ * @param foodDatabaseUrl - Where the built-in food database file is served, on the app's own origin.
  * @throws If the database can't be opened or migrated.
  */
-export async function startApp(): Promise<App> {
+export async function startApp(foodDatabaseUrl: string): Promise<App> {
 	const database = openDatabase();
 	await migrate(database, bundledMigrations);
 	void requestPersistentStorage(navigator.storage);
@@ -51,6 +54,7 @@ export async function startApp(): Promise<App> {
 		databaseFile: database,
 		photoFolder: openPhotoFolder(),
 		images: new CanvasImageProcessor(),
+		foods: new StaticFoodDatabase(() => fetchAppFile(foodDatabaseUrl)),
 		clock: new SystemClock()
 	});
 }

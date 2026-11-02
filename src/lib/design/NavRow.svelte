@@ -63,10 +63,13 @@
 	}
 
 	.value {
-		flex-shrink: 0;
+		max-width: 50%;
+		overflow: hidden;
 		color: var(--color-text-muted);
 		font-size: var(--font-size-15);
 		font-variant-numeric: tabular-nums;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.chevron {

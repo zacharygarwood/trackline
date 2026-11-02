@@ -31,8 +31,12 @@
 
 	p {
 		flex: 1;
+		min-width: 0;
+		overflow: hidden;
 		font-size: var(--font-size-15);
 		font-weight: var(--font-weight-semibold);
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	button {

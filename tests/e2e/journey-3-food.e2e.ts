@@ -71,3 +71,22 @@ test('a recipe made of saved foods logs its numbers per serving', async ({ page 
 	await tab(page, messages.navigation.home).click();
 	await expect(homeRow(page, templates.food)).toContainText('125');
 });
+
+test('a food from the built-in food database logs a chosen portion and joins My foods', async ({
+	page
+}) => {
+	const oats = 'Cereals, oats, regular and quick, not fortified, dry';
+	await finishFirstRun(page);
+	await addTracker(page, templates.food);
+	await page.getByRole('button', { name: food.add }).click();
+
+	await page.getByRole('searchbox', { name: food.search }).fill('oats dry');
+	await page.getByRole('button', { name: oats, exact: true }).click();
+	await page.getByRole('button', { name: '1 cup', exact: true }).click();
+	await expect(page.getByText('307 kcal')).toBeVisible();
+	await page.getByRole('button', { name: food.add_portion, exact: true }).click();
+
+	await expect(page.getByRole('list', { name: food.today })).toContainText(`${oats}, 1 cup`);
+	await tab(page, messages.navigation.home).click();
+	await expect(homeRow(page, templates.food)).toContainText('307');
+});

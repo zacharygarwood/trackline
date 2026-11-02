@@ -7,7 +7,12 @@ import { err, ok, type Result } from '../../shared/result.ts';
 import type { Entry } from '../domain/entry.ts';
 import type { Session } from '../domain/session.ts';
 import type { Subject } from '../domain/subject.ts';
-import { createTracker, tidyName, type Tracker } from '../domain/tracker.ts';
+import {
+	createTracker,
+	MAX_SUBJECT_NAME_LENGTH,
+	tidyName,
+	type Tracker
+} from '../domain/tracker.ts';
 import {
 	SessionState,
 	TrackerIcon,
@@ -117,7 +122,7 @@ function recipePartOf(value: unknown): Pick<Subject, 'recipe'> | undefined {
 
 function subjectNaming(row: SqlRow): Pick<Subject, 'id' | 'trackerId' | 'name'> | undefined {
 	const [id, trackerId] = [idOf<'Subject'>(row.id), idOf<'Tracker'>(row.tracker_id)];
-	const name = tidyName(textOf(row.name) ?? '');
+	const name = tidyName(textOf(row.name) ?? '', MAX_SUBJECT_NAME_LENGTH);
 	return id === undefined || trackerId === undefined || name === undefined
 		? undefined
 		: { id, trackerId, name };

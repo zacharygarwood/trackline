@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FixedClock } from '../../../tests/fakes/fixed-clock.ts';
 import { InMemoryDatabaseFile } from '../../../tests/fakes/in-memory-database-file.ts';
+import { InMemoryFoodDatabase } from '../../../tests/fakes/in-memory-food-database.ts';
 import { FakeImages } from '../../../tests/fakes/in-memory-photos.ts';
 import { InMemoryPhotoFolder } from '../../../tests/fakes/in-memory-photo-folder.ts';
 import { migratedDatabase } from '../../../tests/support/migrated-database.ts';
@@ -22,6 +23,7 @@ describe('wireApp', () => {
 			databaseFile: new InMemoryDatabaseFile(),
 			photoFolder: new InMemoryPhotoFolder(),
 			images: new FakeImages(),
+			foods: new InMemoryFoodDatabase(),
 			clock
 		});
 

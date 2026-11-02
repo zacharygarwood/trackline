@@ -16,6 +16,7 @@ The build plan is the source of truth for scope. Work one phase at a time and st
 - pnpm lint (ESLint, Prettier, svelte-check, tsc, Stylelint, Knip) / pnpm arch (dependency-cruiser)
 - pnpm test (fast suites) / pnpm test:e2e (Playwright, Chromium + WebKit, including the axe accessibility audit) / pnpm test:mutation (Stryker)
 - pnpm screenshots: regenerate the site screenshots (landing and template pages) from demo data (tests/screenshots/)
+- pnpm foods <usda folder> static/foods/usda-sr-legacy.json: rebuild the built-in food database from the USDA SR Legacy CSV download (ADR 0026)
 
 ## Architecture (non-negotiable)
 

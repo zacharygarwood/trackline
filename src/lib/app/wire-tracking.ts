@@ -37,6 +37,11 @@ import {
 	SqliteSubjectRepository,
 	SqliteTrackerRepository
 } from '../tracking/infrastructure/sqlite-tracking-repositories.ts';
+import {
+	GetDatabaseFood,
+	SaveDatabaseFood,
+	SearchFoods
+} from '../tracking/application/food-database.ts';
 import type { Infrastructure } from './infrastructure.ts';
 
 type Repositories = ReturnType<typeof repositoriesOf>;
@@ -105,7 +110,8 @@ function wireSessions({ trackers, sessions, entries, clock, ids }: Repositories)
  */
 export function wireTracking(infrastructure: Infrastructure) {
 	const repositories = repositoriesOf(infrastructure);
-	const { photos, ids } = repositories;
+	const { photos, ids, trackers, subjects } = repositories;
+	const { foods } = infrastructure;
 	return {
 		...wireTrackers(repositories),
 		...wireEntries(repositories),
@@ -113,6 +119,9 @@ export function wireTracking(infrastructure: Infrastructure) {
 		...wireSessions(repositories),
 		savePhoto: new SavePhoto({ processor: infrastructure.images, store: photos, ids }),
 		getPhotoImage: new GetPhotoImage(photos),
-		discardPhoto: new DiscardPhoto(photos)
+		discardPhoto: new DiscardPhoto(photos),
+		searchFoods: new SearchFoods(foods),
+		getDatabaseFood: new GetDatabaseFood(foods),
+		saveDatabaseFood: new SaveDatabaseFood({ trackers, subjects, foods, ids })
 	};
 }

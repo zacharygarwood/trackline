@@ -10,8 +10,11 @@ import {
 	type TrackerKind
 } from './tracking.constants.ts';
 
-/** The longest name a tracker, or a thing in its library, can have. */
+/** The longest name a tracker can have. */
 export const MAX_NAME_LENGTH = 40;
+
+/** The longest name a thing in a library can have, long enough for a food from the food database. */
+export const MAX_SUBJECT_NAME_LENGTH = 240;
 
 /** The most fields a tracker can have. */
 export const MAX_FIELDS = 8;
@@ -50,10 +53,11 @@ export class InvalidTracker {
  * result is empty or too long.
  *
  * @param name - The name as entered.
+ * @param longest - The most characters it may have.
  */
-export function tidyName(name: string): string | undefined {
+export function tidyName(name: string, longest = MAX_NAME_LENGTH): string | undefined {
 	const tidied = name.trim().replace(/\s+/g, ' ');
-	return tidied === '' || tidied.length > MAX_NAME_LENGTH ? undefined : tidied;
+	return tidied === '' || tidied.length > longest ? undefined : tidied;
 }
 
 function checkFields(drafts: readonly FieldDraft[]): Result<readonly Field[], InvalidTracker> {

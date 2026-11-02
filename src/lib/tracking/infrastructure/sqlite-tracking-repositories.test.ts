@@ -5,6 +5,7 @@ import { migratedDatabase } from '../../../../tests/support/migrated-database.ts
 import { TestDatabase } from '../../../../tests/support/test-database.ts';
 import { bundledMigrations } from '../../platform/db/bundled-migrations.ts';
 import { migrate } from '../../platform/db/migrate.ts';
+import { anId } from '../../../../tests/builders/id.builder.ts';
 import { daysAWeek } from '../domain/goal-parts.ts';
 import {
 	SqliteEntryRepository,
@@ -145,6 +146,40 @@ describe('migration 0011', () => {
 
 		expect(await new SqliteTrackerRepository(database).findAll()).toEqual([
 			{ ...tracker, goal: daysAWeek(7) }
+		]);
+	});
+});
+
+describe('migration 0013', () => {
+	it('keeps every thing and the entries about it, and takes a long food name after', async () => {
+		const database = new TestDatabase();
+		const workouts = aWorkoutTracker();
+		const squat = {
+			id: anId<'Subject'>(),
+			trackerId: workouts.id,
+			name: 'Squat',
+			fieldKeys: [],
+			defaults: new Map(),
+			archived: false
+		};
+		const set = anEntry({ trackerId: workouts.id, subjectId: squat.id });
+		await migrate(
+			database,
+			bundledMigrations.filter((migration) => migration.version <= 12)
+		);
+		await new SqliteTrackerRepository(database).save([workouts]);
+		await new SqliteSubjectRepository(database).save([squat]);
+		await new SqliteEntryRepository(database).save(set);
+
+		await migrate(database, bundledMigrations);
+		const subjects = new SqliteSubjectRepository(database);
+		const long = { ...squat, id: anId<'Subject'>(), name: 'x'.repeat(240) };
+		await subjects.save([long]);
+
+		expect(await new SqliteEntryRepository(database).findFor(workouts.id)).toEqual([set]);
+		expect((await subjects.findFor(workouts.id)).map((subject) => subject.id)).toEqual([
+			squat.id,
+			long.id
 		]);
 	});
 });

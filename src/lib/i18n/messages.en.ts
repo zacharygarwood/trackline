@@ -546,7 +546,12 @@ export const messages = {
 			create: (name: string) => `New food “${name}”`,
 			servings: 'Servings',
 			add_portion: 'Add',
-			quickEntry: 'Quick add'
+			quickEntry: 'Quick add',
+			hundredGrams: '100 g',
+			serving: 'Serving',
+			database: 'Food database',
+			databaseSource: 'Foods from USDA FoodData Central. Numbers per serving are estimates.',
+			savedName: (food: string, serving: string) => `${food}, ${serving}`
 		},
 		recipe: {
 			makes: 'Servings it makes',

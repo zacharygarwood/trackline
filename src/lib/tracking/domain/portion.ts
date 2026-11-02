@@ -12,7 +12,7 @@ import { FieldType } from './tracking.constants.ts';
  * @param servings - How many servings were eaten.
  */
 export function portionValues(
-	food: Subject,
+	food: Pick<Subject, 'defaults'>,
 	servingsField: FieldKey,
 	servings: number
 ): ReadonlyMap<FieldKey, FieldValue> {

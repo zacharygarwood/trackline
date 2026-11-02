@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { goto, onNavigate } from '$app/navigation';
-	import { resolve } from '$app/paths';
+	import { asset, resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { setAppContext } from '#lib/app/app-context.ts';
 	import { startApp, type App } from '#lib/app/container.ts';
+	import { FOOD_DATABASE_FILE } from '#lib/app/food-database.constants.ts';
 	import Icon from '#lib/design/Icon.svelte';
 	import Notice from '#lib/design/Notice.svelte';
 	import TabBar from '#lib/design/TabBar.svelte';
@@ -98,7 +99,7 @@
 		});
 	});
 
-	setAppContext(startApp())
+	setAppContext(startApp(asset(FOOD_DATABASE_FILE)))
 		.then(async (app) => {
 			today = app.clock.today();
 			await preferences.load(app.settings);

@@ -5,14 +5,17 @@
 	import NavRow from '#lib/design/NavRow.svelte';
 	import PageHeader from '#lib/design/PageHeader.svelte';
 	import SearchField from '#lib/design/SearchField.svelte';
+	import SectionTitle from '#lib/design/SectionTitle.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
+	import { FoodSearch } from '#lib/tracking/ui/food-search.svelte.ts';
 	import { TrackerScreen } from '#lib/tracking/ui/tracker-screen.svelte.ts';
 	import { AppRoute } from '../../app-route.constants.ts';
 	import { back, open, replace } from '../../open.ts';
 
 	const preferences = getPreferences();
 	let screen: TrackerScreen | undefined = $state();
+	let database: FoodSearch | undefined = $state();
 	let search = $state('');
 
 	void getAppContext().then(async (app) => {
@@ -21,7 +24,12 @@
 			await replace(AppRoute.today);
 			return;
 		}
+		database = new FoodSearch(app.tracking.searchFoods);
 		screen = next;
+	});
+
+	$effect(() => {
+		void database?.find(search);
 	});
 
 	const typed = $derived(search.trim());
@@ -70,4 +78,26 @@
 			/>
 		</li>
 	</ul>
+	{#if database !== undefined && database.found.length > 0}
+		<SectionTitle title={messages.tracking.food.database} />
+		<ul>
+			{#each database.found as food (food.id)}
+				<li>
+					<NavRow
+						label={food.name}
+						onclick={() => open(AppRoute.portion, { tracker: tracker.id, food: food.id })}
+					/>
+				</li>
+			{/each}
+		</ul>
+		<p class="source">{messages.tracking.food.databaseSource}</p>
+	{/if}
 {/if}
+
+<style>
+	.source {
+		margin-top: var(--space-4);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-13);
+	}
+</style>

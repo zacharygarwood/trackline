@@ -23,3 +23,9 @@ export class EntryNotFound {
 	/** @param id - The missing entry. */
 	constructor(readonly id: EntryId) {}
 }
+
+/** Raised when a food is not in the built-in food database. */
+export class DatabaseFoodNotFound {
+	/** @param id - The missing food. */
+	constructor(readonly id: string) {}
+}

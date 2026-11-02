@@ -3,7 +3,7 @@ import { checkValue, type FieldKey, type FieldValue } from './field.ts';
 import type { SubjectId, TrackerId } from './ids.ts';
 import type { Recipe } from './recipe.ts';
 import { KIND_RULES, SubjectProblem, SubjectUse, TrackerKind } from './tracking.constants.ts';
-import { fieldOf, tidyName, type Tracker } from './tracker.ts';
+import { fieldOf, MAX_SUBJECT_NAME_LENGTH, tidyName, type Tracker } from './tracker.ts';
 
 /** A thing in a tracker's library that entries are about, such as an exercise, a food, or a plant. */
 export interface Subject {
@@ -60,7 +60,7 @@ export function createSubject(
 		return err(new InvalidSubject(SubjectProblem.notUsed));
 	if (draft.recipe !== undefined && tracker.kind !== TrackerKind.food)
 		return err(new InvalidSubject(SubjectProblem.recipe));
-	const name = tidyName(draft.name);
+	const name = tidyName(draft.name, MAX_SUBJECT_NAME_LENGTH);
 	if (name === undefined) return err(new InvalidSubject(SubjectProblem.name));
 	if (draft.fieldKeys.some((key) => fieldOf(tracker, key) === undefined))
 		return err(new InvalidSubject(SubjectProblem.fields));

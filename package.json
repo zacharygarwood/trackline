@@ -23,7 +23,8 @@
 		"test:watch": "vitest",
 		"test:e2e": "playwright test",
 		"test:mutation": "stryker run",
-		"screenshots": "playwright test -c playwright.screenshots.config.ts"
+		"screenshots": "playwright test -c playwright.screenshots.config.ts",
+		"foods": "node scripts/build-food-database.ts"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.14.0",

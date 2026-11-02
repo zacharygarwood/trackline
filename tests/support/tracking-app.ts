@@ -17,6 +17,11 @@ import {
 	GetPhotoImage,
 	SavePhoto
 } from '../../src/lib/tracking/application/photos.ts';
+import {
+	GetDatabaseFood,
+	SaveDatabaseFood,
+	SearchFoods
+} from '../../src/lib/tracking/application/food-database.ts';
 import { ListHome, ListStats } from '../../src/lib/tracking/application/progress.ts';
 import {
 	DiscardSession,
@@ -40,6 +45,7 @@ import { FieldType } from '../../src/lib/tracking/domain/tracking.constants.ts';
 import { aKey } from '../builders/tracking.builder.ts';
 import { expectOk } from './result.ts';
 import { FixedClock } from '../fakes/fixed-clock.ts';
+import { InMemoryFoodDatabase } from '../fakes/in-memory-food-database.ts';
 import { FakeImages, InMemoryPhotos } from '../fakes/in-memory-photos.ts';
 import { inMemoryTracking } from '../fakes/in-memory-tracking-repositories.ts';
 import { SequentialIdGenerator } from '../fakes/sequential-id-generator.ts';
@@ -50,6 +56,7 @@ export function trackingApp(clock = new FixedClock(Date.UTC(2026, 9, 29, 12), '2
 	const { trackers, subjects, sessions, entries } = inMemoryTracking();
 	const photos = new InMemoryPhotos();
 	const progress = { trackers, entries, sessions, clock };
+	const foods = new InMemoryFoodDatabase();
 	return {
 		clock,
 		photos,
@@ -69,6 +76,9 @@ export function trackingApp(clock = new FixedClock(Date.UTC(2026, 9, 29, 12), '2
 		archiveSubject: new ArchiveSubject(subjects),
 		getSubject: new GetSubject(subjects),
 		listSubjects: new ListSubjects(subjects),
+		searchFoods: new SearchFoods(foods),
+		getDatabaseFood: new GetDatabaseFood(foods),
+		saveDatabaseFood: new SaveDatabaseFood({ trackers, subjects, foods, ids }),
 		startSession: new StartSession({ trackers, sessions, clock, ids }),
 		finishSession: new FinishSession({ sessions, entries, clock }),
 		discardSession: new DiscardSession(sessions),

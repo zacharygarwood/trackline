@@ -82,4 +82,13 @@ describe('createSubject', () => {
 			SubjectProblem.recipe
 		);
 	});
+
+	it('takes a long name, like a food from the food database with its serving', () => {
+		const name = 'Cereals, oats, regular and quick, not fortified, dry, 1 cup';
+
+		expect(expectOk(createSubject(workouts, aSubjectDraft({ name }))).name).toBe(name);
+		expect(
+			expectErr(createSubject(workouts, aSubjectDraft({ name: 'x'.repeat(241) }))).problem
+		).toBe(SubjectProblem.name);
+	});
 });
