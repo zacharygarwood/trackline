@@ -65,6 +65,9 @@ export const TemplateField = {
 	protein: 'protein',
 	carbs: 'carbs',
 	fat: 'fat',
+	fiber: 'fiber',
+	sugar: 'sugar',
+	sodium: 'sodium',
 	glasses: 'glasses',
 	cups: 'cups',
 	quality: 'quality',
@@ -86,6 +89,7 @@ export const TemplateUnit = {
 	servings: 'servings',
 	kcal: 'kcal',
 	grams: 'g',
+	milligrams: 'mg',
 	glasses: 'glasses',
 	cups: 'cups'
 } as const;

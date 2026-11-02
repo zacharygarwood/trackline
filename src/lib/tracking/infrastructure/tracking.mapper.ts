@@ -14,7 +14,14 @@ import {
 	TrackerKind,
 	type TrackerIcon as Icon
 } from '../domain/tracking.constants.ts';
-import { fieldDraftsOf, fieldKeysOf, goalOf, valuesJson, valuesOf } from './tracking-json.ts';
+import {
+	fieldDraftsOf,
+	fieldKeysOf,
+	goalOf,
+	recipeOf,
+	valuesJson,
+	valuesOf
+} from './tracking-json.ts';
 import type { EntryRow, SessionRow, SubjectRow, TrackerRow } from './tracking.row.ts';
 import { TrackingTable } from './tracking.sql.ts';
 
@@ -100,17 +107,31 @@ function flagOf(value: unknown): boolean | undefined {
 	return value === 0 ? false : undefined;
 }
 
-function subjectOf(row: SqlRow): Subject | undefined {
+const NO_RECIPE = { recipe: undefined } as const;
+
+function recipePartOf(value: unknown): Pick<Subject, 'recipe'> | undefined {
+	if (value === null) return NO_RECIPE;
+	const recipe = parsedOf(value, recipeOf);
+	return recipe === undefined ? undefined : { recipe };
+}
+
+function subjectNaming(row: SqlRow): Pick<Subject, 'id' | 'trackerId' | 'name'> | undefined {
 	const [id, trackerId] = [idOf<'Subject'>(row.id), idOf<'Tracker'>(row.tracker_id)];
 	const name = tidyName(textOf(row.name) ?? '');
+	return id === undefined || trackerId === undefined || name === undefined
+		? undefined
+		: { id, trackerId, name };
+}
+
+function subjectOf(row: SqlRow): Subject | undefined {
+	const naming = subjectNaming(row);
 	const fieldKeys = parsedOf(row.field_keys, fieldKeysOf);
 	const defaults = parsedOf(row.defaults, valuesOf);
-	if (id === undefined || trackerId === undefined || name === undefined) return undefined;
-	if (fieldKeys === undefined || defaults === undefined) return undefined;
-	const archived = flagOf(row.archived);
-	return archived === undefined
+	if (naming === undefined || fieldKeys === undefined || defaults === undefined) return undefined;
+	const [archived, recipe] = [flagOf(row.archived), recipePartOf(row.recipe)];
+	return archived === undefined || recipe === undefined
 		? undefined
-		: { id, trackerId, name, fieldKeys, defaults, archived };
+		: { ...naming, fieldKeys, defaults, archived, ...recipe };
 }
 
 /** Converts between the things in libraries and `subject` rows. */
@@ -133,7 +154,8 @@ export const subjectMapper = {
 			name: subject.name,
 			field_keys: JSON.stringify(subject.fieldKeys),
 			defaults: valuesJson(subject.defaults),
-			archived: subject.archived ? 1 : 0
+			archived: subject.archived ? 1 : 0,
+			recipe: subject.recipe === undefined ? null : JSON.stringify(subject.recipe)
 		};
 	}
 };

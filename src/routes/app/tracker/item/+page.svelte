@@ -89,7 +89,12 @@
 	<div class="edit">
 		<NavRow
 			label={messages.tracking.page.edit}
-			onclick={() => open(AppRoute.newSubject, { tracker: tracker.id, subject: thing.id })}
+			onclick={() =>
+				open(AppRoute.newSubject, {
+					tracker: tracker.id,
+					subject: thing.id,
+					recipe: thing.recipe !== undefined
+				})}
 		/>
 	</div>
 {/if}

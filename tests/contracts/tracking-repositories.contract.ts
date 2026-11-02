@@ -77,6 +77,20 @@ export function describeTrackingRepositories(create: () => Promise<TrackingRepos
 			expect(await subjects.findById(bench.id)).toEqual(bench);
 		});
 
+		it('keeps what a recipe is made of, until it becomes a plain thing again', async () => {
+			const { trackers, subjects } = await create();
+			await trackers.save([workouts]);
+			const [oats, porridge] = [squat('Oats'), squat('Porridge')];
+			const recipe = { ingredients: [{ foodId: oats.id, servings: 1.5 }], servings: 2 };
+			await subjects.save([oats, { ...porridge, recipe }]);
+
+			expect((await subjects.findById(porridge.id))?.recipe).toEqual(recipe);
+
+			await subjects.save([porridge]);
+
+			expect((await subjects.findById(porridge.id))?.recipe).toBeUndefined();
+		});
+
 		it('lists sessions newest first, finished or not', async () => {
 			const { trackers, sessions } = await create();
 			await trackers.save([workouts]);

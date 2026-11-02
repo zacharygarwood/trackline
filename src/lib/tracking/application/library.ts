@@ -1,8 +1,15 @@
 import type { IdGenerator } from '../../shared/id-generator.ts';
-import { err, type Result } from '../../shared/result.ts';
+import { err, ok, type Result } from '../../shared/result.ts';
 import type { FieldKey, FieldValue } from '../domain/field.ts';
 import type { SubjectId, TrackerId } from '../domain/ids.ts';
-import { createSubject, type InvalidSubject, type Subject } from '../domain/subject.ts';
+import { perServingOf, type InvalidRecipe, type Recipe } from '../domain/recipe.ts';
+import {
+	createSubject,
+	type InvalidSubject,
+	type Subject,
+	type SubjectDraft
+} from '../domain/subject.ts';
+import type { Tracker } from '../domain/tracker.ts';
 import type {
 	SubjectReader,
 	SubjectWriter,
@@ -10,12 +17,45 @@ import type {
 } from '../domain/tracking-repositories.ts';
 import { SubjectNotFound, TrackerNotFound } from './tracking-errors.ts';
 
-/** A thing's name, the fields its entries fill, and the values they start from. */
-export interface SubjectDetails {
+/**
+ * A thing's name, the fields its entries fill, and either the values they
+ * start from or, for a recipe, what it is made of, which those values are
+ * worked out from.
+ */
+export type SubjectDetails = {
 	readonly name: string;
 	/** Empty for all of the tracker's fields. */
 	readonly fieldKeys: readonly FieldKey[];
-	readonly defaults: ReadonlyMap<FieldKey, FieldValue>;
+} & (
+	| { readonly defaults: ReadonlyMap<FieldKey, FieldValue>; readonly recipe?: undefined }
+	| { readonly recipe: Recipe; readonly defaults?: undefined }
+);
+
+/** Why a thing cannot be saved: it does not fit its tracker, or its recipe cannot be worked out. */
+export type SubjectRefusal = InvalidSubject | InvalidRecipe;
+
+async function draftOf(
+	subjects: SubjectReader,
+	tracker: Tracker,
+	details: SubjectDetails & { readonly id: SubjectId }
+): Promise<Result<SubjectDraft, InvalidRecipe>> {
+	const { id, name, fieldKeys, recipe } = details;
+	if (recipe === undefined) return ok({ id, name, fieldKeys, defaults: details.defaults });
+	const foods = await subjects.findFor(tracker.id);
+	const defaults = perServingOf(
+		recipe,
+		foods.filter((food) => food.id !== id)
+	);
+	return defaults.ok ? ok({ id, name, fieldKeys, defaults: defaults.value, recipe }) : defaults;
+}
+
+async function checked(
+	subjects: SubjectReader,
+	tracker: Tracker,
+	details: SubjectDetails & { readonly id: SubjectId }
+): Promise<Result<Subject, SubjectRefusal>> {
+	const draft = await draftOf(subjects, tracker, details);
+	return draft.ok ? createSubject(tracker, draft.value) : draft;
 }
 
 /** What changing a library needs. */
@@ -32,28 +72,29 @@ export class AddSubject {
 	/** @param command - The tracker and the thing. */
 	async execute(
 		command: SubjectDetails & { readonly trackerId: TrackerId }
-	): Promise<Result<Subject, TrackerNotFound | InvalidSubject>> {
-		const tracker = await this.ports.trackers.findById(command.trackerId);
+	): Promise<Result<Subject, TrackerNotFound | SubjectRefusal>> {
+		const { trackers, subjects, ids } = this.ports;
+		const tracker = await trackers.findById(command.trackerId);
 		if (tracker === undefined) return err(new TrackerNotFound(command.trackerId));
-		const subject = createSubject(tracker, { ...command, id: this.ports.ids.next<'Subject'>() });
-		if (subject.ok) await this.ports.subjects.save([subject.value]);
+		const subject = await checked(subjects, tracker, { ...command, id: ids.next<'Subject'>() });
+		if (subject.ok) await subjects.save([subject.value]);
 		return subject;
 	}
 }
 
-/** Renames a thing in a library or changes its fields and starting values. */
+/** Renames a thing in a library or changes its fields, starting values, or recipe. */
 export class UpdateSubject {
 	constructor(private readonly ports: Omit<LibraryPorts, 'ids'>) {}
 
 	/** @param command - The thing and its new details. */
 	async execute(
 		command: SubjectDetails & { readonly id: SubjectId }
-	): Promise<Result<Subject, SubjectNotFound | InvalidSubject>> {
+	): Promise<Result<Subject, SubjectNotFound | SubjectRefusal>> {
 		const { trackers, subjects } = this.ports;
 		const current = await subjects.findById(command.id);
 		const tracker = current === undefined ? undefined : await trackers.findById(current.trackerId);
 		if (current === undefined || tracker === undefined) return err(new SubjectNotFound(command.id));
-		const subject = createSubject(tracker, command);
+		const subject = await checked(subjects, tracker, command);
 		if (!subject.ok) return subject;
 		const updated = { ...subject.value, archived: current.archived };
 		await subjects.save([updated]);

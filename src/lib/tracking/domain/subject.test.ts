@@ -74,4 +74,12 @@ describe('createSubject', () => {
 			SubjectProblem.notUsed
 		);
 	});
+
+	it('keeps a recipe only for a food', () => {
+		const recipe = { ingredients: [{ foodId: anId<'Subject'>(), servings: 1 }], servings: 2 };
+
+		expect(expectErr(createSubject(workouts, aSubjectDraft({ recipe }))).problem).toBe(
+			SubjectProblem.recipe
+		);
+	});
 });

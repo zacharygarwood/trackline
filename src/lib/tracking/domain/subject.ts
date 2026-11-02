@@ -1,7 +1,8 @@
 import { err, ok, type Result } from '../../shared/result.ts';
 import { checkValue, type FieldKey, type FieldValue } from './field.ts';
 import type { SubjectId, TrackerId } from './ids.ts';
-import { KIND_RULES, SubjectProblem, SubjectUse } from './tracking.constants.ts';
+import type { Recipe } from './recipe.ts';
+import { KIND_RULES, SubjectProblem, SubjectUse, TrackerKind } from './tracking.constants.ts';
 import { fieldOf, tidyName, type Tracker } from './tracker.ts';
 
 /** A thing in a tracker's library that entries are about, such as an exercise, a food, or a plant. */
@@ -15,6 +16,8 @@ export interface Subject {
 	readonly defaults: ReadonlyMap<FieldKey, FieldValue>;
 	/** Whether it was deleted: hidden from the library, but kept for the entries about it. */
 	readonly archived: boolean;
+	/** What a food is made of, when it is a recipe; its defaults are then worked out from it. */
+	readonly recipe?: Recipe | undefined;
 }
 
 /** A subject as entered, before {@link createSubject} checks it against its tracker. */
@@ -44,7 +47,7 @@ function checkDefaults(
 /**
  * Creates a thing in a tracker's library: tidies its name, keeps the fields it
  * uses in the tracker's order, and checks its default values against those
- * fields. Only kinds with subjects have a library.
+ * fields. Only kinds with subjects have a library, and only a food can be a recipe.
  *
  * @param tracker - The tracker whose library it joins.
  * @param draft - The subject as entered.
@@ -55,6 +58,8 @@ export function createSubject(
 ): Result<Subject, InvalidSubject> {
 	if (KIND_RULES[tracker.kind].subjects === SubjectUse.none)
 		return err(new InvalidSubject(SubjectProblem.notUsed));
+	if (draft.recipe !== undefined && tracker.kind !== TrackerKind.food)
+		return err(new InvalidSubject(SubjectProblem.recipe));
 	const name = tidyName(draft.name);
 	if (name === undefined) return err(new InvalidSubject(SubjectProblem.name));
 	if (draft.fieldKeys.some((key) => fieldOf(tracker, key) === undefined))

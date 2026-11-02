@@ -38,3 +38,36 @@ test('quick add logs calories without a food', async ({ page }) => {
 
 	await expect(page.getByRole('list', { name: food.today })).toContainText(food.quickEntry);
 });
+
+test('a recipe made of saved foods logs its numbers per serving', async ({ page }) => {
+	const { recipe } = messages.tracking;
+	await finishFirstRun(page);
+	await addTracker(page, templates.food);
+	await page.getByRole('button', { name: food.add }).click();
+	for (const [name, calories] of [
+		['Oats', '150'],
+		['Milk', '100']
+	] as const) {
+		await page.getByRole('searchbox', { name: food.search }).fill(name);
+		await page.getByRole('button', { name: food.create(name) }).click();
+		await amountFields(page).nth(0).fill(calories);
+		await page.getByRole('button', { name: library.save }).click();
+	}
+
+	await page.getByRole('button', { name: library.newRecipe }).click();
+	await page.getByRole('textbox', { name: library.name }).fill('Porridge');
+	await page.getByRole('textbox', { name: recipe.makes }).fill('2');
+	for (const name of ['Oats', 'Milk']) {
+		await page.getByRole('searchbox', { name: recipe.addIngredient }).fill(name);
+		await page.getByRole('button', { name, exact: true }).click();
+	}
+	await expect(page.getByText('125 kcal')).toBeVisible();
+	await page.getByRole('button', { name: library.save }).click();
+	await page.getByRole('searchbox', { name: food.search }).fill('');
+	await page.getByRole('button', { name: 'Porridge' }).click();
+	await page.getByRole('button', { name: food.add_portion, exact: true }).click();
+
+	await expect(page.getByRole('list', { name: food.today })).toContainText('Porridge');
+	await tab(page, messages.navigation.home).click();
+	await expect(homeRow(page, templates.food)).toContainText('125');
+});

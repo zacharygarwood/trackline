@@ -22,6 +22,8 @@ export type SubjectRow = {
 	readonly defaults: string;
 	/** 1 when deleted from the library, else 0. */
 	readonly archived: number;
+	/** A JSON object of a recipe's ingredients and the servings it makes; null for a plain thing. */
+	readonly recipe: string | null;
 };
 
 /** A `session` table row, column for column. */

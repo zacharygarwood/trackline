@@ -7,6 +7,7 @@ import {
 	type SimpleField
 } from '../domain/field.ts';
 import type { Goal } from '../domain/goal.ts';
+import type { Ingredient, Recipe } from '../domain/recipe.ts';
 import {
 	Dimension,
 	Direction,
@@ -200,6 +201,32 @@ export function fieldKeysOf(text: string): readonly FieldKey[] | undefined {
 	if (texts === undefined) return undefined;
 	const keys = texts.filter((key) => isFieldKey(key));
 	return keys.length === texts.length ? keys : undefined;
+}
+
+function ingredientOf(raw: unknown): Ingredient | undefined {
+	if (!isObject(raw)) return undefined;
+	const [foodId, servings] = [textOf(raw.foodId), numberOf(raw.servings)];
+	return foodId === undefined || servings === undefined || !isId<'Subject'>(foodId)
+		? undefined
+		: { foodId, servings };
+}
+
+/**
+ * A stored recipe, or undefined if it is malformed.
+ *
+ * @param text - A subject's `recipe` column.
+ */
+export function recipeOf(text: string): Recipe | undefined {
+	const raw = parseJson(text);
+	if (!isObject(raw) || !Array.isArray(raw.ingredients)) return undefined;
+	const servings = numberOf(raw.servings);
+	const ingredients = raw.ingredients.flatMap((item: unknown) => {
+		const ingredient = ingredientOf(item);
+		return ingredient === undefined ? [] : [ingredient];
+	});
+	return servings === undefined || ingredients.length !== raw.ingredients.length
+		? undefined
+		: { ingredients, servings };
 }
 
 /**

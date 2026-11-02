@@ -10,7 +10,7 @@ export const TrackingTable = {
 } as const;
 
 const TRACKER_COLUMNS = 'id, name, icon, kind, position, fields, goal';
-const SUBJECT_COLUMNS = 'id, tracker_id, name, field_keys, defaults, archived';
+const SUBJECT_COLUMNS = 'id, tracker_id, name, field_keys, defaults, archived, recipe';
 const SESSION_COLUMNS = 'id, tracker_id, date, started_at, finished_at';
 const ENTRY_COLUMNS = 'id, tracker_id, date, logged_at, subject_id, session_id, field_values';
 
@@ -69,10 +69,18 @@ export function findSubjectById(id: string): SqlStatement {
 export function saveSubject(row: SubjectRow): SqlStatement {
 	return {
 		name: 'save subject',
-		sql: `INSERT INTO subject (${SUBJECT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?)
+		sql: `INSERT INTO subject (${SUBJECT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (id) DO UPDATE SET name = excluded.name, field_keys = excluded.field_keys,
-			defaults = excluded.defaults, archived = excluded.archived`,
-		params: [row.id, row.tracker_id, row.name, row.field_keys, row.defaults, row.archived]
+			defaults = excluded.defaults, archived = excluded.archived, recipe = excluded.recipe`,
+		params: [
+			row.id,
+			row.tracker_id,
+			row.name,
+			row.field_keys,
+			row.defaults,
+			row.archived,
+			row.recipe
+		]
 	};
 }
 

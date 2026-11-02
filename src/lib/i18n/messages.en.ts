@@ -73,7 +73,7 @@ export const messages = {
 				title: 'Food tracker',
 				tagline: 'Keep an eye on what you eat.',
 				features: [
-					'Calories, protein, carbs, and fat',
+					'Calories, protein, carbs, fat, fiber, sugar, and sodium',
 					'Your own list of foods',
 					'Quick add when you’re busy',
 					'A daily calorie goal'
@@ -390,6 +390,9 @@ export const messages = {
 			protein: 'Protein',
 			carbs: 'Carbs',
 			fat: 'Fat',
+			fiber: 'Fiber',
+			sugar: 'Sugar',
+			sodium: 'Sodium',
 			glasses: 'Glasses',
 			cups: 'Cups',
 			quality: 'How well',
@@ -406,6 +409,7 @@ export const messages = {
 			servings: 'servings',
 			kcal: 'kcal',
 			g: 'g',
+			mg: 'mg',
 			glasses: 'glasses',
 			cups: 'cups'
 		},
@@ -486,6 +490,7 @@ export const messages = {
 			foods: 'My foods',
 			newExercise: 'New exercise',
 			newFood: 'New food',
+			newRecipe: 'New recipe',
 			newThing: 'Add new',
 			name: 'Name',
 			emptyExercises: 'No exercises yet.',
@@ -542,6 +547,15 @@ export const messages = {
 			servings: 'Servings',
 			add_portion: 'Add',
 			quickEntry: 'Quick add'
+		},
+		recipe: {
+			makes: 'Servings it makes',
+			ingredients: 'Ingredients',
+			addIngredient: 'Add an ingredient',
+			noIngredients: 'Search your foods to add them.',
+			servings: (servings: number) => countOf(servings, 'serving', 'servings'),
+			less: (food: string) => `Half a serving less ${food}`,
+			more: (food: string) => `Half a serving more ${food}`
 		},
 		compare: {
 			title: 'Compare',

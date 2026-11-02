@@ -59,6 +59,12 @@
 		{/if}
 		<li>
 			<NavRow
+				label={messages.tracking.library.newRecipe}
+				onclick={() => open(AppRoute.newSubject, { tracker: tracker.id, recipe: true })}
+			/>
+		</li>
+		<li>
+			<NavRow
 				label={messages.tracking.food.quickAdd}
 				onclick={() => open(AppRoute.log, { tracker: tracker.id })}
 			/>

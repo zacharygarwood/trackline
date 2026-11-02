@@ -94,6 +94,19 @@ describe('tracking mappers', () => {
 				})
 		],
 		[
+			'subject recipe',
+			() =>
+				subjectMapper.toDomain({
+					id: anEntry().id,
+					tracker_id: aTracker().id,
+					name: 'A',
+					field_keys: '[]',
+					defaults: '{}',
+					archived: 0,
+					recipe: '{"ingredients":[{"foodId":"nope","servings":1}],"servings":1}'
+				})
+		],
+		[
 			'session end',
 			() =>
 				sessionMapper.toDomain({

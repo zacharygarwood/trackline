@@ -19,6 +19,8 @@ declare global {
 			session?: string;
 			/** The key of the basic template the page names and adds. */
 			template?: string;
+			/** Whether the food the page makes or edits is a recipe. */
+			recipe?: boolean;
 			/** A name typed on the page before, for a page that creates something. */
 			name?: string;
 			/** The ids of the two photo entries to compare, older first. */

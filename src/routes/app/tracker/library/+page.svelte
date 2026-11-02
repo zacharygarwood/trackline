@@ -54,11 +54,20 @@
 
 {#if screen?.tracker !== undefined}
 	{@const tracker = screen.tracker}
-	<ActionButton
-		label={addLabel(tracker)}
-		icon="plus"
-		onclick={() => open(AppRoute.newSubject, { tracker: tracker.id })}
-	/>
+	<div class="adds">
+		<ActionButton
+			label={addLabel(tracker)}
+			icon="plus"
+			onclick={() => open(AppRoute.newSubject, { tracker: tracker.id })}
+		/>
+		{#if tracker.kind === TrackerKind.food}
+			<ActionButton
+				label={messages.tracking.library.newRecipe}
+				icon="plus"
+				onclick={() => open(AppRoute.newSubject, { tracker: tracker.id, recipe: true })}
+			/>
+		{/if}
+	</div>
 	<div class="list">
 		{#if screen.subjects.length === 0}
 			<p class="empty">{emptyText(tracker)}</p>
@@ -78,6 +87,12 @@
 {/if}
 
 <style>
+	.adds {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
 	.list {
 		margin-top: var(--space-6);
 	}

@@ -38,7 +38,7 @@ CREATE TABLE subject (
 	field_keys TEXT NOT NULL CHECK (json_valid(field_keys)),
 	defaults TEXT NOT NULL CHECK (json_valid(defaults)),
 	archived INTEGER NOT NULL CHECK (archived IN (0, 1))
-) STRICT;
+, recipe TEXT CHECK (recipe IS NULL OR json_valid(recipe))) STRICT;
 
 CREATE TABLE tracker (
 	id TEXT PRIMARY KEY NOT NULL,

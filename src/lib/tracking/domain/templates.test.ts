@@ -87,6 +87,12 @@ describe('templates', () => {
 		});
 	});
 
+	it('tracks fiber, sugar, and sodium with the macros', () => {
+		expect(templateOf(TemplateKey.food).fields.map((field) => field.key)).toEqual(
+			expect.arrayContaining(['fiber', 'sugar', 'sodium'])
+		);
+	});
+
 	it.each([TemplateKey.weight, TemplateKey.mood, BasicKey.number, BasicKey.time, BasicKey.rating])(
 		'%s fills its bar with one entry a day',
 		(key) => {

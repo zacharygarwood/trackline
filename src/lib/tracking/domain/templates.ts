@@ -159,7 +159,10 @@ export const TEMPLATES: readonly Template[] = [
 			plain(TemplateField.calories, TemplateUnit.kcal, true),
 			plain(TemplateField.protein, TemplateUnit.grams),
 			plain(TemplateField.carbs, TemplateUnit.grams),
-			plain(TemplateField.fat, TemplateUnit.grams)
+			plain(TemplateField.fat, TemplateUnit.grams),
+			plain(TemplateField.fiber, TemplateUnit.grams),
+			plain(TemplateField.sugar, TemplateUnit.grams),
+			plain(TemplateField.sodium, TemplateUnit.milligrams)
 		],
 		goal: total(TemplateField.calories, CALORIES_A_DAY, { direction: Direction.atMost }),
 		starters: []

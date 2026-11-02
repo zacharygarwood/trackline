@@ -160,11 +160,21 @@ export const SubjectProblem = {
 	notUsed: 'not_used',
 	name: 'name',
 	fields: 'fields',
-	defaults: 'defaults'
+	defaults: 'defaults',
+	recipe: 'recipe'
 } as const;
 
 /** One of the {@link SubjectProblem} values. */
 export type SubjectProblem = (typeof SubjectProblem)[keyof typeof SubjectProblem];
+
+/** Why a recipe cannot be worked out: no ingredients or one not in the library, or a bad amount. */
+export const RecipeProblem = {
+	ingredients: 'ingredients',
+	amount: 'amount'
+} as const;
+
+/** One of the {@link RecipeProblem} values. */
+export type RecipeProblem = (typeof RecipeProblem)[keyof typeof RecipeProblem];
 
 /** Whether a session is under way or done. */
 export const SessionState = {
