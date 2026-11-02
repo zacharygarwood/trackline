@@ -8,7 +8,7 @@ import {
 	type Goal,
 	type Progress
 } from '../domain/goal.ts';
-import { seriesOf } from '../domain/series.ts';
+import { seriesOf, statOf, type Stat } from '../domain/series.ts';
 import type { ActiveSession, Session } from '../domain/session.ts';
 import type { Tracker } from '../domain/tracker.ts';
 import type { EntryReader, SessionReader, TrackerReader } from '../domain/tracking-repositories.ts';
@@ -78,10 +78,10 @@ export class ListHome {
 	}
 }
 
-/** One tracker's chart on Stats: its goal and its recent totals, averages, counts, or values. */
+/** One tracker's chart on Stats: what it charts and its recent totals, averages, counts, or values. */
 export interface TrackerSeries {
 	readonly tracker: Tracker;
-	readonly goal: Goal;
+	readonly stat: Stat;
 	/** Oldest first. */
 	readonly values: readonly number[];
 }
@@ -96,12 +96,12 @@ export class ListStats {
 		const calendar = { today: clock.today(), weekStart: command.weekStart };
 		return Promise.all(
 			(await trackers.findAll()).map(async (tracker) => {
-				const { goal } = tracker;
+				const stat = statOf(tracker);
 				const history = {
 					entries: await entries.findFor(tracker.id),
 					sessions: await sessionsOf(sessions, tracker)
 				};
-				return { tracker, goal, values: seriesOf(goal, history, calendar) };
+				return { tracker, stat, values: seriesOf(stat, history, calendar) };
 			})
 		);
 	}

@@ -3,7 +3,7 @@
 	import SegmentedControl from '../../design/SegmentedControl.svelte';
 	import { messages } from '../../i18n/messages.en.ts';
 	import type { FieldKey } from '../domain/field.ts';
-	import type { GoalMeasure } from '../domain/goal-parts.ts';
+	import { isOnceADay, type GoalMeasure } from '../domain/goal-parts.ts';
 	import { Direction, GoalType, Period } from '../domain/tracking.constants.ts';
 	import type { DisplayUnits } from './display-units.ts';
 	import FieldInput from './FieldInput.svelte';
@@ -17,12 +17,13 @@
 	interface Props {
 		editor: GoalEditor;
 		units: DisplayUnits;
-		/** Shows only the target and how the goal reads, such as during onboarding. */
+		/** Shows only the target and how the goal reads, such as during onboarding; a once-a-day goal has no target to show. */
 		simple?: boolean;
 	}
 
 	const { editor, units, simple = false }: Props = $props();
 	const preview = $derived(editor.goal());
+	const nothingToChoose = $derived(simple && preview.ok && isOnceADay(preview.value));
 	const { edit } = messages.tracking;
 </script>
 
@@ -73,9 +74,15 @@
 		{/if}
 	{/if}
 
-	{#key `${editor.measure}-${editor.field ?? ''}`}
-		<FieldInput field={{ ...editor.input, label: edit.goalAmount }} draft={editor.draft} {units} />
-	{/key}
+	{#if !nothingToChoose}
+		{#key `${editor.measure}-${editor.field ?? ''}`}
+			<FieldInput
+				field={{ ...editor.input, label: edit.goalAmount }}
+				draft={editor.draft}
+				{units}
+			/>
+		{/key}
+	{/if}
 	{#if preview.ok}
 		<p class="preview">{goalText({ fields: editor.tracker.fields, goal: preview.value }, units)}</p>
 	{/if}

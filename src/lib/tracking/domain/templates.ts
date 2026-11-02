@@ -1,6 +1,5 @@
 import { BASICS, ONCE_A_DAY, PHOTO_FIELDS, THING_FIELDS, timesAWeek } from './basics.ts';
 import { fieldKey } from './field.ts';
-import { daysAWeek } from './goal-parts.ts';
 import type { CountGoal, FieldGoal } from './goal.ts';
 import {
 	StarterExercise,
@@ -38,7 +37,6 @@ const SLEEP_SECONDS = 28_800;
 const MEDITATION_SECONDS = 600;
 const READING_SECONDS = 1200;
 const JOURNAL_DAYS_A_WEEK = 5;
-const EVERY_DAY = 7;
 const WATERINGS_A_WEEK = 2;
 
 interface GoalShape {
@@ -139,7 +137,7 @@ export const TEMPLATES: readonly Template[] = [
 		{ ...move, icon: TrackerIcon.steps, goal: total(TemplateField.steps, STEPS_A_DAY) },
 		[plain(TemplateField.steps, TemplateUnit.steps, true)]
 	),
-	log(TemplateKey.weight, { ...body, icon: TrackerIcon.scale, goal: daysAWeek(EVERY_DAY) }, [
+	log(TemplateKey.weight, { ...body, icon: TrackerIcon.scale, goal: ONCE_A_DAY }, [
 		{ key: TemplateField.weight, type: FieldType.number, dimension: Dimension.mass, ...required }
 	]),
 	{
@@ -188,7 +186,7 @@ export const TEMPLATES: readonly Template[] = [
 			{ key: TemplateField.quality, type: FieldType.rating, ...optional }
 		]
 	),
-	log(TemplateKey.mood, { ...mind, icon: TrackerIcon.smile, goal: daysAWeek(EVERY_DAY) }, [
+	log(TemplateKey.mood, { ...mind, icon: TrackerIcon.smile, goal: ONCE_A_DAY }, [
 		{ key: TemplateField.mood, type: FieldType.rating, ...required },
 		note
 	]),

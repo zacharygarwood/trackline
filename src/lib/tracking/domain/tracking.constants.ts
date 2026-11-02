@@ -64,6 +64,15 @@ export const GoalType = {
 /** One of the {@link GoalType} values. */
 export type GoalType = (typeof GoalType)[keyof typeof GoalType];
 
+/** Whether Stats charts a count each period or the trend of a field's latest value. */
+export const StatType = {
+	counts: 'counts',
+	trend: 'trend'
+} as const;
+
+/** One of the {@link StatType} values. */
+export type StatType = (typeof StatType)[keyof typeof StatType];
+
 /** What a period goal counts in each day, week, or month. */
 export const Measure = {
 	total: 'total',

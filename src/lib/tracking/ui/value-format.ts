@@ -1,21 +1,24 @@
 import { messages } from '../../i18n/messages.en.ts';
 import { formatClock } from '../../ui/format.ts';
 import type { Entry } from '../domain/entry.ts';
-import type { Field, FieldValue, NumberField } from '../domain/field.ts';
-import type { Goal } from '../domain/goal.ts';
+import type { Field, FieldKey, FieldValue, NumberField } from '../domain/field.ts';
+import { isOnceADay } from '../domain/goal-parts.ts';
+import type { Stat } from '../domain/series.ts';
 import type { Tracker } from '../domain/tracker.ts';
 import {
 	Dimension,
 	Direction,
 	FieldType,
 	GoalType,
-	Measure
+	Measure,
+	StatType
 } from '../domain/tracking.constants.ts';
 import { toShown, unitText, type DisplayUnits } from './display-units.ts';
 import { DISTANCE_FORMAT, NUMBER_FORMAT } from './value-format.constants.ts';
 
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
+const TENTHS = 10;
 const numberFormat = new Intl.NumberFormat(undefined, NUMBER_FORMAT);
 const distanceFormat = new Intl.NumberFormat(undefined, DISTANCE_FORMAT);
 
@@ -141,10 +144,11 @@ export function entrySummary(
 /** What a goal's text needs from its tracker: the fields and the goal. */
 export type GoalOwner = Pick<Tracker, 'fields' | 'goal'>;
 
-/** What a goal's amounts are counted in: the tracker's fields, its goal, and the user's units. */
-interface GoalTerms {
-	readonly tracker: GoalOwner;
-	readonly goal: Goal;
+/** What an amount counts (entries, days, sessions, or a field's value, total, or average), and in which units. */
+interface Counting {
+	readonly tracker: Pick<Tracker, 'fields'>;
+	readonly measure: Measure | undefined;
+	readonly field: FieldKey | undefined;
 	readonly units: DisplayUnits;
 }
 
@@ -155,19 +159,24 @@ function countText(measure: Measure, amount: number): string {
 	return messages.tracking.counts.entries(count);
 }
 
-function goalAmount(terms: GoalTerms, amount: number): string {
-	const { tracker, goal, units } = terms;
-	if (goal.type === GoalType.period && goal.field === undefined)
-		return countText(goal.measure, amount);
-	const field = tracker.fields.find((candidate) => candidate.key === goal.field);
+function amountText(counting: Counting, amount: number): string {
+	const { tracker, measure, field: key, units } = counting;
+	if (measure !== undefined && key === undefined) return countText(measure, amount);
+	const field = tracker.fields.find((candidate) => candidate.key === key);
 	if (field === undefined) return formatNumber(amount);
 	const value: FieldValue =
 		field.type === FieldType.duration
 			? { type: FieldType.duration, seconds: amount }
 			: { type: FieldType.number, amount };
 	return field.type === FieldType.rating
-		? messages.tracking.values.stars(amount)
+		? messages.tracking.values.stars(Math.round(amount * TENTHS) / TENTHS)
 		: formatValue(field, value, units);
+}
+
+function goalAmount(tracker: GoalOwner, amount: number, units: DisplayUnits): string {
+	const { goal } = tracker;
+	const measure = goal.type === GoalType.period ? goal.measure : undefined;
+	return amountText({ tracker, measure, field: goal.field, units }, amount);
 }
 
 /**
@@ -178,7 +187,8 @@ function goalAmount(terms: GoalTerms, amount: number): string {
  */
 export function goalText(tracker: GoalOwner, units: DisplayUnits): string {
 	const { goal } = tracker;
-	const amount = goalAmount({ tracker, goal, units }, goal.target);
+	if (isOnceADay(goal)) return messages.tracking.goal.everyDay;
+	const amount = goalAmount(tracker, goal.target, units);
 	if (goal.type === GoalType.target) return messages.tracking.goal.target(amount);
 	const period = messages.tracking.periods[goal.period];
 	return goal.direction === Direction.atMost
@@ -194,16 +204,37 @@ export function goalText(tracker: GoalOwner, units: DisplayUnits): string {
  * @param units - The user's units.
  */
 export function progressText(tracker: GoalOwner, value: number, units: DisplayUnits): string {
-	return goalAmount({ tracker, goal: tracker.goal, units }, value);
+	if (isOnceADay(tracker.goal)) return value > 0 ? messages.tracking.values.done : '';
+	return goalAmount(tracker, value, units);
+}
+
+/** A tracker and what Stats charts for it. */
+export interface Charted {
+	readonly tracker: Pick<Tracker, 'fields'>;
+	readonly stat: Stat;
 }
 
 /**
- * What Home shows after a tracker's number: "/ 8 glasses a day", or "Goal 75 kg".
+ * A value Stats charts, in its field's terms, such as "176.4 lb", "3.5/5", or "2 workouts".
+ *
+ * @param charted - The tracker and what Stats charts for it.
+ * @param value - One charted value.
+ * @param units - The user's units.
+ */
+export function statText(charted: Charted, value: number, units: DisplayUnits): string {
+	const { tracker, stat } = charted;
+	const measure = stat.type === StatType.counts ? stat.measure : undefined;
+	return amountText({ tracker, measure, field: stat.field, units }, value);
+}
+
+/**
+ * What Home shows after a tracker's number: "/ 8 glasses a day", "Goal 75 kg", or "Every day".
  *
  * @param tracker - The tracker.
  * @param units - The user's units.
  */
 export function goalDetail(tracker: GoalOwner, units: DisplayUnits): string {
 	const text = goalText(tracker, units);
-	return tracker.goal.type === GoalType.period ? messages.tracking.goal.of(text) : text;
+	const outOf = tracker.goal.type === GoalType.period && !isOnceADay(tracker.goal);
+	return outOf ? messages.tracking.goal.of(text) : text;
 }

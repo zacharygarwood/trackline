@@ -59,6 +59,18 @@ export function daysAWeek(target: number): CountGoal {
 }
 
 /**
+ * Whether a goal is logging something each day, such as a weigh-in, so one
+ * entry today fills its bar and there is no amount to choose.
+ *
+ * @param goal - The goal.
+ */
+export function isOnceADay(goal: Goal): boolean {
+	return (
+		goal.type === GoalType.period && goal.measure === Measure.days && goal.period === Period.day
+	);
+}
+
+/**
  * What a goal counts.
  *
  * @param goal - The goal.

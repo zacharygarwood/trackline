@@ -66,7 +66,8 @@ test('vitamins are one tap a day', async ({ page }) => {
 
 	await expect(page.getByText(messages.tracking.inputs.done, { exact: true })).toBeVisible();
 	await tab(page, messages.navigation.home).click();
-	await expect(homeRow(page, templates.vitamins)).toContainText('1 day');
+	await expect(homeRow(page, templates.vitamins)).toContainText(messages.tracking.values.done);
+	await expect(homeRow(page, templates.vitamins)).toContainText(messages.tracking.goal.everyDay);
 });
 
 test('a new tracker’s goal is built from simple choices while creating it, like 2 hours of piano a day', async ({

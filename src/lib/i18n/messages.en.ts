@@ -424,6 +424,7 @@ export const messages = {
 			atLeast: (amount: string, period: string) => `${amount} ${period}`,
 			atMost: (amount: string, period: string) => `${amount} max ${period}`,
 			target: (amount: string) => `Goal ${amount}`,
+			everyDay: 'Every day',
 			of: (amount: string) => `/ ${amount}`
 		},
 		countUnits: { entries: 'times', days: 'days', sessions: 'workouts' },

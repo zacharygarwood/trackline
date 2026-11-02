@@ -12,6 +12,7 @@ import {
 import { TEMPLATES } from './templates.ts';
 import { createTracker, fieldOf } from './tracker.ts';
 import { fieldKey } from './field.ts';
+import { isOnceADay } from './goal-parts.ts';
 import { Dimension, FieldType, TrackerKind } from './tracking.constants.ts';
 
 const text: TemplateText = {
@@ -85,4 +86,11 @@ describe('templates', () => {
 			unit: ''
 		});
 	});
+
+	it.each([TemplateKey.weight, TemplateKey.mood, BasicKey.number, BasicKey.time, BasicKey.rating])(
+		'%s fills its bar with one entry a day',
+		(key) => {
+			expect(isOnceADay(templateOf(key).goal)).toBe(true);
+		}
+	);
 });

@@ -3,7 +3,15 @@ import { aField, aKey, aNumberField } from '../../../../tests/builders/tracking.
 import { expectErr, expectOk } from '../../../../tests/support/result.ts';
 import { createField, type FieldDraft } from './field.ts';
 import { InvalidGoal, type Goal } from './goal.ts';
-import { fieldsFor, goalFrom, measureOf, measuresFor, partsOf } from './goal-parts.ts';
+import {
+	daysAWeek,
+	fieldsFor,
+	goalFrom,
+	isOnceADay,
+	measureOf,
+	measuresFor,
+	partsOf
+} from './goal-parts.ts';
 import {
 	Dimension,
 	Direction,
@@ -112,5 +120,13 @@ describe('goalFrom', () => {
 		expect(expectOk(goalFrom(partsOf(weight), kg, TrackerKind.log))).toEqual(weight);
 		expect(expectOk(goalFrom(partsOf(twoHours), piano, TrackerKind.log))).toEqual(twoHours);
 		expect(measureOf(weight)).toBe(GoalType.target);
+	});
+});
+
+describe('isOnceADay', () => {
+	it('is logging on a day each day, not each week or a total', () => {
+		expect(isOnceADay({ ...daysAWeek(1), period: Period.day })).toBe(true);
+		expect(isOnceADay(daysAWeek(7))).toBe(false);
+		expect(isOnceADay({ ...twoHoursADay, type: GoalType.period })).toBe(false);
 	});
 });

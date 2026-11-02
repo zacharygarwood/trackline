@@ -56,6 +56,9 @@ export type Goal = FieldGoal | CountGoal | TargetGoal;
 /** Raised when a goal does not fit its tracker's fields or kind. */
 export class InvalidGoal {}
 
+/** What a period goal or a chart counts: a total or average of a field, or entries, days, or sessions. */
+export type Counted = Pick<FieldGoal, 'measure' | 'field'> | Pick<CountGoal, 'measure' | 'field'>;
+
 /** What a goal reads from a logged entry. */
 export interface LoggedValues {
 	readonly date: LocalDate;
@@ -170,25 +173,25 @@ export function fieldNumbers(
 }
 
 /**
- * What a period goal counts over a span of days: entries, days with an entry,
- * finished sessions, or a field's total or average.
+ * What a period goal or a chart counts over a span of days: entries, days
+ * with an entry, finished sessions, or a field's total or average.
  *
- * @param goal - The period goal.
+ * @param counted - What to count.
  * @param history - The tracker's entries and sessions.
  * @param span - The days to count.
  */
-export function measureIn(goal: FieldGoal | CountGoal, history: History, span: Span): number {
+export function measureIn(counted: Counted, history: History, span: Span): number {
 	const entries = history.entries.filter((entry) => within(entry.date, span));
-	if (goal.measure === Measure.entries) return entries.length;
-	if (goal.measure === Measure.days)
+	if (counted.measure === Measure.entries) return entries.length;
+	if (counted.measure === Measure.days)
 		return new Set(entries.map((entry) => entry.date.toString())).size;
-	if (goal.measure === Measure.sessions)
+	if (counted.measure === Measure.sessions)
 		return history.sessions.filter(
 			(session) => session.state === SessionState.finished && within(session.date, span)
 		).length;
-	const numbers = fieldNumbers(entries, goal.field);
+	const numbers = fieldNumbers(entries, counted.field);
 	const total = numbers.reduce((sum, amount) => sum + amount, 0);
-	if (goal.measure === Measure.total) return total;
+	if (counted.measure === Measure.total) return total;
 	return numbers.length === 0 ? 0 : total / numbers.length;
 }
 

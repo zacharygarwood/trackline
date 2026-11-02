@@ -13,7 +13,14 @@ import { MassUnit } from '../../shared/mass-unit.constants.ts';
 import { templateOf, draftFromTemplate } from '../domain/from-template.ts';
 import { TemplateKey } from '../domain/template.constants.ts';
 import { createTracker } from '../domain/tracker.ts';
-import { Direction, FieldType, GoalType, Measure, Period } from '../domain/tracking.constants.ts';
+import {
+	Direction,
+	FieldType,
+	GoalType,
+	Measure,
+	Period,
+	StatType
+} from '../domain/tracking.constants.ts';
 import { homeLine } from './home-line.ts';
 import { templateText } from './template-text.ts';
 import {
@@ -22,7 +29,8 @@ import {
 	formatDuration,
 	goalDetail,
 	goalText,
-	progressText
+	progressText,
+	statText
 } from './value-format.ts';
 
 const km = { mass: MassUnit.kg, distance: DistanceUnit.km };
@@ -77,7 +85,8 @@ describe('goalText', () => {
 		expect(goalText(fromTemplate(TemplateKey.workouts), km)).toBe('3 workouts a week');
 		expect(goalText(fromTemplate(TemplateKey.sleep), km)).toBe('8 h a day');
 		expect(goalText(fromTemplate(TemplateKey.running), lb)).toBe('9.32 mi a week');
-		expect(goalText(fromTemplate(TemplateKey.mood), km)).toBe('7 days a week');
+		expect(goalText(fromTemplate(TemplateKey.mood), km)).toBe('Every day');
+		expect(goalText(fromTemplate(TemplateKey.journal), km)).toBe('5 days a week');
 	});
 
 	it('shows a target goal in the user’s units, and a period goal as “out of”', () => {
@@ -106,6 +115,24 @@ describe('goalText', () => {
 		expect(progressText({ ...days, goal: { ...days.goal, measure: Measure.entries } }, 2, km)).toBe(
 			'2 times'
 		);
+	});
+});
+
+describe('statText', () => {
+	it('reads a charted value in its field’s terms, not the goal’s', () => {
+		const weight = fromTemplate(TemplateKey.weight);
+		const mood = fromTemplate(TemplateKey.mood);
+		const trend = { type: StatType.trend, field: aKey('weight'), goal: undefined } as const;
+		const average = {
+			type: StatType.counts,
+			measure: Measure.average,
+			field: aKey('mood'),
+			period: Period.week,
+			goal: undefined
+		} as const;
+
+		expect(statText({ tracker: weight, stat: trend }, 80, lb)).toBe('176.4 lb');
+		expect(statText({ tracker: mood, stat: average }, 3.5, km)).toBe('3.5/5');
 	});
 });
 
@@ -159,14 +186,30 @@ describe('homeLine', () => {
 		expect(line).toEqual({ value: '4 glasses', detail: '/ 8 glasses a day', fraction: 0.5 });
 	});
 
-	it('fills a bar for a tracker whose goal is days logged, like mood', () => {
-		const mood = fromTemplate(TemplateKey.mood);
-		const progress = { value: 2, fill: 2 / 7, met: false };
+	it('fills a bar for a tracker whose goal is days logged, like journaling', () => {
+		const journal = fromTemplate(TemplateKey.journal);
+		const progress = { value: 2, fill: 2 / 5, met: false };
 
-		expect(homeLine({ tracker: mood, progress, active: undefined }, km)).toEqual({
+		expect(homeLine({ tracker: journal, progress, active: undefined }, km)).toEqual({
 			value: '2 days',
-			detail: '/ 7 days a week',
-			fraction: 2 / 7
+			detail: '/ 5 days a week',
+			fraction: 2 / 5
 		});
+	});
+
+	it('shows a daily weigh-in as done for today once logged', () => {
+		const weight = fromTemplate(TemplateKey.weight);
+		const line = (logged: number) =>
+			homeLine(
+				{
+					tracker: weight,
+					progress: { value: logged, fill: logged, met: logged === 1 },
+					active: undefined
+				},
+				km
+			);
+
+		expect(line(1)).toEqual({ value: 'Done', detail: 'Every day', fraction: 1 });
+		expect(line(0)).toEqual({ value: '', detail: 'Every day', fraction: 0 });
 	});
 });

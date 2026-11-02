@@ -32,7 +32,6 @@ export const THING_FIELDS: readonly TemplateFieldDefinition[] = [
 	note
 ];
 
-const EVERY_DAY = 7;
 const MOST_DAYS = 5;
 
 /**
@@ -61,11 +60,11 @@ function basic(
 	return { key, group: TemplateGroup.basic, ...look, fields, starters: [] };
 }
 
-const daily = { kind: TrackerKind.log, goal: daysAWeek(EVERY_DAY) } as const;
+const daily = { kind: TrackerKind.log, goal: ONCE_A_DAY } as const;
 
 /**
  * The basic templates, one per kind of thing to track, each with a plain goal
- * of logging often. The ready-made templates are these building blocks with a
+ * of logging often: once a day, so one entry fills the day's bar. The ready-made templates are these building blocks with a
  * name and good defaults.
  */
 export const BASICS: readonly BasicTemplate[] = [
@@ -78,7 +77,7 @@ export const BASICS: readonly BasicTemplate[] = [
 		plain(TemplateField.amount, undefined, true),
 		note
 	]),
-	basic(BasicKey.done, { ...daily, icon: TrackerIcon.check, goal: ONCE_A_DAY }, [
+	basic(BasicKey.done, { ...daily, icon: TrackerIcon.check }, [
 		{ key: TemplateField.done, type: FieldType.check, ...required }
 	]),
 	basic(BasicKey.time, { ...daily, icon: TrackerIcon.clock }, [

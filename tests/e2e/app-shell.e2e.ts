@@ -55,7 +55,7 @@ test('onboarding asks only each goal’s amount; the editor sets a goal weight i
 
 	await expectOnHome(page);
 	await expect(homeRow(page, templates.workouts)).toContainText('/ 4 workouts a week');
-	await expect(homeRow(page, templates.weight)).toContainText('/ 7 days a week');
+	await expect(homeRow(page, templates.weight)).toContainText('Every day');
 	await openTracker(page, templates.weight);
 	await page.getByRole('button', { name: messages.tracking.page.editTracker }).click();
 	await page.getByRole('button', { name: messages.tracking.edit.goalKinds.target }).click();
