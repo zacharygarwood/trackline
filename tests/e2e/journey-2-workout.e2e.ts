@@ -44,6 +44,7 @@ test('Home leads back to a workout under way', async ({ page }) => {
 	await finishFirstRun(page);
 	await openTracker(page, templates.workouts);
 	await page.getByRole('button', { name: workout.start }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(workout.title);
 	await tab(page, messages.navigation.home).click();
 
 	await page.getByRole('link', { name: /^Resume Workouts/ }).click();

@@ -62,6 +62,9 @@ test('a recipe made of saved foods logs its numbers per serving', async ({ page 
 		await page.getByRole('button', { name, exact: true }).click();
 	}
 	await expect(page.getByText('125 kcal')).toBeVisible();
+	await page.getByRole('textbox', { name: recipe.amount('Oats') }).fill('1.3');
+	await page.getByRole('textbox', { name: recipe.amount('Oats') }).press('Tab');
+	await expect(page.getByText('147.5 kcal')).toBeVisible();
 	await page.getByRole('button', { name: library.save }).click();
 	await page.getByRole('searchbox', { name: food.search }).fill('');
 	await page.getByRole('button', { name: 'Porridge' }).click();
@@ -69,7 +72,7 @@ test('a recipe made of saved foods logs its numbers per serving', async ({ page 
 
 	await expect(page.getByRole('list', { name: food.today })).toContainText('Porridge');
 	await tab(page, messages.navigation.home).click();
-	await expect(homeRow(page, templates.food)).toContainText('125');
+	await expect(homeRow(page, templates.food)).toContainText('147.5');
 });
 
 test('a food from the built-in food database logs a chosen portion and joins My foods', async ({

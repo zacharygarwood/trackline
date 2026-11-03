@@ -1,12 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { describeTrackingRepositories } from '../../../../tests/contracts/tracking-repositories.contract.ts';
-import { aWorkoutTracker, anEntry, aTracker } from '../../../../tests/builders/tracking.builder.ts';
+import {
+	aWorkoutTracker,
+	anEntry,
+	aTracker,
+	aKey,
+	aNumberField
+} from '../../../../tests/builders/tracking.builder.ts';
 import { migratedDatabase } from '../../../../tests/support/migrated-database.ts';
 import { TestDatabase } from '../../../../tests/support/test-database.ts';
 import { bundledMigrations } from '../../platform/db/bundled-migrations.ts';
 import { migrate } from '../../platform/db/migrate.ts';
 import { anId } from '../../../../tests/builders/id.builder.ts';
 import { daysAWeek } from '../domain/goal-parts.ts';
+import {
+	Direction,
+	GoalType,
+	Measure,
+	Period,
+	TrackerIcon,
+	TrackerKind
+} from '../domain/tracking.constants.ts';
 import {
 	SqliteEntryRepository,
 	SqliteSessionRepository,
@@ -181,5 +195,54 @@ describe('migration 0013', () => {
 			squat.id,
 			long.id
 		]);
+	});
+});
+
+describe('migration 0014', () => {
+	const nutrient = (key: string, label: string, unit = 'g') => aNumberField({ key, label, unit });
+	const newNutrients = [
+		nutrient('fiber', 'Fiber'),
+		nutrient('sugar', 'Sugar'),
+		nutrient('sodium', 'Sodium', 'mg')
+	];
+	const foodTracker = (fields: readonly ReturnType<typeof nutrient>[]) =>
+		aTracker({
+			id: anId<'Tracker'>(),
+			name: 'Food',
+			icon: TrackerIcon.food,
+			kind: TrackerKind.food,
+			fields: [
+				nutrient('servings', 'Servings', 'servings'),
+				aNumberField({ key: 'calories', label: 'Calories', unit: 'kcal', required: true }),
+				...fields
+			],
+			goal: {
+				type: GoalType.period,
+				measure: Measure.total,
+				field: aKey('calories'),
+				target: 2000,
+				direction: Direction.atMost,
+				period: Period.day
+			}
+		});
+
+	it('gives a food tracker made before fiber, sugar, and sodium those fields, once', async () => {
+		const database = new TestDatabase();
+		const macros = [nutrient('protein', 'Protein'), nutrient('carbs', 'Carbs')];
+		const older = foodTracker(macros);
+		const newer = foodTracker([...macros, ...newNutrients]);
+		const water = aTracker({ id: anId<'Tracker'>() });
+		await migrate(
+			database,
+			bundledMigrations.filter((migration) => migration.version <= 13)
+		);
+		await new SqliteTrackerRepository(database).save([older, newer, water]);
+
+		await migrate(database, bundledMigrations);
+
+		const upgraded = { ...foodTracker([...macros, ...newNutrients]), id: older.id };
+		const found = await new SqliteTrackerRepository(database).findAll();
+		expect(found).toHaveLength(3);
+		expect(found).toEqual(expect.arrayContaining([upgraded, newer, water]));
 	});
 });

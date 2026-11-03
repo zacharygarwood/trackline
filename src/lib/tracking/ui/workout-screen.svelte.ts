@@ -46,6 +46,8 @@ export class WorkoutScreen {
 	history: readonly Entry[] = $state([]);
 	/** When the rest timer ends, in epoch milliseconds. */
 	restEndsAt: number | undefined = $state();
+	/** Set changes still being saved, which a new set waits for so it copies them. */
+	private saving: Promise<unknown> = Promise.resolve();
 
 	constructor(
 		private readonly useCases: WorkoutUseCases,
@@ -91,12 +93,14 @@ export class WorkoutScreen {
 	}
 
 	/**
-	 * Logs a set of an exercise, a copy of the one before it, and starts the rest timer.
+	 * Logs a set of an exercise, a copy of the one before it once any change to
+	 * that one is saved, and starts the rest timer.
 	 *
 	 * @param subjectId - The exercise.
 	 * @param restSeconds - How long the rest timer runs.
 	 */
 	async addSet(subjectId: SubjectId, restSeconds: number): Promise<void> {
+		await this.saving;
 		const { tracker, session } = this;
 		const exercise = this.library.find((subject) => subject.id === subjectId);
 		if (tracker === undefined || session === undefined || exercise === undefined) return;
@@ -125,7 +129,13 @@ export class WorkoutScreen {
 	 * @param set - The set.
 	 * @param values - Its new values.
 	 */
-	async changeSet(set: Entry, values: ReadonlyMap<FieldKey, FieldValue>): Promise<void> {
+	changeSet(set: Entry, values: ReadonlyMap<FieldKey, FieldValue>): Promise<void> {
+		const change = this.saveChange(set, values);
+		this.saving = Promise.all([this.saving, change]);
+		return change;
+	}
+
+	private async saveChange(set: Entry, values: ReadonlyMap<FieldKey, FieldValue>): Promise<void> {
 		const changed = await this.useCases.changeEntry.execute({ id: set.id, values });
 		if (!changed.ok) return;
 		this.history = this.history.map((entry) => (entry.id === set.id ? changed.value : entry));

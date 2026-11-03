@@ -1,3 +1,4 @@
+import type { NumberRange } from '../../design/number-entry.ts';
 import { messages } from '../../i18n/messages.en.ts';
 import { isId } from '../../shared/id.ts';
 import { parseDecimal } from '../../ui/format.ts';
@@ -22,6 +23,10 @@ import { shownText } from './entry-drafts.ts';
 import { formatAmount } from './value-format.ts';
 
 const STEP_SERVINGS = 0.5;
+const HUNDREDTHS = 100;
+
+/** The servings of one ingredient that can be typed in: a tenth of a serving to a hundred. */
+export const INGREDIENT_SERVINGS: NumberRange = { min: 0.1, max: 100, step: 0.1 };
 
 /** The use cases the recipe page calls. */
 export interface RecipeEditorUseCases {
@@ -125,6 +130,16 @@ export class RecipeEditor {
 	}
 
 	/**
+	 * Sets the servings of an ingredient to an amount typed in, such as 1.3.
+	 *
+	 * @param foodId - The ingredient's food.
+	 * @param servings - The servings, within {@link INGREDIENT_SERVINGS}.
+	 */
+	setServings(foodId: SubjectId, servings: number): void {
+		this.lines = this.lines.map((line) => (line.food.id === foodId ? { ...line, servings } : line));
+	}
+
+	/**
 	 * Adds or takes away half a serving of an ingredient, taking it out at none.
 	 *
 	 * @param foodId - The ingredient's food.
@@ -133,7 +148,8 @@ export class RecipeEditor {
 	step(foodId: SubjectId, direction: number): void {
 		this.lines = this.lines.flatMap((line) => {
 			if (line.food.id !== foodId) return [line];
-			const servings = line.servings + direction * STEP_SERVINGS;
+			const servings =
+				Math.round((line.servings + direction * STEP_SERVINGS) * HUNDREDTHS) / HUNDREDTHS;
 			return servings > 0 ? [{ ...line, servings }] : [];
 		});
 	}

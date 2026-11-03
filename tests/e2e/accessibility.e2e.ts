@@ -25,12 +25,17 @@ async function violations(page: Page): Promise<string[]> {
 }
 
 test('onboarding meets WCAG 2.2 AA', async ({ page }) => {
+	const { onboarding } = messages.tracking;
+	const step = async (title: string) => {
+		await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
+		return violations(page);
+	};
 	await page.goto('/app/welcome');
-	const found = await violations(page);
+	const found = await step(onboarding.title);
 	await page.getByRole('button', { name: /^Next/ }).click();
-	found.push(...(await violations(page)));
-	await page.getByRole('button', { name: messages.tracking.onboarding.next, exact: true }).click();
-	found.push(...(await violations(page)));
+	found.push(...(await step(onboarding.unitsTitle)));
+	await page.getByRole('button', { name: onboarding.next, exact: true }).click();
+	found.push(...(await step(onboarding.goalsTitle)));
 
 	expect(found).toEqual([]);
 });

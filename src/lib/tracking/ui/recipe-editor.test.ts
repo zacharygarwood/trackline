@@ -59,6 +59,19 @@ describe('RecipeEditor', () => {
 		expect(saved?.defaults.get(aKey('calories'))).toEqual(number(162.5));
 	});
 
+	it('takes any amount of an ingredient typed in', async () => {
+		const { app, tracker, oats } = await withFoods();
+		const editor = new RecipeEditor(app, units);
+		await editor.load({ tracker: tracker.id });
+		editor.add(oats);
+
+		editor.setServings(oats.id, 1.3);
+
+		expect(caloriesOf(editor)).toBe('195 kcal');
+		editor.step(oats.id, 1);
+		expect(editor.lines.map((line) => line.servings)).toEqual([1.8]);
+	});
+
 	it('takes an ingredient out when stepped down to nothing', async () => {
 		const { app, tracker, oats } = await withFoods();
 		const editor = new RecipeEditor(app, units);

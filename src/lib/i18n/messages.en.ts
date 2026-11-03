@@ -559,6 +559,7 @@ export const messages = {
 			addIngredient: 'Add an ingredient',
 			noIngredients: 'Search your foods to add them.',
 			servings: (servings: number) => countOf(servings, 'serving', 'servings'),
+			amount: (food: string) => `Servings of ${food}`,
 			less: (food: string) => `Half a serving less ${food}`,
 			more: (food: string) => `Half a serving more ${food}`
 		},

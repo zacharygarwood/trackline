@@ -5,6 +5,7 @@
 	import Button from '#lib/design/Button.svelte';
 	import { ButtonVariant } from '#lib/design/button.constants.ts';
 	import NavRow from '#lib/design/NavRow.svelte';
+	import NumberField from '#lib/design/NumberField.svelte';
 	import PageHeader from '#lib/design/PageHeader.svelte';
 	import Row from '#lib/design/Row.svelte';
 	import SearchField from '#lib/design/SearchField.svelte';
@@ -13,7 +14,7 @@
 	import TextField from '#lib/design/TextField.svelte';
 	import { messages } from '#lib/i18n/messages.en.ts';
 	import { getPreferences } from '#lib/settings/ui/app-preferences.svelte.ts';
-	import { RecipeEditor } from '#lib/tracking/ui/recipe-editor.svelte.ts';
+	import { INGREDIENT_SERVINGS, RecipeEditor } from '#lib/tracking/ui/recipe-editor.svelte.ts';
 	import { getToaster } from '#lib/ui/toast.svelte.ts';
 	import { AppRoute } from '../app-route.constants.ts';
 	import { back, backTwice, replace } from '../open.ts';
@@ -83,6 +84,18 @@
 										ready.step(line.food.id, LESS);
 									}}
 								/>
+								<div class="amount">
+									<NumberField
+										label={text.amount(line.food.name)}
+										bind:value={
+											() => line.servings,
+											(servings: number) => {
+												ready.setServings(line.food.id, servings);
+											}
+										}
+										range={INGREDIENT_SERVINGS}
+									/>
+								</div>
 								<StepButton
 									label={text.more(line.food.name)}
 									symbol="+"
@@ -141,7 +154,12 @@
 
 	.steps {
 		display: flex;
+		align-items: center;
 		gap: var(--space-2);
+	}
+
+	.amount {
+		width: var(--amount-field-width);
 	}
 
 	.empty {

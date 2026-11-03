@@ -36,3 +36,5 @@ Food entries copy their numbers when logged (portionValues), and a food tracker'
 Stats charts what a tracker records, not always what its goal counts (`statOf`): a goal of a field or a target is charted as it is, but a log whose goal only counts days charts its value instead, a weight as its trend, a rating as its weekly average, and other numbers and times as totals. Workouts, photos, and collections keep their counts.
 
 A food can be a recipe: its ingredients (foods from the same library, each with the servings that go in) and the servings it makes, stored as JSON in the subject's `recipe` column (migration 0012). Its numbers per serving are worked out when it is saved (`perServingOf`) and kept as its defaults, so a recipe logs like any other food and entries still copy their values. Editing an ingredient later does not change a saved recipe until the recipe is saved again.
+
+The Food template tracks fiber, sugar, and sodium as well as calories and macros. Since a tracker's fields cannot be added to from the app, migration 0014 gives food trackers made before then the three new fields, after their own.
